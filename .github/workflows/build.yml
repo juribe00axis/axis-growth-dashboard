@@ -23,13 +23,11 @@ jobs:
         with:
           python-version: '3.9'
 
-      - name: Create .env from secrets
-        run: |
-          echo "GHL_TOKEN_AXISKEY=${{ secrets.GHL_TOKEN_AXISKEY }}" >> .env
-          echo "GHL_LOCATION_ID_AXISKEY=${{ secrets.GHL_LOCATION_ID_AXISKEY }}" >> .env
-          echo "META_TOKEN_AXISKEY=${{ secrets.META_TOKEN_AXISKEY }}" >> .env
-
       - name: Build dashboard
+        env:
+          GHL_TOKEN_AXISKEY: ${{ secrets.GHL_TOKEN_AXISKEY }}
+          GHL_LOCATION_ID_AXISKEY: ${{ secrets.GHL_LOCATION_ID_AXISKEY }}
+          META_TOKEN_AXISKEY: ${{ secrets.META_TOKEN_AXISKEY }}
         run: python3 build_dashboard.py
 
       - name: Prepare publish folder

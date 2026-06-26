@@ -11,6 +11,7 @@ Run with:  python3 build_dashboard.py
 
 import http.client
 import json
+import os
 import ssl
 import urllib.parse
 from collections import defaultdict
@@ -19,17 +20,23 @@ from pathlib import Path
 
 
 # ─── 1. LOAD CREDENTIALS ─────────────────────────────────────────────────────
-# Reads the .env file in the same folder as this script.
-# Pulls only the AXISKEY variables — no other account is touched.
+# Reads from .env file when running locally; falls back to environment
+# variables when running in CI (GitHub Actions passes secrets as env vars).
 
 def load_env(path):
-    """Parse a .env file and return a dict of key=value pairs."""
     result = {}
-    for line in Path(path).read_text().splitlines():
-        line = line.strip()
-        if line and not line.startswith("#") and "=" in line:
-            key, _, val = line.partition("=")
-            result[key.strip()] = val.strip()
+    try:
+        for line in Path(path).read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, _, val = line.partition("=")
+                result[key.strip()] = val.strip()
+    except FileNotFoundError:
+        pass
+    # CI fallback: use environment variables for any missing/empty keys
+    for key in ["GHL_TOKEN_AXISKEY", "GHL_LOCATION_ID_AXISKEY", "META_TOKEN_AXISKEY"]:
+        if not result.get(key):
+            result[key] = os.environ.get(key, "")
     return result
 
 env         = load_env(Path(__file__).parent / ".env")
