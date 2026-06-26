@@ -23,6 +23,16 @@ jobs:
         with:
           python-version: '3.9'
 
+      - name: Check secrets are set
+        env:
+          GHL_TOKEN_AXISKEY: ${{ secrets.GHL_TOKEN_AXISKEY }}
+          GHL_LOCATION_ID_AXISKEY: ${{ secrets.GHL_LOCATION_ID_AXISKEY }}
+          META_TOKEN_AXISKEY: ${{ secrets.META_TOKEN_AXISKEY }}
+        run: |
+          if [ -z "$GHL_TOKEN_AXISKEY" ]; then echo "ERROR: GHL_TOKEN_AXISKEY is empty"; else echo "OK: GHL_TOKEN_AXISKEY is set (${#GHL_TOKEN_AXISKEY} chars)"; fi
+          if [ -z "$GHL_LOCATION_ID_AXISKEY" ]; then echo "ERROR: GHL_LOCATION_ID_AXISKEY is empty"; else echo "OK: GHL_LOCATION_ID_AXISKEY is set (${#GHL_LOCATION_ID_AXISKEY} chars)"; fi
+          if [ -z "$META_TOKEN_AXISKEY" ]; then echo "ERROR: META_TOKEN_AXISKEY is empty"; else echo "OK: META_TOKEN_AXISKEY is set (${#META_TOKEN_AXISKEY} chars)"; fi
+
       - name: Build dashboard
         env:
           GHL_TOKEN_AXISKEY: ${{ secrets.GHL_TOKEN_AXISKEY }}
