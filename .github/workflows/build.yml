@@ -1,0 +1,46 @@
+name: Build Dashboard
+
+on:
+  schedule:
+    - cron: '0 12,20 * * *'   # 12:00 and 20:00 UTC (8am and 4pm EST)
+  workflow_dispatch:            # allow manual trigger from GitHub UI
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+
+      - name: Create .env from secrets
+        run: |
+          echo "GHL_TOKEN_AXISKEY=${{ secrets.GHL_TOKEN_AXISKEY }}" >> .env
+          echo "GHL_LOCATION_ID_AXISKEY=${{ secrets.GHL_LOCATION_ID_AXISKEY }}" >> .env
+          echo "META_TOKEN_AXISKEY=${{ secrets.META_TOKEN_AXISKEY }}" >> .env
+
+      - name: Build dashboard
+        run: python3 build_dashboard.py
+
+      - name: Prepare publish folder
+        run: |
+          mkdir -p dist
+          cp axis-growth.html dist/index.html
+          cp -r assets dist/
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          force_orphan: true

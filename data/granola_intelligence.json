@@ -1,0 +1,20 @@
+{
+  "fund_sizes": {
+    "$50M": 2,
+    "$60M": 1,
+    "$33M": 1,
+    "$12-15M": 1
+  },
+  "competitors": {},
+  "questions": {
+    "Who will communicate with our investors?": 4,
+    "How quickly can we start raising?": 3,
+    "How do distributions work?": 2,
+    "What are the guarantees / probability of success?": 2
+  },
+  "quote_of_week": {
+    "text": "Running a campaign where the cost is paid by the investors — could be money in, money out.",
+    "source": "Nue Holdings · Jun 17 · Reacting to the cost model"
+  },
+  "last_updated": "Jun 22, 2026"
+}
