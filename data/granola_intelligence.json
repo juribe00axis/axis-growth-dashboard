@@ -1,20 +1,27 @@
 {
   "fund_sizes": {
-    "$50M": 2,
     "$60M": 1,
+    "$50M": 2,
+    "$40M": 1,
     "$33M": 1,
-    "$12-15M": 1
+    "$20M": 1,
+    "$12-15M": 1,
+    "$10M": 1
   },
-  "competitors": {},
+  "competitors": {
+    "Norvian Capital Partners": 1
+  },
   "questions": {
-    "Who will communicate with our investors?": 4,
-    "How quickly can we start raising?": 3,
+    "Who will communicate with our investors?": 7,
+    "How quickly can we start raising?": 4,
     "How do distributions work?": 2,
-    "What are the guarantees / probability of success?": 2
+    "What are the guarantees / probability of success?": 2,
+    "When do we switch from BD reps to an in-house IR team?": 2,
+    "Can we launch before our deals are under contract?": 1
   },
   "quote_of_week": {
-    "text": "Running a campaign where the cost is paid by the investors — could be money in, money out.",
-    "source": "Nue Holdings · Jun 17 · Reacting to the cost model"
+    "text": "You’re buying income, you’re buying tax strategy. You’re not buying a shrimp business.",
+    "source": "Marvin · Jun 25 · On investor psychology"
   },
-  "last_updated": "Jun 22, 2026"
+  "last_updated": "Jun 29, 2026"
 }
