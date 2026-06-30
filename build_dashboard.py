@@ -13,6 +13,7 @@ import http.client
 import json
 import os
 import ssl
+import time
 import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
@@ -196,9 +197,19 @@ sales_stages  = sorted(
      for sid, info in stage_map.items() if info["pipeline_id"] == SALES_ID],
     key=lambda x: x[1],
 )
-active_stages = [(name, pos, cnt) for name, pos, cnt in sales_stages if cnt > 0]
+_HIDE_PIPELINE_STAGES = {"Not a fit"}
+active_stages = [(name, pos, cnt) for name, pos, cnt in sales_stages if cnt > 0 and name not in _HIDE_PIPELINE_STAGES]
 funnel_labels = [row[0] for row in active_stages]
 funnel_data   = [row[2] for row in active_stages]
+
+# Save today's pipeline distribution snapshot (used by the date-select pie chart)
+_today_str  = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+_dist_path  = Path(__file__).parent / f"data/snapshots/pipeline-dist-{_today_str}.json"
+_dist_path.write_text(json.dumps({
+    "date":       _today_str,
+    "stages":     [{"name": n, "count": c} for n, c in zip(funnel_labels, funnel_data)],
+    "total_open": sum(funnel_data),
+}, indent=2))
 
 # All-time won opportunities in the Sales Pipeline
 won_total = sum(
@@ -283,31 +294,113 @@ if won_value >= 1000:
 else:
     won_value_str = f"${won_value:,.0f}"
 
-# Human-readable strings used in the HTML
-week_range_str = f"{week_start.strftime('%b')} {week_start.day} – {today.strftime('%b')} {today.day}"
-generated_at   = f"{today.strftime('%B')} {today.day}, {today.year} at {today.strftime('%H:%M')} UTC"
+# ── 6c-ii. Comparison periods ────────────────────────────────────────────────
 
-print(f"  14-day new leads: {total_14d}")
+# Previous 14-day window (days 15–28 ago)
+prev_14_start = (today - timedelta(days=27)).replace(hour=0,  minute=0,  second=0,  microsecond=0)
+prev_14_end   = day_14_ago  # exclusive upper bound
+
+prev_14d = sum(
+    1 for opp in all_opps
+    if opp.get("createdAt")
+    and prev_14_start
+    <= datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00"))
+    < prev_14_end
+)
+delta_14d     = total_14d - prev_14d
+delta_14d_pct = round(delta_14d / prev_14d * 100) if prev_14d else 0
+delta_14d_str = f"+{delta_14d_pct}%" if delta_14d >= 0 else f"{delta_14d_pct}%"
+delta_14d_dir = "↑" if delta_14d > 0 else ("↓" if delta_14d < 0 else "→")
+
+# Last week (Mon–Sun before this week)
+last_week_start = week_start - timedelta(weeks=1)
+last_week_end   = week_start - timedelta(seconds=1)
+last_week_new   = sum(
+    1 for opp in all_opps
+    if opp.get("createdAt")
+    and last_week_start
+    <= datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00"))
+    <= last_week_end
+)
+
+# Last 2 complete calendar months dynamically
+def _month_count(opps, year, month):
+    return sum(
+        1 for opp in opps
+        if opp.get("createdAt")
+        and (dt := datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00")))
+        and dt.year == year and dt.month == month
+    )
+
+_this_month  = today.month
+_this_year   = today.year
+_m1_month    = (_this_month - 1) or 12
+_m1_year     = _this_year if _this_month > 1 else _this_year - 1
+_m2_month    = (_this_month - 2) or 12
+_m2_year     = _this_year if _this_month > 2 else (_m1_year if _this_month == 2 else _this_year - 1)
+
+month1_count   = _month_count(all_opps, _m1_year, _m1_month)
+month2_count   = _month_count(all_opps, _m2_year, _m2_month)
+cur_month_count = _month_count(all_opps, _this_year, _this_month)
+month1_label   = datetime(_m1_year, _m1_month, 1).strftime("%b")
+month2_label   = datetime(_m2_year, _m2_month, 1).strftime("%b")
+cur_month_label = today.strftime("%b")
+
+# Last 7 days slice from the 14-day arrays (already computed)
+day_7_labels = date_labels_short[-7:]
+day_7_data   = daily_data[-7:]
+
+# Week-over-week delta
+week_delta      = new_this_week - last_week_new
+week_delta_pct  = round(week_delta / last_week_new * 100) if last_week_new else 0
+week_delta_str  = f"+{week_delta_pct}%" if week_delta >= 0 else f"{week_delta_pct}%"
+week_delta_dir  = "↑" if week_delta > 0 else ("↓" if week_delta < 0 else "→")
+week_delta_color = "var(--hero)" if week_delta >= 0 else "#FF5C5C"
+
+# Human-readable strings used in the HTML
+week_range_str      = f"{week_start.strftime('%b')} {week_start.day} – {today.strftime('%b')} {today.day}"
+last_week_range_str = f"{last_week_start.strftime('%b')} {last_week_start.day} – {(last_week_end).strftime('%b')} {last_week_end.day}"
+generated_at        = f"{today.strftime('%B')} {today.day}, {today.year} at {today.strftime('%H:%M')} UTC"
+
+print(f"  14-day new leads: {total_14d} (prev: {prev_14d}, {delta_14d_dir})")
+print(f"  This week: {new_this_week} | Last week: {last_week_new} ({week_delta_str})")
+print(f"  {month2_label}: {month2_count} | {month1_label}: {month1_count} | {cur_month_label}: {cur_month_count}")
 print(f"  Open in Sales Pipeline: {sum(funnel_data)} | Won all-time: {won_total} | Stale Pipeline: {stale_count}")
-print(f"  New this week: {new_this_week} | Won: {won_count} / {won_value_str}")
+print(f"  Won this week: {won_count} / {won_value_str}")
 print()
 
 
-# ─── 6d. MGL leads — 14-day count + 8-week weekly breakdown ──────────────────
-# MGL = opportunity source field == "MGL" (set on the opportunity record, not the contact)
-print("Fetching MGL data...")
+# ─── 6d. MGL leads + Lead Source Breakdown ───────────────────────────────────
+print("Fetching MGL + source data...")
 
 SCORE_FIELD  = "5PgTaqgm1MH0Z26KKVcl"
 SCORE_NORM   = {"Green": "1", "Yellow": "2", "Red": "3"}
 POST_HEADERS = {**HEADERS, "Content-Type": "application/json"}
 
 MGL_SOURCES = {"MGL", "FORM", "Meta Survey - Capital Raising"}
-mgl_opps = [opp for opp in all_opps if opp.get("source") in MGL_SOURCES]
-mgl_ids  = {opp["contactId"] for opp in mgl_opps if opp.get("contactId")}
+SGL_SOURCES = {"SGL", "Stormer Santana's Calendar", "Fundraising Discussion"}
 
-# Fetch quality scores from individual contact records
-# GET /contacts/{id} returns {"contact": {...}} — must unwrap
-mgl_scores = {}
+mgl_opps   = [opp for opp in all_opps if opp.get("source") in MGL_SOURCES]
+mgl_ids    = {opp["contactId"] for opp in mgl_opps if opp.get("contactId")}
+sgl_opps   = [opp for opp in all_opps if opp.get("source") in SGL_SOURCES]
+other_opps = [opp for opp in all_opps if opp.get("source") not in MGL_SOURCES and opp.get("source") not in SGL_SOURCES]
+
+# Opportunities at "New Lead" stage or beyond in Sales Pipeline (all statuses)
+_new_lead_pos = next(
+    (info["position"] for sid, info in stage_map.items()
+     if info["pipeline_id"] == SALES_ID and "new lead" in info["name"].lower()),
+    0,
+)
+source_opps = [
+    opp for opp in all_opps
+    if opp.get("pipelineId") == SALES_ID
+    and (
+        opp.get("status") in ("won", "lost")
+        or stage_map.get(opp.get("pipelineStageId", ""), {}).get("position", -1) >= _new_lead_pos
+    )
+]
+# Fetch contacts for MGL quality scores only
+contact_cache = {}  # cid → {"score": str}
 for cid in mgl_ids:
     resp  = ghl_get(f"/contacts/{cid}")
     c     = resp.get("contact", resp)
@@ -316,7 +409,21 @@ for cid in mgl_ids:
         if cf.get("id") == SCORE_FIELD:
             raw   = cf.get("value", "—")
             score = SCORE_NORM.get(raw, raw)
-    mgl_scores[cid] = score
+    contact_cache[cid] = {"score": score}
+    time.sleep(0.05)
+
+mgl_scores = {cid: contact_cache[cid]["score"] for cid in mgl_ids if cid in contact_cache}
+
+# Source breakdown — opportunity source field, 3 buckets
+_src_mgl   = sum(1 for opp in source_opps if (opp.get("source") or "") in MGL_SOURCES)
+_src_sgl   = sum(1 for opp in source_opps if (opp.get("source") or "") in SGL_SOURCES)
+_src_other = len(source_opps) - _src_mgl - _src_sgl
+
+source_chart_labels = ["MGL", "SGL", "Other - Referrals"]
+source_chart_data   = [_src_mgl, _src_sgl, _src_other]
+total_source_opps   = len(source_opps)
+
+print(f"  Source breakdown ({total_source_opps} opps): MGL={_src_mgl} SGL={_src_sgl} Other={_src_other}")
 
 # Score buckets — Sales Pipeline MGL opportunities at Discovery Call or beyond
 # (matches the "open opportunities" CRM view the team uses for scoring)
@@ -328,6 +435,12 @@ _discovery_stage_ids = {
     sid for sid, info in stage_map.items()
     if info["pipeline_id"] == SALES_ID and info["position"] >= _discovery_pos
 }
+
+# All-time Discovery → Proposal conversion (all statuses, Sales Pipeline)
+disc_all_time     = sum(1 for opp in all_opps if opp.get("pipelineId") == SALES_ID and opp.get("pipelineStageId") in _discovery_stage_ids)
+prop_all_time     = sum(1 for opp in all_opps if opp.get("pipelineId") == SALES_ID and opp.get("pipelineStageId") in _proposal_ids)
+disc_to_prop_pct  = round(prop_all_time / disc_all_time * 100) if disc_all_time else 0
+
 mgl_open_sales_cids = {
     opp["contactId"] for opp in mgl_opps
     if opp.get("pipelineId") == SALES_ID
@@ -342,8 +455,52 @@ for cid in mgl_open_sales_cids:
         mgl_buckets[score] += 1
 
 mgl_total_scored   = mgl_buckets["1"] + mgl_buckets["2"] + mgl_buckets["3"]
-mgl_dc_plus_total  = len(mgl_open_sales_cids)   # 17 — all MGL at DC+, scored or not
+mgl_dc_plus_total  = len(mgl_open_sales_cids)
 mgl_dc_unscored    = mgl_dc_plus_total - mgl_total_scored
+
+# SGL and Other contacts at Discovery Call or beyond
+sgl_open_sales_cids = {
+    opp["contactId"] for opp in sgl_opps
+    if opp.get("pipelineId") == SALES_ID
+    and opp.get("pipelineStageId") in _discovery_stage_ids
+    and opp.get("contactId")
+}
+other_open_sales_cids = {
+    opp["contactId"] for opp in other_opps
+    if opp.get("pipelineId") == SALES_ID
+    and opp.get("pipelineStageId") in _discovery_stage_ids
+    and opp.get("contactId")
+}
+
+# Fetch scores for any SGL/Other DC+ contacts not already cached
+for cid in (sgl_open_sales_cids | other_open_sales_cids) - set(contact_cache.keys()):
+    resp  = ghl_get(f"/contacts/{cid}")
+    c     = resp.get("contact", resp)
+    score = "—"
+    for cf in (c.get("customFields") or []):
+        if cf.get("id") == SCORE_FIELD:
+            raw   = cf.get("value", "—")
+            score = SCORE_NORM.get(raw, raw)
+    contact_cache[cid] = {"score": score}
+    time.sleep(0.05)
+
+sgl_buckets = {"1": 0, "2": 0, "3": 0}
+for cid in sgl_open_sales_cids:
+    score = contact_cache.get(cid, {}).get("score", "—")
+    if score in sgl_buckets:
+        sgl_buckets[score] += 1
+sgl_total_scored  = sum(sgl_buckets.values())
+sgl_dc_plus_total = len(sgl_open_sales_cids)
+sgl_dc_unscored   = sgl_dc_plus_total - sgl_total_scored
+
+other_buckets = {"1": 0, "2": 0, "3": 0}
+for cid in other_open_sales_cids:
+    score = contact_cache.get(cid, {}).get("score", "—")
+    if score in other_buckets:
+        other_buckets[score] += 1
+other_total_scored  = sum(other_buckets.values())
+other_dc_plus_total = len(other_open_sales_cids)
+other_dc_unscored   = other_dc_plus_total - other_total_scored
 
 # Count MGL opps in the 14-day window
 mgl_14d = sum(
@@ -963,105 +1120,151 @@ HEADER = f"""
   </header>
 """
 
-# ── 7c. Hero metric (f-string — embeds total_14d and date range) ──────────────
+# ── 7c. Hero metric ───────────────────────────────────────────────────────────
 HERO = f"""
   <section class="section-hero card">
-    <div class="card-label">New Leads — Last 14 Days</div>
-    <div class="hero-top">
-      <div>
-        <div class="hero-number">{total_14d}</div>
-        <div class="hero-sub">opportunities created &nbsp;·&nbsp; {date_labels_short[0]} – {date_labels_short[-1]}</div>
+    <div class="card-label">New Leads</div>
+
+    <div style="display:grid;grid-template-columns:220px 1fr 200px;gap:0;align-items:start;">
+
+      <!-- ── Col 1: KPI group (≤35% of width) ── -->
+      <div style="border-right:1px solid var(--line);padding-right:24px;padding-top:2px;">
+        <div style="margin-bottom:14px;">
+          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-mute);margin-bottom:6px;">This Week</div>
+          <div style="font-size:3.4rem;font-weight:800;color:var(--hero);line-height:1;">{new_this_week}</div>
+          <div style="font-size:0.6rem;color:var(--text-mute);margin-top:5px;">{week_range_str}</div>
+        </div>
+        <div style="height:1px;background:var(--line);margin-bottom:13px;"></div>
+        <div style="margin-bottom:13px;">
+          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-mute);margin-bottom:5px;">Last Week</div>
+          <div style="font-size:2.0rem;font-weight:800;color:var(--text);line-height:1;">{last_week_new}</div>
+          <div style="font-size:0.6rem;color:var(--text-mute);margin-top:4px;">{last_week_range_str}</div>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border-radius:7px;padding:4px 10px;">
+          <span style="font-size:0.85rem;font-weight:800;color:{week_delta_color};">{week_delta_dir}&thinsp;{week_delta_str}</span>
+          <span style="font-size:0.5rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">WoW</span>
+        </div>
       </div>
-      <div class="hero-stat-block">
-        <div class="hero-stat-lbl">This Week</div>
-        <div class="hero-stat-num accent">{new_this_week}</div>
-        <div class="hero-stat-sub-s">{week_range_str}</div>
+
+      <!-- ── Col 2: Daily Activity ── -->
+      <div style="padding:0 24px;">
+        <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);margin-bottom:8px;">Daily Activity — Last 7 Days</div>
+        <div style="position:relative;height:168px;"><canvas id="chartLeads"></canvas></div>
       </div>
-      <div class="hero-stat-block">
-        <div class="hero-stat-lbl">Won This Week</div>
-        <div class="hero-stat-num">{won_count}</div>
-        <div class="hero-stat-sub-s">{won_value_str} closed</div>
+
+      <!-- ── Col 3: Monthly Volume + MGL badge ── -->
+      <div style="border-left:1px solid var(--line);padding-left:24px;padding-top:2px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume</div>
+          <span class="mgl-pill" style="font-size:0.56rem;padding:2px 7px;white-space:nowrap;">MGL&nbsp;{mgl_14d}&nbsp;·&nbsp;{mgl_14d_pct}%</span>
+        </div>
+        <div style="position:relative;height:168px;"><canvas id="chartMonthly"></canvas></div>
       </div>
-    </div>
-    <div class="mgl-stat">
-      <span class="mgl-pill">MGL {mgl_14d} &nbsp;/&nbsp; {mgl_14d_pct}%</span>
-      of new leads are marketing generated
-    </div>
-    <div class="chart-wrap">
-      <canvas id="chartLeads"></canvas>
+
     </div>
   </section>
 """
 
 MGL_CHART = f"""
   <div class="card" style="margin-bottom:22px;">
-    <div class="card-label">Marketing Generated Leads (MGL · FORM · Meta Survey)</div>
-    <div class="mgl-row">
-      <div>
-        <div style="font-size:0.62rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);margin-bottom:14px;">Weekly Volume — Last 8 Weeks</div>
-        <div class="mgl-table">
-        {_mgl_rows}
+    <div class="card-label">Lead Sources — New Lead &amp; Beyond &nbsp;·&nbsp; {total_source_opps} Opportunities</div>
+    <div style="display:grid;grid-template-columns:3fr 2fr;gap:28px;align-items:stretch;">
+
+      <!-- Left: source bar chart — constrained width so bars cluster together -->
+      <div style="display:flex;align-items:center;justify-content:center;">
+        <div style="position:relative;width:300px;height:100%;">
+          <canvas id="chartSource"></canvas>
         </div>
       </div>
+
+      <!-- Right: 3-column call quality table -->
       <div>
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px;">
-          <span style="font-size:2.6rem;font-weight:800;color:var(--hero);line-height:1;">{mgl_dc_plus_total}</span>
-          <span style="font-size:0.62rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Total Marketing<br>Generated Leads<br>Discovery Call+</span>
+        <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-mute);margin-bottom:12px;">Call Quality &nbsp;·&nbsp; Discovery Call+</div>
+
+        <!-- Header row: labels + totals -->
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:end;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:2px;">
+          <span></span>
+          <div style="text-align:center;">
+            <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#C8FF01;margin-bottom:4px;">MGL</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#C8FF01;line-height:1;">{mgl_dc_plus_total}</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#5B8FFF;margin-bottom:4px;">SGL</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#5B8FFF;line-height:1;">{sgl_dc_plus_total}</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#FF9F45;margin-bottom:4px;">Other</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#FF9F45;line-height:1;">{other_dc_plus_total}</div>
+          </div>
         </div>
-        <div style="font-size:0.62rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);margin-bottom:8px;">Call Quality</div>
-        <div class="score-table">
-          <div class="score-row hdr">
-            <span class="score-lbl">Bucket</span>
-            <span class="score-n">#</span>
-          </div>
-          <div class="score-row">
-            <span class="score-lbl">🟢 Great Fit</span>
-            <span class="score-n accent">{mgl_buckets["1"]}</span>
-          </div>
-          <div class="score-row">
-            <span class="score-lbl">🟡 Potential</span>
-            <span class="score-n">{mgl_buckets["2"]}</span>
-          </div>
-          <div class="score-row">
-            <span class="score-lbl">🔴 Poor Fit</span>
-            <span class="score-n">{mgl_buckets["3"]}</span>
-          </div>
-          <div class="score-row">
-            <span class="score-lbl">⬜ Unscored</span>
-            <span class="score-n dim">{mgl_dc_unscored}</span>
-          </div>
-          <div class="score-row total-row">
-            <span class="score-lbl">Scored</span>
-            <span class="score-n">{mgl_total_scored} / {mgl_dc_plus_total}</span>
-          </div>
+
+        <!-- Score rows -->
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:0.75rem;color:var(--text);">🟢 Great Fit</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">{mgl_buckets["1"]}</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">{sgl_buckets["1"]}</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">{other_buckets["1"]}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:0.75rem;color:var(--text);">🟡 Potential</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">{mgl_buckets["2"]}</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">{sgl_buckets["2"]}</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">{other_buckets["2"]}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:0.75rem;color:var(--text);">🔴 Poor Fit</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">{mgl_buckets["3"]}</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">{sgl_buckets["3"]}</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">{other_buckets["3"]}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;">
+          <span style="font-size:0.75rem;color:var(--text-mute);">⬜ Unscored</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">{mgl_dc_unscored}</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">{sgl_dc_unscored}</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">{other_dc_unscored}</span>
         </div>
       </div>
+
     </div>
   </div>
 """
 
-# ── 7d. Middle row (f-string — embeds tile values and stale count) ────────────
+# ── 7d. Pipeline Snapshot — segmented bar with date selector ─────────────────
 MIDDLE = f"""
   <div style="margin-bottom:22px;">
     <div class="card">
-      <div class="card-label">Pipeline Snapshot — Open Deals by Stage</div>
-      <div class="funnel-kpis">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <div class="card-label" style="margin-bottom:0;">Pipeline Snapshot — Open Deals by Stage</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span id="pipelineTotal" style="font-size:0.72rem;font-weight:600;color:var(--text-mute);"></span>
+          <select id="pipelineDateSelect" style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 12px;font-family:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;outline:none;"></select>
+        </div>
+      </div>
+
+      <!-- Segmented bar -->
+      <div id="pipelineBar" style="display:flex;border-radius:10px;overflow:hidden;height:52px;gap:2px;background:#0F0F14;margin-bottom:16px;"></div>
+
+      <!-- Legend -->
+      <div id="pipelineLegend" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px 0;margin-bottom:20px;"></div>
+
+      <div class="funnel-kpis" style="margin-top:4px;">
         <div class="funnel-kpi">
           <span class="funnel-kpi-label">Lead to Won</span>
           <span class="funnel-kpi-value">{won_rate_pct}%</span>
-          <span class="funnel-kpi-sub">{won_total} won of {total_sales_opps} total leads</span>
+          <span class="funnel-kpi-sub">{won_total} won of {total_sales_opps} total</span>
         </div>
         <div class="funnel-kpi">
           <span class="funnel-kpi-label">Lead to Proposal</span>
           <span class="funnel-kpi-value">{proposal_rate_pct}%</span>
-          <span class="funnel-kpi-sub">{proposal_reached} reached proposal stage</span>
+          <span class="funnel-kpi-sub">{proposal_reached} reached proposal</span>
+        </div>
+        <div class="funnel-kpi">
+          <span class="funnel-kpi-label">Discovery to Proposal</span>
+          <span class="funnel-kpi-value">{disc_to_prop_pct}%</span>
+          <span class="funnel-kpi-sub">{prop_all_time} of {disc_all_time} discoveries</span>
         </div>
       </div>
-      <div class="funnel-table">
-        {_funnel_rows}
-        {_funnel_won}
-      </div>
-      <div class="pipeline-note">Stale Pipeline &nbsp;—&nbsp; {stale_count} open</div>
+      <div class="pipeline-note" style="margin-top:14px;">Stale Pipeline &nbsp;—&nbsp; {stale_count} open</div>
     </div>
   </div>
 """
@@ -1200,14 +1403,28 @@ STAGE_MOVEMENT = f"""
 """
 
 # ── 7g. Data injection (f-string — embeds computed JSON arrays) ───────────────
+# Load all saved pipeline distribution snapshots for the date selector dropdown
+_snap_dir = Path(__file__).parent / "data/snapshots"
+pipeline_history = {}
+for _sp in sorted(_snap_dir.glob("pipeline-dist-*.json")):
+    _sd = json.loads(_sp.read_text())
+    pipeline_history[_sd["date"]] = _sd
+pipeline_dates = sorted(pipeline_history.keys(), reverse=True)
+
 # Chart.js reads these constants from the next <script> block.
 DATA_SCRIPT = f"""
   <script>
     // All values injected by build_dashboard.py — re-run the script to refresh.
-    const DAILY_LABELS  = {json.dumps(date_labels_short)};
-    const DAILY_DATA    = {json.dumps(daily_data)};
-    const META_LABELS   = {json.dumps(meta_labels)};
-    const META_SPEND    = {json.dumps(meta_spends)};
+    const DAY7_LABELS     = {json.dumps(day_7_labels)};
+    const DAY7_DATA       = {json.dumps(day_7_data)};
+    const MONTH_LABELS    = {json.dumps([month2_label, month1_label, cur_month_label])};
+    const MONTH_DATA      = {json.dumps([month2_count, month1_count, cur_month_count])};
+    const META_LABELS     = {json.dumps(meta_labels)};
+    const META_SPEND      = {json.dumps(meta_spends)};
+    const SOURCE_LABELS      = {json.dumps(source_chart_labels)};
+    const SOURCE_DATA        = {json.dumps(source_chart_data)};
+    const PIPELINE_HISTORY   = {json.dumps(pipeline_history)};
+    const PIPELINE_DATES     = {json.dumps(pipeline_dates)};
   </script>
 """
 
@@ -1219,17 +1436,18 @@ CHARTS_SCRIPT = """
     Chart.defaults.font.family = '"Saira", "Eurostile", system-ui, sans-serif';
     Chart.defaults.font.size   = 12;
 
-    // ── Daily new leads (vertical bar) ────────────────────────────────────
-    // Lime bars on days with activity; dark on zero days so busy days pop.
+    // ── Daily activity — 7 days, tight skinny bars ────────────────────────
     new Chart(document.getElementById("chartLeads"), {
       type: "bar",
       data: {
-        labels: DAILY_LABELS,
+        labels: DAY7_LABELS,
         datasets: [{
-          data:            DAILY_DATA,
-          backgroundColor: DAILY_DATA.map(v => v > 0 ? "#C8FF01" : "#262630"),
-          borderRadius:    6,
-          borderSkipped:   false,
+          data:               DAY7_DATA,
+          backgroundColor:    DAY7_DATA.map(v => v > 0 ? "#C8FF01" : "#1E1E28"),
+          borderRadius:       3,
+          borderSkipped:      false,
+          barPercentage:      0.22,
+          categoryPercentage: 0.96,
         }],
       },
       options: {
@@ -1239,20 +1457,142 @@ CHARTS_SCRIPT = """
           legend: { display: false },
           tooltip: {
             displayColors: false,
-            callbacks: {
-              label: ctx => ` ${ctx.parsed.y} new lead${ctx.parsed.y !== 1 ? "s" : ""}`,
-            },
+            callbacks: { label: ctx => ` ${ctx.parsed.y} lead${ctx.parsed.y !== 1 ? "s" : ""}` },
           },
         },
         scales: {
-          x: { grid: { color: "#2E2E38" }, ticks: { color: "#9A9AA5" } },
+          x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 11 } } },
           y: {
             grid:        { color: "#2E2E38" },
-            ticks:       { color: "#9A9AA5", stepSize: 1, precision: 0 },
+            ticks:       { color: "#9A9AA5", stepSize: 1, precision: 0, font: { size: 11 } },
             beginAtZero: true,
           },
         },
       },
+    });
+
+    // ── Monthly volume — with inline data labels ───────────────────────────
+    const monthlyDataLabels = {
+      id: "monthlyLabels",
+      afterDatasetsDraw(chart) {
+        const ctx = chart.ctx;
+        chart.data.datasets.forEach((ds, i) => {
+          chart.getDatasetMeta(i).data.forEach((bar, idx) => {
+            const v = ds.data[idx];
+            if (!v) return;
+            ctx.save();
+            ctx.fillStyle   = "#F5F5F7";
+            ctx.font        = '700 12px "Saira", system-ui, sans-serif';
+            ctx.textAlign   = "center";
+            ctx.textBaseline = "bottom";
+            ctx.fillText(v, bar.x, bar.y - 4);
+            ctx.restore();
+          });
+        });
+      }
+    };
+    new Chart(document.getElementById("chartMonthly"), {
+      type: "bar",
+      data: {
+        labels: MONTH_LABELS,
+        datasets: [{
+          data:               MONTH_DATA,
+          backgroundColor:    ["#C8FF01", "#5B8FFF", "rgba(200,255,1,0.30)"],
+          borderRadius:       5,
+          borderSkipped:      false,
+          barPercentage:      0.70,
+          categoryPercentage: 0.68,
+        }],
+      },
+      options: {
+        responsive:          true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 20 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            displayColors: false,
+            callbacks: { label: ctx => ` ${ctx.parsed.y} new leads` },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 11 } } },
+          y: { display: false, beginAtZero: true },
+        },
+      },
+      plugins: [monthlyDataLabels],
+    });
+
+    // ── Lead Source Breakdown (vertical bar) ──────────────────────────────
+    const sourceDataLabels = {
+      id: "sourceDataLabels",
+      afterDatasetsDraw(chart) {
+        const {ctx} = chart;
+        const total = SOURCE_DATA.reduce((a, b) => a + b, 0);
+        chart.getDatasetMeta(0).data.forEach((bar, i) => {
+          const v       = SOURCE_DATA[i];
+          const pct     = Math.round(v / total * 100);
+          const barH    = bar.base - bar.y;
+          const inside  = barH > 32;
+          ctx.save();
+          ctx.textAlign    = "center";
+          ctx.textBaseline = "bottom";
+          // Count — just above bar when pct is inside; shifted higher when both go above
+          ctx.font      = '700 12px "Saira", system-ui, sans-serif';
+          ctx.fillStyle = "#F5F5F7";
+          ctx.fillText(v, bar.x, inside ? bar.y - 4 : bar.y - 17);
+          // Percentage
+          if (inside) {
+            ctx.font         = `600 ${barH > 60 ? 11 : 10}px "Saira", system-ui, sans-serif`;
+            ctx.fillStyle    = barH > 60 ? "rgba(0,0,0,0.65)" : "rgba(255,255,255,0.82)";
+            ctx.textBaseline = "middle";
+            ctx.fillText(`${pct}%`, bar.x, bar.y + barH / 2);
+          } else {
+            // Short bar: pct sits just above bar top, below the count
+            ctx.font      = '600 10px "Saira", system-ui, sans-serif';
+            ctx.fillStyle = "#9A9AA5";
+            ctx.fillText(`${pct}%`, bar.x, bar.y - 3);
+          }
+          ctx.restore();
+        });
+      }
+    };
+    new Chart(document.getElementById("chartSource"), {
+      type: "bar",
+      data: {
+        labels: SOURCE_LABELS,
+        datasets: [{
+          data:               SOURCE_DATA,
+          backgroundColor:    ["#C8FF01", "#5B8FFF", "#FF9F45"],
+          borderRadius:       8,
+          borderSkipped:      false,
+          barPercentage:      1.0,
+          categoryPercentage: 0.95,
+        }],
+      },
+      options: {
+        responsive:          true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 28 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            displayColors: false,
+            callbacks: {
+              label: ctx => {
+                const total = SOURCE_DATA.reduce((a, b) => a + b, 0);
+                const pct   = Math.round(ctx.parsed.y / total * 100);
+                return ` ${ctx.parsed.y} opportunities · ${pct}%`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 11 } } },
+          y: { display: false, beginAtZero: true },
+        },
+      },
+      plugins: [sourceDataLabels],
     });
 
     // ── Meta Campaign Spending (vertical bar) ─────────────────────────────
@@ -1289,6 +1629,53 @@ CHARTS_SCRIPT = """
         },
       },
     });
+
+
+    // ── Pipeline segmented bar — date-selectable ─────────────────────────────
+    const PIPE_COLORS = ["#C8FF01","#5B8FFF","#FF9F45","#A78BFA","#34D399","#FB923C","#F472B6"];
+
+    function fmtPipeDate(s) {
+      return new Date(s + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+    }
+
+    const pipeSel = document.getElementById("pipelineDateSelect");
+    PIPELINE_DATES.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d; opt.textContent = fmtPipeDate(d);
+      pipeSel.appendChild(opt);
+    });
+
+    function renderPipeline(dateKey) {
+      const snap  = PIPELINE_HISTORY[dateKey];
+      const total = snap.total_open;
+
+      // Total label
+      document.getElementById("pipelineTotal").textContent = `${total} open deals`;
+
+      // Segmented bar
+      document.getElementById("pipelineBar").innerHTML = snap.stages.map((s, i) => {
+        const w   = (s.count / total * 100).toFixed(2);
+        const pct = Math.round(s.count / total * 100);
+        const col = PIPE_COLORS[i % PIPE_COLORS.length];
+        return `<div style="width:${w}%;background:${col};flex-shrink:0;position:relative;cursor:default;"
+                     title="${s.name}: ${s.count} deals (${pct}%)"></div>`;
+      }).join("");
+
+      // Legend
+      document.getElementById("pipelineLegend").innerHTML = snap.stages.map((s, i) => {
+        const pct = Math.round(s.count / total * 100);
+        const col = PIPE_COLORS[i % PIPE_COLORS.length];
+        return `<div style="display:flex;align-items:center;gap:5px;">
+          <span style="width:10px;height:10px;border-radius:3px;background:${col};flex-shrink:0;"></span>
+          <span style="font-size:0.74rem;color:var(--text-mute);white-space:nowrap;">${s.name}</span>
+          <span style="font-size:0.78rem;font-weight:700;color:var(--text);">·&thinsp;${s.count}</span>
+          <span style="font-size:0.66rem;color:var(--text-mute);">(${pct}%)</span>
+        </div>`;
+      }).join("");
+    }
+
+    renderPipeline(PIPELINE_DATES[0]);
+    pipeSel.addEventListener("change", () => renderPipeline(pipeSel.value));
 
   </script>
 </body>

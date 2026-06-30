@@ -473,147 +473,178 @@
       <img src="assets/logo.svg" alt="Axis Growth" class="header-logo">
       <span class="header-title">Axis Growth</span>
     </div>
-    <span class="header-meta">Generated June 29, 2026 at 15:35 UTC</span>
+    <span class="header-meta">Generated June 30, 2026 at 21:36 UTC</span>
   </header>
 
   <section class="section-hero card">
-    <div class="card-label">New Leads — Last 14 Days</div>
-    <div class="hero-top">
-      <div>
-        <div class="hero-number">34</div>
-        <div class="hero-sub">opportunities created &nbsp;·&nbsp; Jun 16 – Jun 29</div>
+    <div class="card-label">New Leads</div>
+
+    <div style="display:grid;grid-template-columns:220px 1fr 200px;gap:0;align-items:start;">
+
+      <!-- ── Col 1: KPI group (≤35% of width) ── -->
+      <div style="border-right:1px solid var(--line);padding-right:24px;padding-top:2px;">
+        <div style="margin-bottom:14px;">
+          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-mute);margin-bottom:6px;">This Week</div>
+          <div style="font-size:3.4rem;font-weight:800;color:var(--hero);line-height:1;">2</div>
+          <div style="font-size:0.6rem;color:var(--text-mute);margin-top:5px;">Jun 29 – Jun 30</div>
+        </div>
+        <div style="height:1px;background:var(--line);margin-bottom:13px;"></div>
+        <div style="margin-bottom:13px;">
+          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-mute);margin-bottom:5px;">Last Week</div>
+          <div style="font-size:2.0rem;font-weight:800;color:var(--text);line-height:1;">17</div>
+          <div style="font-size:0.6rem;color:var(--text-mute);margin-top:4px;">Jun 22 – Jun 28</div>
+        </div>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border-radius:7px;padding:4px 10px;">
+          <span style="font-size:0.85rem;font-weight:800;color:#FF5C5C;">↓&thinsp;-88%</span>
+          <span style="font-size:0.5rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">WoW</span>
+        </div>
       </div>
-      <div class="hero-stat-block">
-        <div class="hero-stat-lbl">This Week</div>
-        <div class="hero-stat-num accent">0</div>
-        <div class="hero-stat-sub-s">Jun 29 – Jun 29</div>
+
+      <!-- ── Col 2: Daily Activity ── -->
+      <div style="padding:0 24px;">
+        <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);margin-bottom:8px;">Daily Activity — Last 7 Days</div>
+        <div style="position:relative;height:168px;"><canvas id="chartLeads"></canvas></div>
       </div>
-      <div class="hero-stat-block">
-        <div class="hero-stat-lbl">Won This Week</div>
-        <div class="hero-stat-num">0</div>
-        <div class="hero-stat-sub-s">$0 closed</div>
+
+      <!-- ── Col 3: Monthly Volume + MGL badge ── -->
+      <div style="border-left:1px solid var(--line);padding-left:24px;padding-top:2px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume</div>
+          <span class="mgl-pill" style="font-size:0.56rem;padding:2px 7px;white-space:nowrap;">MGL&nbsp;20&nbsp;·&nbsp;62%</span>
+        </div>
+        <div style="position:relative;height:168px;"><canvas id="chartMonthly"></canvas></div>
       </div>
-    </div>
-    <div class="mgl-stat">
-      <span class="mgl-pill">MGL 21 &nbsp;/&nbsp; 62%</span>
-      of new leads are marketing generated
-    </div>
-    <div class="chart-wrap">
-      <canvas id="chartLeads"></canvas>
+
     </div>
   </section>
 
   <div class="card" style="margin-bottom:22px;">
-    <div class="card-label">Marketing Generated Leads (MGL · FORM · Meta Survey)</div>
-    <div class="mgl-row">
-      <div>
-        <div style="font-size:0.62rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);margin-bottom:14px;">Weekly Volume — Last 8 Weeks</div>
-        <div class="mgl-table">
-        <div class="mgl-tr"><span class="mgl-tw">May 11</span><span class="mgl-tbar-wrap"><span class="mgl-tbar" style="width:0%"></span></span><span class="mgl-tc">0</span></div>
-        <div class="mgl-tr"><span class="mgl-tw">May 18</span><span class="mgl-tbar-wrap"><span class="mgl-tbar" style="width:22%"></span></span><span class="mgl-tc">4</span></div>
-        <div class="mgl-tr"><span class="mgl-tw">May 25</span><span class="mgl-tbar-wrap"><span class="mgl-tbar" style="width:56%"></span></span><span class="mgl-tc">10</span></div>
-        <div class="mgl-tr"><span class="mgl-tw">Jun 1</span><span class="mgl-tbar-wrap"><span class="mgl-tbar" style="width:100%"></span></span><span class="mgl-tc">18</span></div>
-        <div class="mgl-tr"><span class="mgl-tw">Jun 8</span><span class="mgl-tbar-wrap"><span class="mgl-tbar" style="width:89%"></span></span><span class="mgl-tc">16</span></div>
-        <div class="mgl-tr"><span class="mgl-tw">Jun 15</span><span class="mgl-tbar-wrap"><span class="mgl-tbar" style="width:83%"></span></span><span class="mgl-tc">15</span></div>
-        <div class="mgl-tr"><span class="mgl-tw">Jun 22</span><span class="mgl-tbar-wrap"><span class="mgl-tbar" style="width:50%"></span></span><span class="mgl-tc">9</span></div>
-        <div class="mgl-tr current"><span class="mgl-tw">Jun 29</span><span class="mgl-tbar-wrap"><span class="mgl-tbar" style="width:0%"></span></span><span class="mgl-tc">0</span></div>
-        
+    <div class="card-label">Lead Sources — New Lead &amp; Beyond &nbsp;·&nbsp; 121 Opportunities</div>
+    <div style="display:grid;grid-template-columns:3fr 2fr;gap:28px;align-items:stretch;">
+
+      <!-- Left: source bar chart — constrained width so bars cluster together -->
+      <div style="display:flex;align-items:center;justify-content:center;">
+        <div style="position:relative;width:300px;height:100%;">
+          <canvas id="chartSource"></canvas>
         </div>
       </div>
+
+      <!-- Right: 3-column call quality table -->
       <div>
-        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px;">
-          <span style="font-size:2.6rem;font-weight:800;color:var(--hero);line-height:1;">22</span>
-          <span style="font-size:0.62rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Total Marketing<br>Generated Leads<br>Discovery Call+</span>
+        <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-mute);margin-bottom:12px;">Call Quality &nbsp;·&nbsp; Discovery Call+</div>
+
+        <!-- Header row: labels + totals -->
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:end;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:2px;">
+          <span></span>
+          <div style="text-align:center;">
+            <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#C8FF01;margin-bottom:4px;">MGL</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#C8FF01;line-height:1;">23</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#5B8FFF;margin-bottom:4px;">SGL</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#5B8FFF;line-height:1;">11</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#FF9F45;margin-bottom:4px;">Other</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#FF9F45;line-height:1;">31</div>
+          </div>
         </div>
-        <div style="font-size:0.62rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);margin-bottom:8px;">Call Quality</div>
-        <div class="score-table">
-          <div class="score-row hdr">
-            <span class="score-lbl">Bucket</span>
-            <span class="score-n">#</span>
-          </div>
-          <div class="score-row">
-            <span class="score-lbl">🟢 Great Fit</span>
-            <span class="score-n accent">11</span>
-          </div>
-          <div class="score-row">
-            <span class="score-lbl">🟡 Potential</span>
-            <span class="score-n">6</span>
-          </div>
-          <div class="score-row">
-            <span class="score-lbl">🔴 Poor Fit</span>
-            <span class="score-n">3</span>
-          </div>
-          <div class="score-row">
-            <span class="score-lbl">⬜ Unscored</span>
-            <span class="score-n dim">2</span>
-          </div>
-          <div class="score-row total-row">
-            <span class="score-lbl">Scored</span>
-            <span class="score-n">20 / 22</span>
-          </div>
+
+        <!-- Score rows -->
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:0.75rem;color:var(--text);">🟢 Great Fit</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">10</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">4</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">2</span>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:0.75rem;color:var(--text);">🟡 Potential</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">7</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">2</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">2</span>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:0.75rem;color:var(--text);">🔴 Poor Fit</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">3</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">0</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">0</span>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;">
+          <span style="font-size:0.75rem;color:var(--text-mute);">⬜ Unscored</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">3</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">5</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">27</span>
         </div>
       </div>
+
     </div>
   </div>
 
   <div style="margin-bottom:22px;">
     <div class="card">
-      <div class="card-label">Pipeline Snapshot — Open Deals by Stage</div>
-      <div class="funnel-kpis">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <div class="card-label" style="margin-bottom:0;">Pipeline Snapshot — Open Deals by Stage</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span id="pipelineTotal" style="font-size:0.72rem;font-weight:600;color:var(--text-mute);"></span>
+          <select id="pipelineDateSelect" style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 12px;font-family:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;outline:none;"></select>
+        </div>
+      </div>
+
+      <!-- Segmented bar -->
+      <div id="pipelineBar" style="display:flex;border-radius:10px;overflow:hidden;height:52px;gap:2px;background:#0F0F14;margin-bottom:16px;"></div>
+
+      <!-- Legend -->
+      <div id="pipelineLegend" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px 0;margin-bottom:20px;"></div>
+
+      <div class="funnel-kpis" style="margin-top:4px;">
         <div class="funnel-kpi">
           <span class="funnel-kpi-label">Lead to Won</span>
           <span class="funnel-kpi-value">9%</span>
-          <span class="funnel-kpi-sub">11 won of 122 total leads</span>
+          <span class="funnel-kpi-sub">11 won of 121 total</span>
         </div>
         <div class="funnel-kpi">
           <span class="funnel-kpi-label">Lead to Proposal</span>
-          <span class="funnel-kpi-value">31%</span>
-          <span class="funnel-kpi-sub">38 reached proposal stage</span>
+          <span class="funnel-kpi-value">32%</span>
+          <span class="funnel-kpi-sub">39 reached proposal</span>
+        </div>
+        <div class="funnel-kpi">
+          <span class="funnel-kpi-label">Discovery to Proposal</span>
+          <span class="funnel-kpi-value">60%</span>
+          <span class="funnel-kpi-sub">40 of 67 discoveries</span>
         </div>
       </div>
-      <div class="funnel-table">
-        <div class="funnel-row"><span class="funnel-stage">New Lead</span><span class="funnel-bar-wrap"><span class="funnel-bar" style="width:100%"></span></span><span class="funnel-count">55</span></div>
-        <div class="funnel-row"><span class="funnel-stage">Discovery Call</span><span class="funnel-bar-wrap"><span class="funnel-bar" style="width:38%"></span></span><span class="funnel-count">21</span></div>
-        <div class="funnel-row"><span class="funnel-stage">Strategy Call</span><span class="funnel-bar-wrap"><span class="funnel-bar" style="width:5%"></span></span><span class="funnel-count">3</span></div>
-        <div class="funnel-row"><span class="funnel-stage">Proposal Sent</span><span class="funnel-bar-wrap"><span class="funnel-bar" style="width:29%"></span></span><span class="funnel-count">16</span></div>
-        <div class="funnel-row"><span class="funnel-stage">Closing Call</span><span class="funnel-bar-wrap"><span class="funnel-bar" style="width:16%"></span></span><span class="funnel-count">9</span></div>
-        <div class="funnel-row"><span class="funnel-stage">Agreement Sent</span><span class="funnel-bar-wrap"><span class="funnel-bar" style="width:2%"></span></span><span class="funnel-count">1</span></div>
-        <div class="funnel-row"><span class="funnel-stage">Not a fit</span><span class="funnel-bar-wrap"><span class="funnel-bar" style="width:2%"></span></span><span class="funnel-count">1</span></div>
-        
-        <div class="funnel-won-sep"></div><div class="funnel-row won-row"><span class="funnel-stage">Won</span><span class="funnel-bar-wrap"><span class="funnel-bar" style="width:20%"></span></span><span class="funnel-count">11</span></div>
-      </div>
-      <div class="pipeline-note">Stale Pipeline &nbsp;—&nbsp; 120 open</div>
+      <div class="pipeline-note" style="margin-top:14px;">Stale Pipeline &nbsp;—&nbsp; 123 open</div>
     </div>
   </div>
 
   <section class="card" style="margin-top:22px;">
     <div class="card-label">Stage Movement — Week of Jun 29</div>
-    <div class="smv-wrap"><table class="smv-table"><thead><tr><th class="smv-th-owner">Owner</th><th class="smv-th-stage">Stage</th><th>Mon 6/29</th></tr></thead><tbody><tr><td class="smv-owner-cell" rowspan="4">Jennifer Verma</td><td class="smv-stage-cell">Discovery Call</td><td class="smv-val smv-val-pos">1</td></tr>
-<tr><td class="smv-stage-cell">Strategy Call</td><td class="smv-val smv-val-zero">—</td></tr>
-<tr><td class="smv-stage-cell">Proposal Sent</td><td class="smv-val smv-val-zero">—</td></tr>
-<tr class="smv-owner-last-row"><td class="smv-stage-cell">Agreement Signed</td><td class="smv-val smv-val-zero">—</td></tr>
-<tr><td class="smv-owner-cell" rowspan="4">Stormer Santana</td><td class="smv-stage-cell">Discovery Call</td><td class="smv-val smv-val-pos">1</td></tr>
-<tr><td class="smv-stage-cell">Strategy Call</td><td class="smv-val smv-val-zero">—</td></tr>
-<tr><td class="smv-stage-cell">Proposal Sent</td><td class="smv-val smv-val-zero">—</td></tr>
-<tr class="smv-owner-last-row"><td class="smv-stage-cell">Agreement Signed</td><td class="smv-val smv-val-zero">—</td></tr>
-</tbody></table></div><div class="smv-note">Counts reflect opportunities currently in each stage · last stage change date used as entry date · 6/29–6/29</div>
+    <div class="smv-wrap"><table class="smv-table"><thead><tr><th class="smv-th-owner">Owner</th><th class="smv-th-stage">Stage</th><th>Mon 6/29</th><th>Tue 6/30</th></tr></thead><tbody><tr><td class="smv-owner-cell" rowspan="4">Jennifer Verma</td><td class="smv-stage-cell">Discovery Call</td><td class="smv-val smv-val-pos">4</td><td class="smv-val smv-val-zero">—</td></tr>
+<tr><td class="smv-stage-cell">Strategy Call</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td></tr>
+<tr><td class="smv-stage-cell">Proposal Sent</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td></tr>
+<tr class="smv-owner-last-row"><td class="smv-stage-cell">Agreement Signed</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td></tr>
+<tr><td class="smv-owner-cell" rowspan="4">Stormer Santana</td><td class="smv-stage-cell">Discovery Call</td><td class="smv-val smv-val-pos">1</td><td class="smv-val smv-val-pos">1</td></tr>
+<tr><td class="smv-stage-cell">Strategy Call</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">1</td></tr>
+<tr><td class="smv-stage-cell">Proposal Sent</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">1</td></tr>
+<tr class="smv-owner-last-row"><td class="smv-stage-cell">Agreement Signed</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td></tr>
+</tbody></table></div><div class="smv-note">Counts reflect opportunities currently in each stage · last stage change date used as entry date · 6/29–6/30</div>
   </section>
 
   <section class="card meta-section">
     <div class="card-label">Meta Campaign Spending — Last 7 Days</div>
     <div class="meta-top">
       <div>
-        <div class="hero-number">$1,379</div>
-        <div class="hero-sub">Jun 23 – Jun 29 · AxisKey</div>
+        <div class="hero-number">$1,425</div>
+        <div class="hero-sub">Jun 24 – Jun 30 · AxisKey</div>
       </div>
       <div class="meta-tiles">
         <div class="tile">
           <div class="tile-label">Avg Daily Spend</div>
-          <div class="tile-value accent">$197</div>
+          <div class="tile-value accent">$204</div>
         </div>
         <div class="tile">
           <div class="tile-label">Today's Spend</div>
-          <div class="tile-value">$135</div>
+          <div class="tile-value">$170</div>
           <div class="tile-sub">partial day</div>
         </div>
       </div>
@@ -664,10 +695,16 @@
 
   <script>
     // All values injected by build_dashboard.py — re-run the script to refresh.
-    const DAILY_LABELS  = ["Jun 16", "Jun 17", "Jun 18", "Jun 19", "Jun 20", "Jun 21", "Jun 22", "Jun 23", "Jun 24", "Jun 25", "Jun 26", "Jun 27", "Jun 28", "Jun 29"];
-    const DAILY_DATA    = [4, 3, 3, 4, 1, 2, 4, 2, 1, 3, 3, 2, 2, 0];
-    const META_LABELS   = ["6/23", "6/24", "6/25", "6/26", "6/27", "6/28", "6/29"];
-    const META_SPEND    = [218.73, 212.89, 198.35, 203.06, 147.12, 263.26, 135.33];
+    const DAY7_LABELS     = ["Jun 24", "Jun 25", "Jun 26", "Jun 27", "Jun 28", "Jun 29", "Jun 30"];
+    const DAY7_DATA       = [1, 3, 3, 2, 2, 0, 2];
+    const MONTH_LABELS    = ["Apr", "May", "Jun"];
+    const MONTH_DATA      = [9, 58, 88];
+    const META_LABELS     = ["6/24", "6/25", "6/26", "6/27", "6/28", "6/29", "6/30"];
+    const META_SPEND      = [212.89, 198.35, 203.06, 147.14, 263.68, 229.79, 169.87];
+    const SOURCE_LABELS      = ["MGL", "SGL", "Other - Referrals"];
+    const SOURCE_DATA        = [68, 13, 40];
+    const PIPELINE_HISTORY   = {"2026-06-30": {"date": "2026-06-30", "stages": [{"name": "New Lead", "count": 50}, {"name": "Discovery Call", "count": 22}, {"name": "Strategy Call", "count": 4}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 1}], "total_open": 103}};
+    const PIPELINE_DATES     = ["2026-06-30"];
   </script>
 
   <script>
@@ -676,17 +713,18 @@
     Chart.defaults.font.family = '"Saira", "Eurostile", system-ui, sans-serif';
     Chart.defaults.font.size   = 12;
 
-    // ── Daily new leads (vertical bar) ────────────────────────────────────
-    // Lime bars on days with activity; dark on zero days so busy days pop.
+    // ── Daily activity — 7 days, tight skinny bars ────────────────────────
     new Chart(document.getElementById("chartLeads"), {
       type: "bar",
       data: {
-        labels: DAILY_LABELS,
+        labels: DAY7_LABELS,
         datasets: [{
-          data:            DAILY_DATA,
-          backgroundColor: DAILY_DATA.map(v => v > 0 ? "#C8FF01" : "#262630"),
-          borderRadius:    6,
-          borderSkipped:   false,
+          data:               DAY7_DATA,
+          backgroundColor:    DAY7_DATA.map(v => v > 0 ? "#C8FF01" : "#1E1E28"),
+          borderRadius:       3,
+          borderSkipped:      false,
+          barPercentage:      0.22,
+          categoryPercentage: 0.96,
         }],
       },
       options: {
@@ -696,20 +734,142 @@
           legend: { display: false },
           tooltip: {
             displayColors: false,
-            callbacks: {
-              label: ctx => ` ${ctx.parsed.y} new lead${ctx.parsed.y !== 1 ? "s" : ""}`,
-            },
+            callbacks: { label: ctx => ` ${ctx.parsed.y} lead${ctx.parsed.y !== 1 ? "s" : ""}` },
           },
         },
         scales: {
-          x: { grid: { color: "#2E2E38" }, ticks: { color: "#9A9AA5" } },
+          x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 11 } } },
           y: {
             grid:        { color: "#2E2E38" },
-            ticks:       { color: "#9A9AA5", stepSize: 1, precision: 0 },
+            ticks:       { color: "#9A9AA5", stepSize: 1, precision: 0, font: { size: 11 } },
             beginAtZero: true,
           },
         },
       },
+    });
+
+    // ── Monthly volume — with inline data labels ───────────────────────────
+    const monthlyDataLabels = {
+      id: "monthlyLabels",
+      afterDatasetsDraw(chart) {
+        const ctx = chart.ctx;
+        chart.data.datasets.forEach((ds, i) => {
+          chart.getDatasetMeta(i).data.forEach((bar, idx) => {
+            const v = ds.data[idx];
+            if (!v) return;
+            ctx.save();
+            ctx.fillStyle   = "#F5F5F7";
+            ctx.font        = '700 12px "Saira", system-ui, sans-serif';
+            ctx.textAlign   = "center";
+            ctx.textBaseline = "bottom";
+            ctx.fillText(v, bar.x, bar.y - 4);
+            ctx.restore();
+          });
+        });
+      }
+    };
+    new Chart(document.getElementById("chartMonthly"), {
+      type: "bar",
+      data: {
+        labels: MONTH_LABELS,
+        datasets: [{
+          data:               MONTH_DATA,
+          backgroundColor:    ["#C8FF01", "#5B8FFF", "rgba(200,255,1,0.30)"],
+          borderRadius:       5,
+          borderSkipped:      false,
+          barPercentage:      0.70,
+          categoryPercentage: 0.68,
+        }],
+      },
+      options: {
+        responsive:          true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 20 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            displayColors: false,
+            callbacks: { label: ctx => ` ${ctx.parsed.y} new leads` },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 11 } } },
+          y: { display: false, beginAtZero: true },
+        },
+      },
+      plugins: [monthlyDataLabels],
+    });
+
+    // ── Lead Source Breakdown (vertical bar) ──────────────────────────────
+    const sourceDataLabels = {
+      id: "sourceDataLabels",
+      afterDatasetsDraw(chart) {
+        const {ctx} = chart;
+        const total = SOURCE_DATA.reduce((a, b) => a + b, 0);
+        chart.getDatasetMeta(0).data.forEach((bar, i) => {
+          const v       = SOURCE_DATA[i];
+          const pct     = Math.round(v / total * 100);
+          const barH    = bar.base - bar.y;
+          const inside  = barH > 32;
+          ctx.save();
+          ctx.textAlign    = "center";
+          ctx.textBaseline = "bottom";
+          // Count — just above bar when pct is inside; shifted higher when both go above
+          ctx.font      = '700 12px "Saira", system-ui, sans-serif';
+          ctx.fillStyle = "#F5F5F7";
+          ctx.fillText(v, bar.x, inside ? bar.y - 4 : bar.y - 17);
+          // Percentage
+          if (inside) {
+            ctx.font         = `600 ${barH > 60 ? 11 : 10}px "Saira", system-ui, sans-serif`;
+            ctx.fillStyle    = barH > 60 ? "rgba(0,0,0,0.65)" : "rgba(255,255,255,0.82)";
+            ctx.textBaseline = "middle";
+            ctx.fillText(`${pct}%`, bar.x, bar.y + barH / 2);
+          } else {
+            // Short bar: pct sits just above bar top, below the count
+            ctx.font      = '600 10px "Saira", system-ui, sans-serif';
+            ctx.fillStyle = "#9A9AA5";
+            ctx.fillText(`${pct}%`, bar.x, bar.y - 3);
+          }
+          ctx.restore();
+        });
+      }
+    };
+    new Chart(document.getElementById("chartSource"), {
+      type: "bar",
+      data: {
+        labels: SOURCE_LABELS,
+        datasets: [{
+          data:               SOURCE_DATA,
+          backgroundColor:    ["#C8FF01", "#5B8FFF", "#FF9F45"],
+          borderRadius:       8,
+          borderSkipped:      false,
+          barPercentage:      1.0,
+          categoryPercentage: 0.95,
+        }],
+      },
+      options: {
+        responsive:          true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 28 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            displayColors: false,
+            callbacks: {
+              label: ctx => {
+                const total = SOURCE_DATA.reduce((a, b) => a + b, 0);
+                const pct   = Math.round(ctx.parsed.y / total * 100);
+                return ` ${ctx.parsed.y} opportunities · ${pct}%`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 11 } } },
+          y: { display: false, beginAtZero: true },
+        },
+      },
+      plugins: [sourceDataLabels],
     });
 
     // ── Meta Campaign Spending (vertical bar) ─────────────────────────────
@@ -746,6 +906,53 @@
         },
       },
     });
+
+
+    // ── Pipeline segmented bar — date-selectable ─────────────────────────────
+    const PIPE_COLORS = ["#C8FF01","#5B8FFF","#FF9F45","#A78BFA","#34D399","#FB923C","#F472B6"];
+
+    function fmtPipeDate(s) {
+      return new Date(s + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+    }
+
+    const pipeSel = document.getElementById("pipelineDateSelect");
+    PIPELINE_DATES.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d; opt.textContent = fmtPipeDate(d);
+      pipeSel.appendChild(opt);
+    });
+
+    function renderPipeline(dateKey) {
+      const snap  = PIPELINE_HISTORY[dateKey];
+      const total = snap.total_open;
+
+      // Total label
+      document.getElementById("pipelineTotal").textContent = `${total} open deals`;
+
+      // Segmented bar
+      document.getElementById("pipelineBar").innerHTML = snap.stages.map((s, i) => {
+        const w   = (s.count / total * 100).toFixed(2);
+        const pct = Math.round(s.count / total * 100);
+        const col = PIPE_COLORS[i % PIPE_COLORS.length];
+        return `<div style="width:${w}%;background:${col};flex-shrink:0;position:relative;cursor:default;"
+                     title="${s.name}: ${s.count} deals (${pct}%)"></div>`;
+      }).join("");
+
+      // Legend
+      document.getElementById("pipelineLegend").innerHTML = snap.stages.map((s, i) => {
+        const pct = Math.round(s.count / total * 100);
+        const col = PIPE_COLORS[i % PIPE_COLORS.length];
+        return `<div style="display:flex;align-items:center;gap:5px;">
+          <span style="width:10px;height:10px;border-radius:3px;background:${col};flex-shrink:0;"></span>
+          <span style="font-size:0.74rem;color:var(--text-mute);white-space:nowrap;">${s.name}</span>
+          <span style="font-size:0.78rem;font-weight:700;color:var(--text);">·&thinsp;${s.count}</span>
+          <span style="font-size:0.66rem;color:var(--text-mute);">(${pct}%)</span>
+        </div>`;
+      }).join("");
+    }
+
+    renderPipeline(PIPELINE_DATES[0]);
+    pipeSel.addEventListener("change", () => renderPipeline(pipeSel.value));
 
   </script>
 </body>
