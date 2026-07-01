@@ -204,7 +204,9 @@ funnel_data   = [row[2] for row in active_stages]
 
 # Save today's pipeline distribution snapshot (used by the date-select pie chart)
 _today_str  = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-_dist_path  = Path(__file__).parent / f"data/snapshots/pipeline-dist-{_today_str}.json"
+_snap_dir   = Path(__file__).parent / "data/snapshots"
+_snap_dir.mkdir(parents=True, exist_ok=True)
+_dist_path  = _snap_dir / f"pipeline-dist-{_today_str}.json"
 _dist_path.write_text(json.dumps({
     "date":       _today_str,
     "stages":     [{"name": n, "count": c} for n, c in zip(funnel_labels, funnel_data)],
@@ -1404,9 +1406,8 @@ STAGE_MOVEMENT = f"""
 
 # ── 7g. Data injection (f-string — embeds computed JSON arrays) ───────────────
 # Load all saved pipeline distribution snapshots for the date selector dropdown
-_snap_dir = Path(__file__).parent / "data/snapshots"
 pipeline_history = {}
-for _sp in sorted(_snap_dir.glob("pipeline-dist-*.json")):
+for _sp in sorted((Path(__file__).parent / "data/snapshots").glob("pipeline-dist-*.json")):
     _sd = json.loads(_sp.read_text())
     pipeline_history[_sd["date"]] = _sd
 pipeline_dates = sorted(pipeline_history.keys(), reverse=True)

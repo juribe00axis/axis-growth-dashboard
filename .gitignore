@@ -1,5 +1,5 @@
 .env
-data/snapshots/
+data/snapshots/opportunities-*.json
 data/exports/
 data/.DS_Store
 .DS_Store
