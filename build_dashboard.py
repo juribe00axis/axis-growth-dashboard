@@ -213,6 +213,21 @@ _dist_path.write_text(json.dumps({
     "total_open": sum(funnel_data),
 }, indent=2))
 
+# Save today's stage snapshot — used to diff against tomorrow's build for accurate movement tracking
+(_snap_dir / f"stage-snap-{_today_str}.json").write_text(json.dumps({
+    "date": _today_str,
+    "opps": {
+        opp["id"]: {
+            "stage": stage_map.get(opp.get("pipelineStageId", ""), {}).get("name", ""),
+            "owner": opp.get("assignedTo") or "unassigned",
+        }
+        for opp in all_opps
+        if opp.get("pipelineId") == SALES_ID
+        and opp.get("status") == "open"
+        and opp.get("id")
+    }
+}, indent=2))
+
 # All-time won opportunities in the Sales Pipeline
 won_total = sum(
     1 for opp in all_opps
@@ -560,51 +575,50 @@ for _i, (_lbl, _cnt) in enumerate(zip(mgl_week_labels, mgl_week_data)):
 
 print("Computing stage movement...")
 
-MOVE_STAGES = ["Discovery Call", "Strategy Call", "Proposal Sent", "Agreement Signed"]
+MOVE_TRANSITIONS = [
+    ("New Lead",       "Discovery Call"),
+    ("Discovery Call", "Strategy Call"),
+    ("Strategy Call",  "Proposal Sent"),
+    ("Proposal Sent",  "Agreement Signed"),
+]
+MOVE_LABELS = [f"{f} → {t}" for f, t in MOVE_TRANSITIONS]
+_valid_trans = {f"{f} → {t}" for f, t in MOVE_TRANSITIONS}
 
-# Build day columns from week_start through today
-_move_days = []
-_d = week_start
-while _d.date() <= today.date():
-    _move_days.append(_d)
-    _d += timedelta(days=1)
-move_day_keys   = [_d.strftime("%Y-%m-%d")              for _d in _move_days]
-move_day_labels = [_d.strftime("%a %-m/%-d")             for _d in _move_days]
+# Diff consecutive daily stage snapshots to compute accurate forward movements
+_stage_snaps = sorted(_snap_dir.glob("stage-snap-*.json"))
+movement_history = {}   # date_key → {label → count}
 
-# stage_move[owner_id][stage][date_key] = count
-stage_move = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+for i in range(1, len(_stage_snaps)):
+    prev_data = json.loads(_stage_snaps[i-1].read_text())
+    curr_data = json.loads(_stage_snaps[i].read_text())
+    date_key  = curr_data["date"]
+    counts    = {lbl: 0 for lbl in MOVE_LABELS}
+    for opp_id, curr_opp in curr_data["opps"].items():
+        if opp_id not in prev_data["opps"]:
+            continue
+        label = f"{prev_data['opps'][opp_id]['stage']} → {curr_opp['stage']}"
+        if label in _valid_trans:
+            counts[label] += 1
+    movement_history[date_key] = counts
 
-for opp in all_opps:
-    if opp.get("pipelineId") != SALES_ID:
-        continue
-    stage_info = stage_map.get(opp.get("pipelineStageId", ""), {})
-    stage = stage_info.get("name", "")
-    if stage not in MOVE_STAGES:
-        continue
-    raw_ts = opp.get("lastStageChangeAt")
-    if not raw_ts:
-        continue
-    dt = datetime.fromisoformat(raw_ts.replace("Z", "+00:00"))
-    if dt < week_start:
-        continue
-    d_key    = dt.strftime("%Y-%m-%d")
-    owner_id = opp.get("assignedTo") or "unassigned"
-    stage_move[owner_id][stage][d_key] += 1
+move_display_dates  = sorted(movement_history.keys())
+move_display_labels = [
+    datetime.strptime(d, "%Y-%m-%d").strftime("%a %-m/%-d")
+    for d in move_display_dates
+]
+_last_week_key = week_start.strftime("%Y-%m-%d")   # used for Total column boundary
 
-# Sort owners by display name
-move_owners = sorted(stage_move.keys(), key=lambda oid: user_map.get(oid, oid).lower())
-
-print(f"  {len(move_owners)} owners · {len(move_day_keys)} days · {len(MOVE_STAGES)} stages")
+print(f"  {len(_stage_snaps)} snapshots · {len(movement_history)} diffs computed")
 print()
 
 
 # ─── 6g. Meta Campaign Spending — last 7 days ────────────────────────────────
 print("Fetching Meta spend data...")
 meta_end   = today.date()
-meta_start = meta_end - timedelta(days=6)
+meta_start = meta_end - timedelta(days=27)   # 28 days for Marketing section
 
 meta_resp  = meta_get(f"/v21.0/{META_ACCT}/insights", {
-    "fields":         "date_start,spend",
+    "fields":         "date_start,spend,inline_link_clicks",
     "time_range":     json.dumps({"since": str(meta_start), "until": str(meta_end)}),
     "time_increment": "1",
 })
@@ -615,20 +629,73 @@ if "error" in meta_resp:
 else:
     meta_rows = sorted(meta_resp.get("data", []), key=lambda r: r["date_start"])
 
-meta_labels  = [datetime.strptime(r["date_start"], "%Y-%m-%d").strftime("%-m/%-d") for r in meta_rows]
-meta_spends  = [float(r.get("spend", 0)) for r in meta_rows]
+# ── MGL leads per day (for marketing table + CPL) ────────────────────────────
+mgl_by_date = defaultdict(int)
+for opp in mgl_opps:
+    if opp.get("createdAt"):
+        _d = datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00")).strftime("%Y-%m-%d")
+        mgl_by_date[_d] += 1
+
+# Combined 28-day daily data for the Marketing & Leads metrics table
+_meta_by_date = {r["date_start"]: r for r in meta_rows}
+mktg_daily = []
+for i in range(28):
+    _ds     = (meta_start + timedelta(days=i)).strftime("%Y-%m-%d")
+    _r      = _meta_by_date.get(_ds, {})
+    _spend  = float(_r.get("spend", 0))
+    _clicks = int(_r.get("inline_link_clicks", 0))
+    _cpc    = round(_spend / _clicks, 2) if _clicks else 0
+    _leads  = mgl_by_date.get(_ds, 0)
+    _conv   = round(_leads / _clicks * 100, 1) if _clicks else 0
+    mktg_daily.append({
+        "date": _ds,
+        "label": datetime.strptime(_ds, "%Y-%m-%d").strftime("%-m/%-d"),
+        "spend": round(_spend, 2),
+        "clicks": _clicks,
+        "cpc": _cpc,
+        "leads": _leads,
+        "conv_pct": _conv,
+    })
+
+# ── CPL: last full week vs previous full week ─────────────────────────────────
+_lw_dates   = {(last_week_start + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)}
+_prev_dates = {(last_week_start - timedelta(days=7-i)).strftime("%Y-%m-%d") for i in range(7)}
+
+_lw_spend   = sum(float(r.get("spend", 0)) for r in meta_rows if r["date_start"] in _lw_dates)
+_lw_leads   = sum(mgl_by_date.get(d, 0) for d in _lw_dates)
+_prev_spend = sum(float(r.get("spend", 0)) for r in meta_rows if r["date_start"] in _prev_dates)
+_prev_leads = sum(mgl_by_date.get(d, 0) for d in _prev_dates)
+
+cpl_lw   = _lw_spend   / _lw_leads   if _lw_leads   else None
+cpl_prev = _prev_spend / _prev_leads if _prev_leads else None
+cpl_lw_str = f"${cpl_lw:.0f}" if cpl_lw else "—"
+
+if cpl_lw and cpl_prev:
+    _cpl_delta     = round((cpl_lw - cpl_prev) / cpl_prev * 100)
+    cpl_wow_str    = f"+{_cpl_delta}%" if _cpl_delta >= 0 else f"{_cpl_delta}%"
+    cpl_wow_dir    = "↑" if _cpl_delta > 0 else ("↓" if _cpl_delta < 0 else "→")
+    cpl_wow_color  = "#FF5C5C" if _cpl_delta > 0 else "var(--hero)"  # lower CPL = better
+else:
+    cpl_wow_str = "—"; cpl_wow_dir = ""; cpl_wow_color = "var(--text-mute)"
+
+_cpl_range_str = f"{last_week_start.strftime('%b %-d')} – {(last_week_start + timedelta(days=6)).strftime('%b %-d')}"
+
+# Last 7-day window for the Meta spending section (bottom of dashboard)
+meta_rows_7  = meta_rows[-7:]
+meta_labels  = [datetime.strptime(r["date_start"], "%Y-%m-%d").strftime("%-m/%-d") for r in meta_rows_7]
+meta_spends  = [float(r.get("spend", 0)) for r in meta_rows_7]
 meta_total   = sum(meta_spends)
 meta_avg     = meta_total / len(meta_spends) if meta_spends else 0
 meta_today_v = meta_spends[-1] if meta_spends else 0
 
-meta_start_fmt = datetime.strptime(meta_rows[0]["date_start"], "%Y-%m-%d").strftime("%b %-d") if meta_rows else ""
-meta_end_fmt   = datetime.strptime(meta_rows[-1]["date_start"], "%Y-%m-%d").strftime("%b %-d") if meta_rows else ""
+meta_start_fmt = datetime.strptime(meta_rows_7[0]["date_start"], "%Y-%m-%d").strftime("%b %-d") if meta_rows_7 else ""
+meta_end_fmt   = datetime.strptime(meta_rows_7[-1]["date_start"], "%Y-%m-%d").strftime("%b %-d") if meta_rows_7 else ""
 meta_range_str = f"{meta_start_fmt} – {meta_end_fmt} · AxisKey"
 meta_total_str = f"${meta_total:,.0f}"
 meta_avg_str   = f"${meta_avg:,.0f}"
 meta_today_str = f"${meta_today_v:,.0f}"
 
-print(f"  7-day total: {meta_total_str} | avg/day: {meta_avg_str} | today: {meta_today_str}")
+print(f"  28-day fetch | last-7: {meta_total_str} total | CPL last week: {cpl_lw_str}")
 print()
 
 
@@ -1073,6 +1140,8 @@ HEAD = """<!DOCTYPE html>
     .smv-table td.smv-val { font-size: 0.88rem; font-weight: 700; }
     .smv-table td.smv-val-pos { color: var(--hero); }
     .smv-table td.smv-val-zero { color: var(--surface-2); }
+    .smv-table th.smv-th-total { border-left: 1px solid var(--line); color: var(--text); }
+    .smv-table td.smv-total { border-left: 1px solid var(--line); color: var(--text); font-size: 0.88rem; font-weight: 800; }
     .smv-table tr.smv-owner-last-row td { border-bottom: 2px solid var(--line); }
     .smv-table tr.smv-owner-last-row:last-child td { border-bottom: none; }
     .smv-note {
@@ -1083,6 +1152,24 @@ HEAD = """<!DOCTYPE html>
       margin-top: 14px;
       padding-top: 14px;
       border-top: 1px solid var(--line);
+    }
+
+    /* Marketing & Leads — period toggle buttons */
+    .mktg-btn {
+      background: var(--surface-2);
+      color: var(--text-mute);
+      border: none;
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-family: inherit;
+      font-size: 0.62rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+    }
+    .mktg-btn-active {
+      background: var(--hero);
+      color: #000;
     }
 
     /* Coming soon placeholder */
@@ -1123,36 +1210,58 @@ HEADER = f"""
   </header>
 """
 
-# ── 7c. Hero metric ───────────────────────────────────────────────────────────
+# ── 7c. Marketing & Leads hero section ───────────────────────────────────────
 HERO = f"""
   <section class="section-hero card">
-    <div class="card-label">New Leads</div>
+
+    <!-- Title row + CPL hero -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div class="card-label" style="margin-bottom:0;">Marketing &amp; Leads</div>
+      <div style="display:flex;align-items:baseline;gap:12px;">
+        <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;">{cpl_lw_str}</div>
+        <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-mute);">CPL</div>
+        <div style="display:inline-flex;align-items:center;gap:5px;background:var(--surface-2);border-radius:6px;padding:3px 9px;">
+          <span style="font-size:0.8rem;font-weight:800;color:{cpl_wow_color};">{cpl_wow_dir}&thinsp;{cpl_wow_str}</span>
+          <span style="font-size:0.48rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-mute);">WoW</span>
+        </div>
+        <div style="font-size:0.58rem;color:var(--text-mute);">{_cpl_range_str}</div>
+      </div>
+    </div>
 
     <div style="display:grid;grid-template-columns:220px 1fr 200px;gap:0;align-items:start;">
 
-      <!-- ── Col 1: KPI group (≤35% of width) ── -->
+      <!-- ── Col 1: New Leads KPI ── -->
       <div style="border-right:1px solid var(--line);padding-right:24px;padding-top:2px;">
         <div style="margin-bottom:14px;">
-          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-mute);margin-bottom:6px;">This Week</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-mute);">This Week</div>
+            <div style="display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border-radius:6px;padding:2px 7px;">
+              <span style="font-size:0.75rem;font-weight:800;color:{week_delta_color};">{week_delta_dir}&thinsp;{week_delta_str}</span>
+              <span style="font-size:0.46rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-mute);">WoW</span>
+            </div>
+          </div>
           <div style="font-size:3.4rem;font-weight:800;color:var(--hero);line-height:1;">{new_this_week}</div>
           <div style="font-size:0.6rem;color:var(--text-mute);margin-top:5px;">{week_range_str}</div>
         </div>
         <div style="height:1px;background:var(--line);margin-bottom:13px;"></div>
-        <div style="margin-bottom:13px;">
+        <div>
           <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-mute);margin-bottom:5px;">Last Week</div>
           <div style="font-size:2.0rem;font-weight:800;color:var(--text);line-height:1;">{last_week_new}</div>
           <div style="font-size:0.6rem;color:var(--text-mute);margin-top:4px;">{last_week_range_str}</div>
         </div>
-        <div style="display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border-radius:7px;padding:4px 10px;">
-          <span style="font-size:0.85rem;font-weight:800;color:{week_delta_color};">{week_delta_dir}&thinsp;{week_delta_str}</span>
-          <span style="font-size:0.5rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">WoW</span>
-        </div>
       </div>
 
-      <!-- ── Col 2: Daily Activity ── -->
+      <!-- ── Col 2: Daily Performance metrics table ── -->
       <div style="padding:0 24px;">
-        <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);margin-bottom:8px;">Daily Activity — Last 7 Days</div>
-        <div style="position:relative;height:168px;"><canvas id="chartLeads"></canvas></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Daily Performance · MGL</div>
+          <div style="display:flex;gap:4px;">
+            <button onclick="setMktgPeriod(7,this)" class="mktg-btn mktg-btn-active">7d</button>
+            <button onclick="setMktgPeriod(14,this)" class="mktg-btn">14d</button>
+            <button onclick="setMktgPeriod(28,this)" class="mktg-btn">28d</button>
+          </div>
+        </div>
+        <div id="mktgTable" style="max-height:190px;overflow-y:auto;"></div>
       </div>
 
       <!-- ── Col 3: Monthly Volume + MGL badge ── -->
@@ -1267,7 +1376,6 @@ MIDDLE = f"""
           <span class="funnel-kpi-sub">{prop_all_time} of {disc_all_time} discoveries</span>
         </div>
       </div>
-      <div class="pipeline-note" style="margin-top:14px;">Stale Pipeline &nbsp;—&nbsp; {stale_count} open</div>
     </div>
   </div>
 """
@@ -1358,49 +1466,44 @@ GRANOLA_SECTION = f"""
   </section>
 """
 
-# ── 7i. Stage Movement table (f-string — embeds computed rows) ───────────────
+# ── 7i. Stage Movement matrix (snapshot-diff based — accurate forward movements)
 def _build_stage_movement():
-    if not move_owners:
-        return '<div class="smv-note" style="text-align:center;padding:32px 0;">No stage movement data found for this period.</div>'
+    if not movement_history:
+        return (
+            '<div class="smv-note" style="text-align:center;padding:32px 0;">'
+            'First snapshot captured today — movement data will appear on the next build.'
+            '</div>'
+        )
 
-    # Header row
-    day_ths = "".join(f'<th>{lbl}</th>' for lbl in move_day_labels)
-    thead = f'<thead><tr><th class="smv-th-owner">Owner</th><th class="smv-th-stage">Stage</th>{day_ths}</tr></thead>'
+    day_ths  = "".join(f'<th>{lbl}</th>' for lbl in move_display_labels)
+    thead    = (f'<thead><tr>'
+                f'<th class="smv-th-stage">Transition</th>'
+                f'{day_ths}'
+                f'<th class="smv-th-total">Total</th>'
+                f'</tr></thead>')
 
     tbody_rows = ""
-    for owner_id in move_owners:
-        name = user_map.get(owner_id, owner_id)
-        for s_idx, stage in enumerate(MOVE_STAGES):
-            is_last = s_idx == len(MOVE_STAGES) - 1
-            row_cls = ' class="smv-owner-last-row"' if is_last else ""
-
-            # Owner cell only on first stage row (rowspan=4)
-            if s_idx == 0:
-                owner_td = f'<td class="smv-owner-cell" rowspan="{len(MOVE_STAGES)}">{name}</td>'
+    for label in MOVE_LABELS:
+        day_tds   = ""
+        row_total = 0
+        for d_key in move_display_dates:
+            val = movement_history[d_key].get(label, 0)
+            if d_key < _last_week_key:
+                row_total += val
+            if val > 0:
+                day_tds += f'<td class="smv-val smv-val-pos">{val}</td>'
             else:
-                owner_td = ""
-
-            stage_td = f'<td class="smv-stage-cell">{stage}</td>'
-
-            day_tds = ""
-            for d_key in move_day_keys:
-                val = stage_move[owner_id][stage].get(d_key, 0)
-                if val > 0:
-                    day_tds += f'<td class="smv-val smv-val-pos">{val}</td>'
-                else:
-                    day_tds += f'<td class="smv-val smv-val-zero">—</td>'
-
-            tbody_rows += f"<tr{row_cls}>{owner_td}{stage_td}{day_tds}</tr>\n"
+                day_tds += f'<td class="smv-val smv-val-zero">—</td>'
+        total_td    = f'<td class="smv-val smv-total">{row_total if row_total else "—"}</td>'
+        tbody_rows += f'<tr><td class="smv-stage-cell">{label}</td>{day_tds}{total_td}</tr>\n'
 
     tbody = f"<tbody>{tbody_rows}</tbody>"
-    week_label = _move_days[0].strftime("%-m/%-d") if _move_days else ""
-    today_label = _move_days[-1].strftime("%-m/%-d") if _move_days else ""
-    note = f'<div class="smv-note">Counts reflect opportunities currently in each stage · last stage change date used as entry date · {week_label}–{today_label}</div>'
+    note  = '<div class="smv-note">Forward movements only · Sales Pipeline · based on daily snapshots</div>'
     return f'<div class="smv-wrap"><table class="smv-table">{thead}{tbody}</table></div>{note}'
 
 STAGE_MOVEMENT = f"""
   <section class="card" style="margin-top:22px;">
-    <div class="card-label">Stage Movement — Week of {_move_days[0].strftime("%b %-d") if _move_days else ""}</div>
+    <div class="card-label">Stage Movement — Forward Pipeline Transitions</div>
     {_build_stage_movement()}
   </section>
 """
@@ -1427,6 +1530,7 @@ DATA_SCRIPT = f"""
     const SOURCE_DATA        = {json.dumps(source_chart_data)};
     const PIPELINE_HISTORY   = {json.dumps(pipeline_history)};
     const PIPELINE_DATES     = {json.dumps(pipeline_dates)};
+    const MKTG_DAILY         = {json.dumps(mktg_daily)};
   </script>
 """
 
@@ -1438,40 +1542,53 @@ CHARTS_SCRIPT = """
     Chart.defaults.font.family = '"Saira", "Eurostile", system-ui, sans-serif';
     Chart.defaults.font.size   = 12;
 
-    // ── Daily activity — 7 days, tight skinny bars ────────────────────────
-    new Chart(document.getElementById("chartLeads"), {
-      type: "bar",
-      data: {
-        labels: DAY7_LABELS,
-        datasets: [{
-          data:               DAY7_DATA,
-          backgroundColor:    DAY7_DATA.map(v => v > 0 ? "#C8FF01" : "#1E1E28"),
-          borderRadius:       3,
-          borderSkipped:      false,
-          barPercentage:      0.22,
-          categoryPercentage: 0.96,
-        }],
-      },
-      options: {
-        responsive:          true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            displayColors: false,
-            callbacks: { label: ctx => ` ${ctx.parsed.y} lead${ctx.parsed.y !== 1 ? "s" : ""}` },
-          },
-        },
-        scales: {
-          x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 11 } } },
-          y: {
-            grid:        { color: "#2E2E38" },
-            ticks:       { color: "#9A9AA5", stepSize: 1, precision: 0, font: { size: 11 } },
-            beginAtZero: true,
-          },
-        },
-      },
-    });
+    // ── Marketing & Leads — daily metrics table ──────────────────────────
+    function renderMktgTable(days) {
+      const rows = MKTG_DAILY.slice(-days);
+      const totSpend  = rows.reduce((s, r) => s + r.spend,  0);
+      const totClicks = rows.reduce((s, r) => s + r.clicks, 0);
+      const totLeads  = rows.reduce((s, r) => s + r.leads,  0);
+      const totCpc    = totClicks ? totSpend / totClicks : 0;
+      const totConv   = totClicks ? (totLeads / totClicks * 100) : 0;
+      const fS  = v => v >= 1000 ? `$${(v/1000).toFixed(1)}k` : `$${v.toFixed(0)}`;
+      const fC  = v => `$${v.toFixed(2)}`;
+      const th  = (t, a) => `<th style="text-align:${a||'right'};padding:3px 5px 5px ${a==='left'?'0':'5px'};color:var(--text-mute);font-size:0.65rem;font-weight:600;white-space:nowrap;">${t}</th>`;
+      const td  = (t, col, fw) => `<td style="padding:4px 5px;text-align:right;color:${col||'var(--text)'};font-weight:${fw||400};font-size:0.72rem;">${t}</td>`;
+      const td0 = (t) => `<td style="padding:4px 5px 4px 0;color:var(--text-mute);font-size:0.72rem;">${t}</td>`;
+      let body = "";
+      [...rows].reverse().forEach(r => {
+        body += `<tr style="border-bottom:1px solid #1A1A22;">
+          ${td0(r.label)}
+          ${td(fS(r.spend))}
+          ${td(r.clicks || "—", r.clicks ? undefined : "var(--text-mute)")}
+          ${td(r.cpc > 0 ? fC(r.cpc) : "—", r.cpc > 0 ? undefined : "var(--text-mute)")}
+          ${td(r.leads > 0 ? r.leads : "—", r.leads > 0 ? "var(--hero)" : "var(--text-mute)")}
+          ${td(r.conv_pct > 0 ? r.conv_pct + "%" : "—", r.conv_pct > 0 ? undefined : "var(--text-mute)")}
+        </tr>`;
+      });
+      const foot = `<tr style="border-top:1px solid var(--line);">
+        <td style="padding:5px 5px 3px 0;color:var(--text-mute);font-size:0.72rem;font-weight:700;">Total</td>
+        ${td(fS(totSpend), undefined, 700)}
+        ${td(totClicks || "—", totClicks ? undefined : "var(--text-mute)", 700)}
+        ${td(totClicks ? fC(totCpc) : "—", totClicks ? undefined : "var(--text-mute)", 700)}
+        ${td(totLeads > 0 ? totLeads : "—", totLeads > 0 ? "var(--hero)" : "var(--text-mute)", 700)}
+        ${td(totConv > 0 ? totConv.toFixed(1) + "%" : "—", totConv > 0 ? undefined : "var(--text-mute)", 700)}
+      </tr>`;
+      document.getElementById("mktgTable").innerHTML =
+        `<table style="width:100%;border-collapse:collapse;">
+          <thead><tr style="border-bottom:1px solid var(--line);">
+            ${th("Date","left")}${th("Spend")}${th("Clicks")}${th("CPC")}${th("Leads")}${th("Conv%")}
+          </tr></thead>
+          <tbody>${body}</tbody>
+          <tfoot>${foot}</tfoot>
+        </table>`;
+    }
+    function setMktgPeriod(days, btn) {
+      document.querySelectorAll(".mktg-btn").forEach(b => b.classList.remove("mktg-btn-active"));
+      btn.classList.add("mktg-btn-active");
+      renderMktgTable(days);
+    }
+    renderMktgTable(7);
 
     // ── Monthly volume — with inline data labels ───────────────────────────
     const monthlyDataLabels = {

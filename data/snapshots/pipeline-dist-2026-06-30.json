@@ -1,5 +1,5 @@
 {
-  "date": "2026-07-01",
+  "date": "2026-06-30",
   "stages": [
     {
       "name": "New Lead",
@@ -7,11 +7,11 @@
     },
     {
       "name": "Discovery Call",
-      "count": 20
+      "count": 22
     },
     {
       "name": "Strategy Call",
-      "count": 6
+      "count": 4
     },
     {
       "name": "Proposal Sent",
@@ -19,16 +19,12 @@
     },
     {
       "name": "Closing Call",
-      "count": 8
+      "count": 9
     },
     {
       "name": "Agreement Sent",
-      "count": 2
-    },
-    {
-      "name": "Agreement Signed",
       "count": 1
     }
   ],
-  "total_open": 104
+  "total_open": 103
 }
