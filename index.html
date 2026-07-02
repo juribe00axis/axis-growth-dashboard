@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Axis Growth</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* Design tokens from style/style.md */
+    :root {
+      --bg:        #101014;
+      --surface:   #1C1C24;
+      --surface-2: #262630;
+      --hero:      #C8FF01;
+      --text:      #F5F5F7;
+      --text-mute: #9A9AA5;
+      --won:       #C8FF01;
+      --lost:      #FF5C5C;
+      --line:      #2E2E38;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Saira", "Eurostile", system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 32px 40px 64px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+    .header-left  { display: flex; align-items: center; gap: 58px; }
+    .header-logo  { height: 44px; width: auto; display: block; }
+    .header-title {
+      font-size: 1.55rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .header-meta {
+      font-size: 0.7rem;
+      color: var(--text-mute);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 28px 32px;
+      box-shadow: 0 4px 28px rgba(0,0,0,0.5);
+    }
+    .card-label {
+      font-size: 0.67rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-bottom: 14px;
+    }
+
+    /* Hero section */
+    .section-hero  { margin-bottom: 22px; }
+    .hero-number {
+      font-size: 4.2rem;
+      font-weight: 800;
+      color: var(--hero);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .hero-sub {
+      font-size: 0.72rem;
+      color: var(--text-mute);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+    .chart-wrap { position: relative; height: 200px; }
+
+    /* Funnel KPI chips */
+    .funnel-kpis { display: flex; gap: 16px; margin-bottom: 20px; }
+    .funnel-kpi {
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 14px 20px;
+      flex: 1;
+    }
+    .funnel-kpi-label {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      display: block;
+      margin-bottom: 6px;
+    }
+    .funnel-kpi-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--hero);
+      line-height: 1;
+    }
+    .funnel-kpi-sub {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      display: block;
+      margin-top: 5px;
+    }
+
+    /* Funnel table */
+    .funnel-table { margin-top: 4px; }
+    .funnel-row {
+      display: grid;
+      grid-template-columns: 148px 1fr 38px;
+      align-items: center;
+      gap: 14px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .funnel-row:last-child { border-bottom: none; }
+    .funnel-stage { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .funnel-bar-wrap { display: block; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+    .funnel-bar { display: block; height: 100%; background: rgba(200,255,1,0.45); border-radius: 3px; }
+    .funnel-count { font-size: 0.95rem; font-weight: 800; color: var(--text); text-align: right; }
+    .funnel-won-sep { height: 1px; background: var(--line); margin: 4px 0; }
+    .funnel-row.won-row .funnel-stage { color: var(--hero); }
+    .funnel-row.won-row .funnel-bar   { background: var(--hero); }
+    .funnel-row.won-row .funnel-count { color: var(--hero); }
+    .pipeline-note {
+      font-size: 0.66rem;
+      color: var(--text-mute);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    /* Summary tiles */
+    .tiles { display: flex; flex-direction: column; gap: 16px; }
+    .tile {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 24px 26px;
+      box-shadow: 0 4px 28px rgba(0,0,0,0.5);
+      flex: 1;
+    }
+    .tile-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-bottom: 10px;
+    }
+    .tile-value {
+      font-size: 3.2rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+    .tile-value.accent { color: var(--hero); }
+    .tile-sub {
+      font-size: 0.72rem;
+      color: var(--text-mute);
+      margin-top: 8px;
+    }
+
+    /* MGL stat line inside hero */
+    .mgl-stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
+      color: var(--text-mute);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+    .mgl-pill {
+      background: rgba(200,255,1,0.12);
+      border: 1px solid rgba(200,255,1,0.35);
+      color: var(--hero);
+      font-size: 0.7rem;
+      font-weight: 700;
+      border-radius: 20px;
+      padding: 2px 10px;
+      letter-spacing: 0.04em;
+    }
+
+    /* MGL score table */
+    .mgl-row {
+      display: grid;
+      grid-template-columns: 1fr 200px;
+      gap: 20px;
+      align-items: start;
+    }
+    .score-table { display: flex; flex-direction: column; }
+    .score-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.88rem;
+    }
+    .score-row:last-child { border-bottom: none; }
+    .score-row.hdr {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      padding-bottom: 6px;
+    }
+    .score-row.hdr .score-n { font-size: 0.6rem; font-weight: 600; }
+    .score-n { font-weight: 700; font-size: 1.05rem; text-align: right; min-width: 28px; }
+    .score-n.accent { color: var(--hero); }
+    .score-n.dim    { color: var(--text-mute); }
+    .score-row.total-row { border-top: 1px solid var(--line); margin-top: 2px; }
+    .score-row.total-row .score-lbl { font-size: 0.72rem; color: var(--text-mute); }
+    .score-row.total-row .score-n   { font-size: 0.9rem; color: var(--text-mute); }
+
+    /* Hero weekly stat blocks */
+    .hero-top {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 36px;
+      align-items: start;
+      margin-bottom: 18px;
+    }
+    .hero-stat-block {
+      border-left: 1px solid var(--line);
+      padding-left: 24px;
+      min-width: 110px;
+    }
+    .hero-stat-lbl {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-bottom: 8px;
+    }
+    .hero-stat-num {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+    .hero-stat-num.accent { color: var(--hero); }
+    .hero-stat-sub-s {
+      font-size: 0.7rem;
+      color: var(--text-mute);
+      margin-top: 6px;
+    }
+
+    /* Meta Campaign Spending section */
+    .meta-section { margin-top: 22px; }
+    .meta-top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: start;
+      margin-bottom: 22px;
+    }
+    .meta-tiles { display: flex; gap: 16px; }
+    .meta-tiles .tile { min-width: 140px; }
+
+    /* Granola Insights section */
+    .granola-section { margin-top: 22px; }
+    .granola-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .g-card {
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 20px 22px;
+    }
+    .g-card-label {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-bottom: 14px;
+    }
+    .fund-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .fund-row:last-child { border-bottom: none; }
+    .fund-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: rgba(200,255,1,0.12);
+      color: var(--hero);
+      border: 1px solid rgba(200,255,1,0.3);
+      border-radius: 20px;
+      padding: 2px 10px;
+      letter-spacing: 0.05em;
+    }
+    .comp-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.9rem;
+    }
+    .comp-row:last-child { border-bottom: none; }
+    .comp-count {
+      font-size: 0.72rem;
+      color: var(--text-mute);
+    }
+    .comp-none {
+      font-size: 0.82rem;
+      color: var(--text-mute);
+      font-style: italic;
+      padding: 8px 0;
+    }
+    .quote-text {
+      font-size: 1.05rem;
+      font-weight: 600;
+      line-height: 1.55;
+      color: var(--text);
+      border-left: 3px solid var(--hero);
+      padding-left: 14px;
+      margin-bottom: 10px;
+    }
+    .quote-source {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .question-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    .question-row:last-child { border-bottom: none; }
+    .q-count {
+      min-width: 28px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--hero);
+      padding-top: 2px;
+    }
+
+    /* MGL weekly table */
+    .mgl-table { display: flex; flex-direction: column; gap: 7px; }
+    .mgl-tr { display: grid; grid-template-columns: 54px 1fr 26px; align-items: center; gap: 10px; }
+    .mgl-tw { font-size: 0.68rem; color: var(--text-mute); letter-spacing: 0.04em; white-space: nowrap; }
+    .mgl-tbar-wrap { display: block; height: 7px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+    .mgl-tbar { display: block; height: 100%; background: #C8FF01; border-radius: 4px; }
+    .mgl-tc { font-size: 0.82rem; font-weight: 700; color: var(--text); text-align: right; }
+    .mgl-tr.current .mgl-tbar { background: rgba(200,255,1,0.38); }
+    .mgl-tr.current .mgl-tc  { color: var(--text-mute); }
+    .mgl-tr.current .mgl-tw  { color: rgba(154,154,165,0.6); }
+
+    /* Stage movement table */
+    .smv-wrap { overflow-x: auto; }
+    .smv-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .smv-table th {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      padding: 0 10px 12px;
+      text-align: center;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--line);
+    }
+    .smv-table th.smv-th-owner { text-align: left; min-width: 130px; padding-left: 0; }
+    .smv-table th.smv-th-stage { text-align: left; min-width: 142px; }
+    .smv-table td {
+      padding: 7px 10px;
+      text-align: center;
+      border-bottom: 1px solid var(--line);
+      color: var(--text);
+      font-weight: 600;
+    }
+    .smv-table td.smv-owner-cell {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text);
+      text-align: left;
+      padding-left: 0;
+      vertical-align: middle;
+      border-right: 1px solid var(--line);
+      padding-right: 14px;
+    }
+    .smv-table td.smv-stage-cell {
+      text-align: left;
+      font-weight: 400;
+      font-size: 0.78rem;
+      color: var(--text-mute);
+      padding-left: 12px;
+      white-space: nowrap;
+    }
+    .smv-table td.smv-val { font-size: 0.88rem; font-weight: 700; }
+    .smv-table td.smv-val-pos { color: var(--hero); }
+    .smv-table td.smv-val-zero { color: var(--surface-2); }
+    .smv-table th.smv-th-total { border-left: 1px solid var(--line); color: var(--text); }
+    .smv-table td.smv-total { border-left: 1px solid var(--line); color: var(--text); font-size: 0.88rem; font-weight: 800; }
+    .smv-table tr.smv-owner-last-row td { border-bottom: 2px solid var(--line); }
+    .smv-table tr.smv-owner-last-row:last-child td { border-bottom: none; }
+    .smv-note {
+      font-size: 0.66rem;
+      color: var(--text-mute);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    /* Marketing & Leads — period toggle buttons */
+    .mktg-btn {
+      background: var(--surface-2);
+      color: var(--text-mute);
+      border: none;
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-family: inherit;
+      font-size: 0.62rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+    }
+    .mktg-btn-active {
+      background: var(--hero);
+      color: #000;
+    }
+
+    /* Coming soon placeholder */
+    .section-coming {
+      border: 2px dashed var(--line);
+      border-radius: 18px;
+      padding: 42px 32px;
+      text-align: center;
+    }
+    .coming-label {
+      font-size: 0.66rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-bottom: 10px;
+    }
+    .coming-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--surface-2);
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-left">
+      <img src="assets/logo.svg" alt="Axis Growth" class="header-logo">
+      <span class="header-title">Axis Growth</span>
+    </div>
+    <span class="header-meta">Generated July 2, 2026 at 18:17 UTC</span>
+  </header>
+
+  <section class="section-hero card">
+
+    <!-- Title row + CPL hero -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div class="card-label" style="margin-bottom:0;">Marketing &amp; Leads</div>
+      <div style="display:flex;align-items:baseline;gap:12px;">
+        <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;">$185</div>
+        <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-mute);">CPL</div>
+        <div style="display:inline-flex;align-items:center;gap:5px;background:var(--surface-2);border-radius:6px;padding:3px 9px;">
+          <span style="font-size:0.8rem;font-weight:800;color:#FF5C5C;">↑&thinsp;+81%</span>
+          <span style="font-size:0.48rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-mute);">WoW</span>
+        </div>
+        <div style="font-size:0.58rem;color:var(--text-mute);">Jun 22 – Jun 28</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:220px 1fr 200px;gap:0;align-items:start;">
+
+      <!-- ── Col 1: New Leads KPI ── -->
+      <div style="border-right:1px solid var(--line);padding-right:24px;padding-top:2px;">
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-mute);">This Week</div>
+            <div style="display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border-radius:6px;padding:2px 7px;">
+              <span style="font-size:0.75rem;font-weight:800;color:#FF5C5C;">↓&thinsp;-65%</span>
+              <span style="font-size:0.46rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-mute);">WoW</span>
+            </div>
+          </div>
+          <div style="font-size:3.4rem;font-weight:800;color:var(--hero);line-height:1;">6</div>
+          <div style="font-size:0.6rem;color:var(--text-mute);margin-top:5px;">Jun 29 – Jul 2</div>
+        </div>
+        <div style="height:1px;background:var(--line);margin-bottom:13px;"></div>
+        <div>
+          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-mute);margin-bottom:5px;">Last Week</div>
+          <div style="font-size:2.0rem;font-weight:800;color:var(--text);line-height:1;">17</div>
+          <div style="font-size:0.6rem;color:var(--text-mute);margin-top:4px;">Jun 22 – Jun 28</div>
+        </div>
+      </div>
+
+      <!-- ── Col 2: Daily Performance metrics table ── -->
+      <div style="padding:0 24px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Daily Performance · MGL</div>
+          <div style="display:flex;gap:4px;">
+            <button onclick="setMktgPeriod(7,this)" class="mktg-btn mktg-btn-active">7d</button>
+            <button onclick="setMktgPeriod(14,this)" class="mktg-btn">14d</button>
+            <button onclick="setMktgPeriod(28,this)" class="mktg-btn">28d</button>
+          </div>
+        </div>
+        <div id="mktgTable" style="max-height:190px;overflow-y:auto;"></div>
+      </div>
+
+      <!-- ── Col 3: Monthly Volume + MGL badge ── -->
+      <div style="border-left:1px solid var(--line);padding-left:24px;padding-top:2px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume</div>
+          <span class="mgl-pill" style="font-size:0.56rem;padding:2px 7px;white-space:nowrap;">MGL&nbsp;18&nbsp;·&nbsp;60%</span>
+        </div>
+        <div style="position:relative;height:168px;"><canvas id="chartMonthly"></canvas></div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="card" style="margin-bottom:22px;">
+    <div class="card-label">Lead Sources — New Lead &amp; Beyond &nbsp;·&nbsp; 104 Opportunities</div>
+    <div style="display:grid;grid-template-columns:3fr 2fr;gap:28px;align-items:stretch;">
+
+      <!-- Left: source bar chart — constrained width so bars cluster together -->
+      <div style="display:flex;align-items:center;justify-content:center;">
+        <div style="position:relative;width:300px;height:100%;">
+          <canvas id="chartSource"></canvas>
+        </div>
+      </div>
+
+      <!-- Right: 3-column call quality table -->
+      <div>
+        <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-mute);margin-bottom:12px;">Call Quality &nbsp;·&nbsp; Discovery Call+</div>
+
+        <!-- Header row: labels + totals -->
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:end;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:2px;">
+          <span></span>
+          <div style="text-align:center;">
+            <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#C8FF01;margin-bottom:4px;">MGL</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#C8FF01;line-height:1;">39</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#5B8FFF;margin-bottom:4px;">SGL</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#5B8FFF;line-height:1;">11</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#FF9F45;margin-bottom:4px;">Other</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#FF9F45;line-height:1;">33</div>
+          </div>
+        </div>
+
+        <!-- Score rows -->
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:0.75rem;color:var(--text);">🟢 Great Fit</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">9</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">4</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">3</span>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:0.75rem;color:var(--text);">🟡 Potential</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">7</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">2</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">2</span>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:0.75rem;color:var(--text);">🔴 Poor Fit</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">5</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">0</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">0</span>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;">
+          <span style="font-size:0.75rem;color:var(--text-mute);">⬜ Unscored</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">18</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">5</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">28</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="margin-bottom:22px;">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <div class="card-label" style="margin-bottom:0;">Pipeline Snapshot — Open Deals by Stage</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span id="pipelineTotal" style="font-size:0.72rem;font-weight:600;color:var(--text-mute);"></span>
+          <select id="pipelineDateSelect" style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 12px;font-family:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;outline:none;"></select>
+        </div>
+      </div>
+
+      <!-- Segmented bar -->
+      <div id="pipelineBar" style="display:flex;border-radius:10px;overflow:hidden;height:52px;gap:2px;background:#0F0F14;margin-bottom:16px;"></div>
+
+      <!-- Legend -->
+      <div id="pipelineLegend" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px 0;margin-bottom:20px;"></div>
+
+      <div class="funnel-kpis" style="margin-top:4px;">
+        <div class="funnel-kpi">
+          <span class="funnel-kpi-label">Lead to Won</span>
+          <span class="funnel-kpi-value">11%</span>
+          <span class="funnel-kpi-sub">11 won of 104 total</span>
+        </div>
+        <div class="funnel-kpi">
+          <span class="funnel-kpi-label">Lead to Proposal</span>
+          <span class="funnel-kpi-value">54%</span>
+          <span class="funnel-kpi-sub">56 reached proposal</span>
+        </div>
+        <div class="funnel-kpi">
+          <span class="funnel-kpi-label">Discovery to Proposal</span>
+          <span class="funnel-kpi-value">67%</span>
+          <span class="funnel-kpi-sub">57 of 85 discoveries</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="card" style="margin-top:22px;">
+    <div class="card-label">Stage Movement — Forward Pipeline Transitions</div>
+    <div class="smv-wrap"><table class="smv-table"><thead><tr><th class="smv-th-stage">Transition</th><th>Thu 7/2</th><th class="smv-th-total">Total</th></tr></thead><tbody><tr><td class="smv-stage-cell">New Lead → Discovery Call</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-total">—</td></tr>
+<tr><td class="smv-stage-cell">Discovery Call → Strategy Call</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-total">—</td></tr>
+<tr><td class="smv-stage-cell">Strategy Call → Proposal Sent</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-total">—</td></tr>
+<tr><td class="smv-stage-cell">Proposal Sent → Agreement Signed</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-total">—</td></tr>
+</tbody></table></div><div class="smv-note">Forward movements only · Sales Pipeline · based on daily snapshots</div>
+  </section>
+
+  <section class="card meta-section">
+    <div class="card-label">Meta Campaign Spending — Last 7 Days</div>
+    <div class="meta-top">
+      <div>
+        <div class="hero-number">$1,474</div>
+        <div class="hero-sub">Jun 23 – Jun 29 · AxisKey</div>
+      </div>
+      <div class="meta-tiles">
+        <div class="tile">
+          <div class="tile-label">Avg Daily Spend</div>
+          <div class="tile-value accent">$211</div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">Today's Spend</div>
+          <div class="tile-value">$230</div>
+          <div class="tile-sub">partial day</div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="chartMetaSpend"></canvas>
+    </div>
+  </section>
+
+  <section class="card granola-section">
+    <div class="card-label">Call Intelligence — All Time &nbsp;·&nbsp; Updated Jun 29, 2026</div>
+    <div class="granola-grid">
+
+      <div class="g-card">
+        <div class="g-card-label">Fund Sizes Mentioned</div>
+        <div class="fund-row"><span>$50M</span><span class="fund-badge">×2</span></div>
+        <div class="fund-row"><span>$60M</span><span class="fund-badge">×1</span></div>
+        <div class="fund-row"><span>$40M</span><span class="fund-badge">×1</span></div>
+        <div class="fund-row"><span>$33M</span><span class="fund-badge">×1</span></div>
+        <div class="fund-row"><span>$20M</span><span class="fund-badge">×1</span></div>
+        <div class="fund-row"><span>$12-15M</span><span class="fund-badge">×1</span></div>
+        <div class="fund-row"><span>$10M</span><span class="fund-badge">×1</span></div>
+      </div>
+
+      <div class="g-card">
+        <div class="g-card-label">Top Competitors Mentioned</div>
+        <div class="comp-row"><span>Norvian Capital Partners</span><span class="comp-count">×1</span></div>
+      </div>
+
+      <div class="g-card">
+        <div class="g-card-label">Quote of the Week</div>
+        <div class="quote-text">"You’re buying income, you’re buying tax strategy. You’re not buying a shrimp business."</div>
+        <div class="quote-source">Marvin · Jun 25 · On investor psychology</div>
+      </div>
+
+      <div class="g-card">
+        <div class="g-card-label">Questions Prospects Ask Most</div>
+        <div class="question-row"><span class="q-count">×7</span><span>Who will communicate with our investors?</span></div>
+        <div class="question-row"><span class="q-count">×4</span><span>How quickly can we start raising?</span></div>
+        <div class="question-row"><span class="q-count">×2</span><span>How do distributions work?</span></div>
+        <div class="question-row"><span class="q-count">×2</span><span>What are the guarantees / probability of success?</span></div>
+        <div class="question-row"><span class="q-count">×2</span><span>When do we switch from BD reps to an in-house IR team?</span></div>
+        <div class="question-row"><span class="q-count">×1</span><span>Can we launch before our deals are under contract?</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <script>
+    // All values injected by build_dashboard.py — re-run the script to refresh.
+    const DAY7_LABELS     = ["Jun 26", "Jun 27", "Jun 28", "Jun 29", "Jun 30", "Jul 1", "Jul 2"];
+    const DAY7_DATA       = [3, 2, 2, 0, 2, 3, 1];
+    const MONTH_LABELS    = ["May", "Jun", "Jul"];
+    const MONTH_DATA      = [58, 88, 4];
+    const META_LABELS     = ["6/23", "6/24", "6/25", "6/26", "6/27", "6/28", "6/29"];
+    const META_SPEND      = [218.73, 212.89, 198.35, 203.06, 147.14, 263.68, 229.84];
+    const SOURCE_LABELS      = ["MGL", "SGL", "Other - Referrals"];
+    const SOURCE_DATA        = [49, 13, 42];
+    const PIPELINE_HISTORY   = {"2026-06-30": {"date": "2026-06-30", "stages": [{"name": "New Lead", "count": 50}, {"name": "Discovery Call", "count": 22}, {"name": "Strategy Call", "count": 4}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 1}], "total_open": 103}, "2026-07-01": {"date": "2026-07-01", "stages": [{"name": "New Lead", "count": 50}, {"name": "Discovery Call", "count": 20}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Agreement Signed", "count": 1}], "total_open": 104}, "2026-07-02": {"date": "2026-07-02", "stages": [{"name": "New Lead", "count": 16}, {"name": "Discovery Call", "count": 21}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 16}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Agreement Signed", "count": 1}, {"name": "Reactivation Queue", "count": 15}], "total_open": 86}};
+    const PIPELINE_DATES     = ["2026-07-02", "2026-07-01", "2026-06-30"];
+    const MKTG_DAILY         = [{"date": "2026-06-05", "label": "6/5", "spend": 117.29, "clicks": 16, "cpc": 7.33, "leads": 3, "conv_pct": 18.8}, {"date": "2026-06-06", "label": "6/6", "spend": 55.45, "clicks": 7, "cpc": 7.92, "leads": 0, "conv_pct": 0.0}, {"date": "2026-06-07", "label": "6/7", "spend": 154.02, "clicks": 33, "cpc": 4.67, "leads": 2, "conv_pct": 6.1}, {"date": "2026-06-08", "label": "6/8", "spend": 155.52, "clicks": 22, "cpc": 7.07, "leads": 4, "conv_pct": 18.2}, {"date": "2026-06-09", "label": "6/9", "spend": 153.1, "clicks": 26, "cpc": 5.89, "leads": 2, "conv_pct": 7.7}, {"date": "2026-06-10", "label": "6/10", "spend": 217.9, "clicks": 30, "cpc": 7.26, "leads": 2, "conv_pct": 6.7}, {"date": "2026-06-11", "label": "6/11", "spend": 196.22, "clicks": 29, "cpc": 6.77, "leads": 0, "conv_pct": 0.0}, {"date": "2026-06-12", "label": "6/12", "spend": 235.67, "clicks": 21, "cpc": 11.22, "leads": 1, "conv_pct": 4.8}, {"date": "2026-06-13", "label": "6/13", "spend": 140.51, "clicks": 21, "cpc": 6.69, "leads": 3, "conv_pct": 14.3}, {"date": "2026-06-14", "label": "6/14", "spend": 280.4, "clicks": 26, "cpc": 10.78, "leads": 3, "conv_pct": 11.5}, {"date": "2026-06-15", "label": "6/15", "spend": 284.12, "clicks": 39, "cpc": 7.29, "leads": 3, "conv_pct": 7.7}, {"date": "2026-06-16", "label": "6/16", "spend": 221.12, "clicks": 20, "cpc": 11.06, "leads": 1, "conv_pct": 5.0}, {"date": "2026-06-17", "label": "6/17", "spend": 213.19, "clicks": 31, "cpc": 6.88, "leads": 2, "conv_pct": 6.5}, {"date": "2026-06-18", "label": "6/18", "spend": 191.51, "clicks": 25, "cpc": 7.66, "leads": 2, "conv_pct": 8.0}, {"date": "2026-06-19", "label": "6/19", "spend": 203.77, "clicks": 22, "cpc": 9.26, "leads": 4, "conv_pct": 18.2}, {"date": "2026-06-20", "label": "6/20", "spend": 137.09, "clicks": 15, "cpc": 9.14, "leads": 1, "conv_pct": 6.7}, {"date": "2026-06-21", "label": "6/21", "spend": 283.51, "clicks": 21, "cpc": 13.5, "leads": 2, "conv_pct": 9.5}, {"date": "2026-06-22", "label": "6/22", "spend": 239.56, "clicks": 20, "cpc": 11.98, "leads": 1, "conv_pct": 5.0}, {"date": "2026-06-23", "label": "6/23", "spend": 218.73, "clicks": 27, "cpc": 8.1, "leads": 1, "conv_pct": 3.7}, {"date": "2026-06-24", "label": "6/24", "spend": 212.89, "clicks": 13, "cpc": 16.38, "leads": 1, "conv_pct": 7.7}, {"date": "2026-06-25", "label": "6/25", "spend": 198.35, "clicks": 27, "cpc": 7.35, "leads": 1, "conv_pct": 3.7}, {"date": "2026-06-26", "label": "6/26", "spend": 203.06, "clicks": 30, "cpc": 6.77, "leads": 1, "conv_pct": 3.3}, {"date": "2026-06-27", "label": "6/27", "spend": 147.14, "clicks": 40, "cpc": 3.68, "leads": 2, "conv_pct": 5.0}, {"date": "2026-06-28", "label": "6/28", "spend": 263.68, "clicks": 53, "cpc": 4.98, "leads": 1, "conv_pct": 1.9}, {"date": "2026-06-29", "label": "6/29", "spend": 229.84, "clicks": 34, "cpc": 6.76, "leads": 0, "conv_pct": 0.0}, {"date": "2026-06-30", "label": "6/30", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 1, "conv_pct": 0}, {"date": "2026-07-01", "label": "7/1", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 2, "conv_pct": 0}, {"date": "2026-07-02", "label": "7/2", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}];
+  </script>
+
+  <script>
+    // Shared defaults applied to every chart on the page
+    Chart.defaults.color       = "#9A9AA5";
+    Chart.defaults.font.family = '"Saira", "Eurostile", system-ui, sans-serif';
+    Chart.defaults.font.size   = 12;
+
+    // ── Marketing & Leads — daily metrics table ──────────────────────────
+    function renderMktgTable(days) {
+      const rows = MKTG_DAILY.slice(-days);
+      const totSpend  = rows.reduce((s, r) => s + r.spend,  0);
+      const totClicks = rows.reduce((s, r) => s + r.clicks, 0);
+      const totLeads  = rows.reduce((s, r) => s + r.leads,  0);
+      const totCpc    = totClicks ? totSpend / totClicks : 0;
+      const totConv   = totClicks ? (totLeads / totClicks * 100) : 0;
+      const fS  = v => v >= 1000 ? `$${(v/1000).toFixed(1)}k` : `$${v.toFixed(0)}`;
+      const fC  = v => `$${v.toFixed(2)}`;
+      const th  = (t, a) => `<th style="text-align:${a||'right'};padding:3px 5px 5px ${a==='left'?'0':'5px'};color:var(--text-mute);font-size:0.65rem;font-weight:600;white-space:nowrap;">${t}</th>`;
+      const td  = (t, col, fw) => `<td style="padding:4px 5px;text-align:right;color:${col||'var(--text)'};font-weight:${fw||400};font-size:0.72rem;">${t}</td>`;
+      const td0 = (t) => `<td style="padding:4px 5px 4px 0;color:var(--text-mute);font-size:0.72rem;">${t}</td>`;
+      let body = "";
+      [...rows].reverse().forEach(r => {
+        body += `<tr style="border-bottom:1px solid #1A1A22;">
+          ${td0(r.label)}
+          ${td(fS(r.spend))}
+          ${td(r.clicks || "—", r.clicks ? undefined : "var(--text-mute)")}
+          ${td(r.cpc > 0 ? fC(r.cpc) : "—", r.cpc > 0 ? undefined : "var(--text-mute)")}
+          ${td(r.leads > 0 ? r.leads : "—", r.leads > 0 ? "var(--hero)" : "var(--text-mute)")}
+          ${td(r.conv_pct > 0 ? r.conv_pct + "%" : "—", r.conv_pct > 0 ? undefined : "var(--text-mute)")}
+        </tr>`;
+      });
+      const foot = `<tr style="border-top:1px solid var(--line);">
+        <td style="padding:5px 5px 3px 0;color:var(--text-mute);font-size:0.72rem;font-weight:700;">Total</td>
+        ${td(fS(totSpend), undefined, 700)}
+        ${td(totClicks || "—", totClicks ? undefined : "var(--text-mute)", 700)}
+        ${td(totClicks ? fC(totCpc) : "—", totClicks ? undefined : "var(--text-mute)", 700)}
+        ${td(totLeads > 0 ? totLeads : "—", totLeads > 0 ? "var(--hero)" : "var(--text-mute)", 700)}
+        ${td(totConv > 0 ? totConv.toFixed(1) + "%" : "—", totConv > 0 ? undefined : "var(--text-mute)", 700)}
+      </tr>`;
+      document.getElementById("mktgTable").innerHTML =
+        `<table style="width:100%;border-collapse:collapse;">
+          <thead><tr style="border-bottom:1px solid var(--line);">
+            ${th("Date","left")}${th("Spend")}${th("Clicks")}${th("CPC")}${th("Leads")}${th("Conv%")}
+          </tr></thead>
+          <tbody>${body}</tbody>
+          <tfoot>${foot}</tfoot>
+        </table>`;
+    }
+    function setMktgPeriod(days, btn) {
+      document.querySelectorAll(".mktg-btn").forEach(b => b.classList.remove("mktg-btn-active"));
+      btn.classList.add("mktg-btn-active");
+      renderMktgTable(days);
+    }
+    renderMktgTable(7);
+
+    // ── Monthly volume — with inline data labels ───────────────────────────
+    const monthlyDataLabels = {
+      id: "monthlyLabels",
+      afterDatasetsDraw(chart) {
+        const ctx = chart.ctx;
+        chart.data.datasets.forEach((ds, i) => {
+          chart.getDatasetMeta(i).data.forEach((bar, idx) => {
+            const v = ds.data[idx];
+            if (!v) return;
+            ctx.save();
+            ctx.fillStyle   = "#F5F5F7";
+            ctx.font        = '700 12px "Saira", system-ui, sans-serif';
+            ctx.textAlign   = "center";
+            ctx.textBaseline = "bottom";
+            ctx.fillText(v, bar.x, bar.y - 4);
+            ctx.restore();
+          });
+        });
+      }
+    };
+    new Chart(document.getElementById("chartMonthly"), {
+      type: "bar",
+      data: {
+        labels: MONTH_LABELS,
+        datasets: [{
+          data:               MONTH_DATA,
+          backgroundColor:    ["#C8FF01", "#5B8FFF", "rgba(200,255,1,0.30)"],
+          borderRadius:       5,
+          borderSkipped:      false,
+          barPercentage:      0.70,
+          categoryPercentage: 0.68,
+        }],
+      },
+      options: {
+        responsive:          true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 20 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            displayColors: false,
+            callbacks: { label: ctx => ` ${ctx.parsed.y} new leads` },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 11 } } },
+          y: { display: false, beginAtZero: true },
+        },
+      },
+      plugins: [monthlyDataLabels],
+    });
+
+    // ── Lead Source Breakdown (vertical bar) ──────────────────────────────
+    const sourceDataLabels = {
+      id: "sourceDataLabels",
+      afterDatasetsDraw(chart) {
+        const {ctx} = chart;
+        const total = SOURCE_DATA.reduce((a, b) => a + b, 0);
+        chart.getDatasetMeta(0).data.forEach((bar, i) => {
+          const v       = SOURCE_DATA[i];
+          const pct     = Math.round(v / total * 100);
+          const barH    = bar.base - bar.y;
+          const inside  = barH > 32;
+          ctx.save();
+          ctx.textAlign    = "center";
+          ctx.textBaseline = "bottom";
+          // Count — just above bar when pct is inside; shifted higher when both go above
+          ctx.font      = '700 12px "Saira", system-ui, sans-serif';
+          ctx.fillStyle = "#F5F5F7";
+          ctx.fillText(v, bar.x, inside ? bar.y - 4 : bar.y - 17);
+          // Percentage
+          if (inside) {
+            ctx.font         = `600 ${barH > 60 ? 11 : 10}px "Saira", system-ui, sans-serif`;
+            ctx.fillStyle    = barH > 60 ? "rgba(0,0,0,0.65)" : "rgba(255,255,255,0.82)";
+            ctx.textBaseline = "middle";
+            ctx.fillText(`${pct}%`, bar.x, bar.y + barH / 2);
+          } else {
+            // Short bar: pct sits just above bar top, below the count
+            ctx.font      = '600 10px "Saira", system-ui, sans-serif';
+            ctx.fillStyle = "#9A9AA5";
+            ctx.fillText(`${pct}%`, bar.x, bar.y - 3);
+          }
+          ctx.restore();
+        });
+      }
+    };
+    new Chart(document.getElementById("chartSource"), {
+      type: "bar",
+      data: {
+        labels: SOURCE_LABELS,
+        datasets: [{
+          data:               SOURCE_DATA,
+          backgroundColor:    ["#C8FF01", "#5B8FFF", "#FF9F45"],
+          borderRadius:       8,
+          borderSkipped:      false,
+          barPercentage:      1.0,
+          categoryPercentage: 0.95,
+        }],
+      },
+      options: {
+        responsive:          true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 28 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            displayColors: false,
+            callbacks: {
+              label: ctx => {
+                const total = SOURCE_DATA.reduce((a, b) => a + b, 0);
+                const pct   = Math.round(ctx.parsed.y / total * 100);
+                return ` ${ctx.parsed.y} opportunities · ${pct}%`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 11 } } },
+          y: { display: false, beginAtZero: true },
+        },
+      },
+      plugins: [sourceDataLabels],
+    });
+
+    // ── Meta Campaign Spending (vertical bar) ─────────────────────────────
+    new Chart(document.getElementById("chartMetaSpend"), {
+      type: "bar",
+      data: {
+        labels: META_LABELS,
+        datasets: [{
+          data:            META_SPEND,
+          backgroundColor: META_SPEND.map((v, i) => i === META_SPEND.length - 1 ? "rgba(200,255,1,0.45)" : "#C8FF01"),
+          borderRadius:    6,
+          borderSkipped:   false,
+        }],
+      },
+      options: {
+        responsive:          true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            displayColors: false,
+            callbacks: {
+              label: ctx => ` $${ctx.parsed.y.toFixed(2)} spent`,
+            },
+          },
+        },
+        scales: {
+          x: { grid: { color: "#2E2E38" }, ticks: { color: "#9A9AA5" } },
+          y: {
+            grid:        { color: "#2E2E38" },
+            ticks:       { color: "#9A9AA5", callback: v => `$${v}` },
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+
+
+    // ── Pipeline segmented bar — date-selectable ─────────────────────────────
+    const PIPE_COLORS = ["#C8FF01","#5B8FFF","#FF9F45","#A78BFA","#34D399","#FB923C","#F472B6"];
+
+    function fmtPipeDate(s) {
+      return new Date(s + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+    }
+
+    const pipeSel = document.getElementById("pipelineDateSelect");
+    PIPELINE_DATES.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d; opt.textContent = fmtPipeDate(d);
+      pipeSel.appendChild(opt);
+    });
+
+    function renderPipeline(dateKey) {
+      const snap  = PIPELINE_HISTORY[dateKey];
+      const total = snap.total_open;
+
+      // Total label
+      document.getElementById("pipelineTotal").textContent = `${total} open deals`;
+
+      // Segmented bar
+      document.getElementById("pipelineBar").innerHTML = snap.stages.map((s, i) => {
+        const w   = (s.count / total * 100).toFixed(2);
+        const pct = Math.round(s.count / total * 100);
+        const col = PIPE_COLORS[i % PIPE_COLORS.length];
+        return `<div style="width:${w}%;background:${col};flex-shrink:0;position:relative;cursor:default;"
+                     title="${s.name}: ${s.count} deals (${pct}%)"></div>`;
+      }).join("");
+
+      // Legend
+      document.getElementById("pipelineLegend").innerHTML = snap.stages.map((s, i) => {
+        const pct = Math.round(s.count / total * 100);
+        const col = PIPE_COLORS[i % PIPE_COLORS.length];
+        return `<div style="display:flex;align-items:center;gap:5px;">
+          <span style="width:10px;height:10px;border-radius:3px;background:${col};flex-shrink:0;"></span>
+          <span style="font-size:0.74rem;color:var(--text-mute);white-space:nowrap;">${s.name}</span>
+          <span style="font-size:0.78rem;font-weight:700;color:var(--text);">·&thinsp;${s.count}</span>
+          <span style="font-size:0.66rem;color:var(--text-mute);">(${pct}%)</span>
+        </div>`;
+      }).join("");
+    }
+
+    renderPipeline(PIPELINE_DATES[0]);
+    pipeSel.addEventListener("change", () => renderPipeline(pipeSel.value));
+
+  </script>
+</body>
+</html>
