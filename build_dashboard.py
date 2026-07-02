@@ -442,6 +442,16 @@ total_source_opps   = len(source_opps)
 
 print(f"  Source breakdown ({total_source_opps} opps): MGL={_src_mgl} SGL={_src_sgl} Other={_src_other}")
 
+# Append today's source breakdown into the same daily snapshot file written in 6b,
+# so the shared date selector can look up both pipeline stages and source mix per day.
+_dist_data = json.loads(_dist_path.read_text())
+_dist_data["source"] = {
+    "labels": source_chart_labels,
+    "data":   source_chart_data,
+    "total":  total_source_opps,
+}
+_dist_path.write_text(json.dumps(_dist_data, indent=2))
+
 # Score buckets — Sales Pipeline MGL opportunities at Discovery Call or beyond
 # (matches the "open opportunities" CRM view the team uses for scoring)
 _discovery_pos = next(
@@ -1277,15 +1287,23 @@ HERO = f"""
   </section>
 """
 
+SHARED_DATE_HEADER = f"""
+  <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-bottom:10px;">
+    <span style="font-size:0.62rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Viewing Snapshot</span>
+    <select id="sharedDateSelect" style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 12px;font-family:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;outline:none;"></select>
+  </div>
+"""
+
 MGL_CHART = f"""
   <div class="card" style="margin-bottom:22px;">
-    <div class="card-label">Lead Sources — New Lead &amp; Beyond &nbsp;·&nbsp; {total_source_opps} Opportunities</div>
+    <div class="card-label">Lead Sources — New Lead &amp; Beyond &nbsp;·&nbsp; <span id="sourceTotalLabel">{total_source_opps} Opportunities</span></div>
     <div style="display:grid;grid-template-columns:3fr 2fr;gap:28px;align-items:stretch;">
 
       <!-- Left: source bar chart — constrained width so bars cluster together -->
       <div style="display:flex;align-items:center;justify-content:center;">
         <div style="position:relative;width:300px;height:100%;">
           <canvas id="chartSource"></canvas>
+          <div id="sourceNoData" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;font-size:0.7rem;color:var(--text-mute);padding:0 20px;">Source breakdown wasn't tracked for this date yet.</div>
         </div>
       </div>
 
@@ -1347,10 +1365,7 @@ MIDDLE = f"""
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
         <div class="card-label" style="margin-bottom:0;">Pipeline Snapshot — Open Deals by Stage</div>
-        <div style="display:flex;align-items:center;gap:12px;">
-          <span id="pipelineTotal" style="font-size:0.72rem;font-weight:600;color:var(--text-mute);"></span>
-          <select id="pipelineDateSelect" style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 12px;font-family:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;outline:none;"></select>
-        </div>
+        <span id="pipelineTotal" style="font-size:0.72rem;font-weight:600;color:var(--text-mute);"></span>
       </div>
 
       <!-- Segmented bar -->
@@ -1647,9 +1662,10 @@ CHARTS_SCRIPT = """
       id: "sourceDataLabels",
       afterDatasetsDraw(chart) {
         const {ctx} = chart;
-        const total = SOURCE_DATA.reduce((a, b) => a + b, 0);
+        const data  = chart.data.datasets[0].data;
+        const total = data.reduce((a, b) => a + b, 0) || 1;
         chart.getDatasetMeta(0).data.forEach((bar, i) => {
-          const v       = SOURCE_DATA[i];
+          const v       = data[i];
           const pct     = Math.round(v / total * 100);
           const barH    = bar.base - bar.y;
           const inside  = barH > 32;
@@ -1676,7 +1692,7 @@ CHARTS_SCRIPT = """
         });
       }
     };
-    new Chart(document.getElementById("chartSource"), {
+    const sourceChart = new Chart(document.getElementById("chartSource"), {
       type: "bar",
       data: {
         labels: SOURCE_LABELS,
@@ -1699,7 +1715,8 @@ CHARTS_SCRIPT = """
             displayColors: false,
             callbacks: {
               label: ctx => {
-                const total = SOURCE_DATA.reduce((a, b) => a + b, 0);
+                const data  = ctx.chart.data.datasets[0].data;
+                const total = data.reduce((a, b) => a + b, 0) || 1;
                 const pct   = Math.round(ctx.parsed.y / total * 100);
                 return ` ${ctx.parsed.y} opportunities · ${pct}%`;
               },
@@ -1757,7 +1774,7 @@ CHARTS_SCRIPT = """
       return new Date(s + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
     }
 
-    const pipeSel = document.getElementById("pipelineDateSelect");
+    const pipeSel = document.getElementById("sharedDateSelect");
     PIPELINE_DATES.forEach(d => {
       const opt = document.createElement("option");
       opt.value = d; opt.textContent = fmtPipeDate(d);
@@ -1793,8 +1810,34 @@ CHARTS_SCRIPT = """
       }).join("");
     }
 
-    renderPipeline(PIPELINE_DATES[0]);
-    pipeSel.addEventListener("change", () => renderPipeline(pipeSel.value));
+    // ── Lead Source bar — driven by the same shared date selector ─────────
+    function renderSource(dateKey) {
+      const snap = PIPELINE_HISTORY[dateKey];
+      const src  = snap.source;
+      const noDataEl = document.getElementById("sourceNoData");
+
+      if (!src) {
+        noDataEl.style.display = "flex";
+        sourceChart.data.datasets[0].data = [0, 0, 0];
+        sourceChart.update();
+        document.getElementById("sourceTotalLabel").textContent = "No data for this date";
+        return;
+      }
+
+      noDataEl.style.display = "none";
+      sourceChart.data.labels             = src.labels;
+      sourceChart.data.datasets[0].data   = src.data;
+      sourceChart.update();
+      document.getElementById("sourceTotalLabel").textContent = `${src.total} Opportunities`;
+    }
+
+    function renderShared(dateKey) {
+      renderPipeline(dateKey);
+      renderSource(dateKey);
+    }
+
+    renderShared(PIPELINE_DATES[0]);
+    pipeSel.addEventListener("change", () => renderShared(pipeSel.value));
 
   </script>
 </body>
@@ -1805,7 +1848,7 @@ CHARTS_SCRIPT = """
 # Join all sections into one string and write axis-growth.html.
 # Running this script again will overwrite the file with fresh data.
 
-html     = HEAD + HEADER + HERO + MGL_CHART + MIDDLE + STAGE_MOVEMENT + META_SECTION + GRANOLA_SECTION + DATA_SCRIPT + CHARTS_SCRIPT
+html     = HEAD + HEADER + HERO + SHARED_DATE_HEADER + MGL_CHART + MIDDLE + STAGE_MOVEMENT + META_SECTION + GRANOLA_SECTION + DATA_SCRIPT + CHARTS_SCRIPT
 out_path = Path(__file__).parent / "axis-growth.html"
 out_path.write_text(html, encoding="utf-8")
 
