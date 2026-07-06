@@ -1,6 +1,14 @@
 {
   "date": "2026-07-06",
   "opps": {
+    "99bMsyL03fISLy7i0QLK": {
+      "stage": "New Lead",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "22g4Ta7mINpk8z8ZfWFt": {
+      "stage": "New Lead",
+      "owner": "XuKNQdIV2pC3u5PUpla6"
+    },
     "IZTubpwvQVi7UrXl8dD2": {
       "stage": "New Lead",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
@@ -11,7 +19,7 @@
     },
     "mVp936WCyHgPKUz56jig": {
       "stage": "New Lead",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
+      "owner": "XuKNQdIV2pC3u5PUpla6"
     },
     "3KrShOPdNdxQI5BGYj7A": {
       "stage": "New Lead",
@@ -155,7 +163,7 @@
     },
     "IeTvQoZxyfKdepT60Ft7": {
       "stage": "Closing Call",
-      "owner": "unassigned"
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "UvTKkZXHITPvLNxWhjOH": {
       "stage": "New Lead",
@@ -239,10 +247,6 @@
     },
     "A65wCYBOMixq9ezSoQUL": {
       "stage": "Proposal Sent",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
-    "t1cwzeTJIZipqF0i5Yey": {
-      "stage": "New Lead",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "G4RWAfZMRPJzlITW0pRB": {
