@@ -1,27 +1,33 @@
 {
   "fund_sizes": {
     "$60M": 1,
-    "$50M": 2,
+    "$50M": 3,
     "$40M": 1,
     "$33M": 1,
     "$20M": 1,
     "$12-15M": 1,
-    "$10M": 1
+    "$10M": 2,
+    "$5M": 1
   },
   "competitors": {
-    "Norvian Capital Partners": 1
+    "Norvian Capital Partners": 1,
+    "Sidecar": 1,
+    "AngelList": 1
   },
   "questions": {
     "Who will communicate with our investors?": 7,
     "How quickly can we start raising?": 4,
+    "Why a 3-call sales process?": 2,
     "How do distributions work?": 2,
     "What are the guarantees / probability of success?": 2,
     "When do we switch from BD reps to an in-house IR team?": 2,
+    "Why do you focus on accredited investors specifically?": 1,
+    "What am I getting for my money?": 1,
     "Can we launch before our deals are under contract?": 1
   },
   "quote_of_week": {
-    "text": "You’re buying income, you’re buying tax strategy. You’re not buying a shrimp business.",
-    "source": "Marvin · Jun 25 · On investor psychology"
+    "text": "I have hired a few groups before, and honestly, I got taken two times at pretty heavy numbers… everybody wants these retainers, but nobody wants to really bring in the worry to get it done.",
+    "source": "Brian de Armas · Jul 6 · On past fundraising groups"
   },
-  "last_updated": "Jun 29, 2026"
+  "last_updated": "Jul 8, 2026"
 }

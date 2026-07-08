@@ -1,5 +1,5 @@
 {
-  "date": "2026-07-07",
+  "date": "2026-07-08",
   "stages": [
     {
       "name": "New Lead",
@@ -11,11 +11,11 @@
     },
     {
       "name": "Strategy Call",
-      "count": 9
+      "count": 7
     },
     {
       "name": "Proposal Sent",
-      "count": 15
+      "count": 13
     },
     {
       "name": "Closing Call",
@@ -30,7 +30,7 @@
       "count": 14
     }
   ],
-  "total_open": 89,
+  "total_open": 85,
   "source": {
     "labels": [
       "MGL",
@@ -40,8 +40,8 @@
     "data": [
       52,
       15,
-      42
+      39
     ],
-    "total": 109
+    "total": 106
   }
 }
