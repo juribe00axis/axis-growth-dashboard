@@ -468,6 +468,75 @@ disc_all_time     = sum(1 for opp in all_opps if opp.get("pipelineId") == SALES_
 prop_all_time     = sum(1 for opp in all_opps if opp.get("pipelineId") == SALES_ID and opp.get("pipelineStageId") in _proposal_ids)
 disc_to_prop_pct  = round(prop_all_time / disc_all_time * 100) if disc_all_time else 0
 
+# All-time Proposal → Agreement Signed conversion (all statuses, Sales Pipeline)
+_signed_pos = next(
+    info["position"] for sid, info in stage_map.items()
+    if info["pipeline_id"] == SALES_ID and info["name"] == "Agreement Signed"
+)
+_signed_stage_ids = {
+    sid for sid, info in stage_map.items()
+    if info["pipeline_id"] == SALES_ID and info["position"] >= _signed_pos
+}
+signed_all_time     = sum(1 for opp in all_opps if opp.get("pipelineId") == SALES_ID and opp.get("pipelineStageId") in _signed_stage_ids)
+prop_to_signed_pct  = round(signed_all_time / prop_all_time * 100) if prop_all_time else 0
+
+# "Won" = opportunities currently sitting in the Onboarding stage (not GHL's
+# won/lost status field -- this pipeline treats reaching Onboarding as won).
+_onboarding_id = next(
+    sid for sid, info in stage_map.items()
+    if info["pipeline_id"] == SALES_ID and info["name"] == "Onboarding"
+)
+onboarding_opps = [
+    opp for opp in all_opps
+    if opp.get("pipelineId") == SALES_ID and opp.get("pipelineStageId") == _onboarding_id
+]
+won_onboarding_total = len(onboarding_opps)
+
+# Bucket onboarding entries by the month they entered that stage (lastStageChangeAt)
+_won_by_month = defaultdict(int)
+for opp in onboarding_opps:
+    _ts = opp.get("lastStageChangeAt") or opp.get("createdAt")
+    if _ts:
+        _dt = datetime.fromisoformat(_ts.replace("Z", "+00:00"))
+        _won_by_month[_dt.strftime("%Y-%m")] += 1
+
+_won_month_keys = sorted(_won_by_month.keys())
+_current_month_key = today.strftime("%Y-%m")
+
+_won_month_rows = ""
+_prev_count = None
+for _mk in _won_month_keys:
+    _cnt   = _won_by_month[_mk]
+    _label = datetime.strptime(_mk, "%Y-%m").strftime("%B %Y")
+    _is_current = (_mk == _current_month_key)
+
+    if _is_current:
+        _delta_html = '<span style="font-size:0.62rem;color:var(--text-mute);">month in progress — not compared yet</span>'
+    elif _prev_count is None:
+        _delta_html = '<span style="font-size:0.62rem;color:var(--text-mute);">first month on record</span>'
+    elif _prev_count == 0:
+        _delta_html = '<span style="font-size:0.62rem;color:var(--text-mute);">—</span>'
+    else:
+        _delta_pct = round((_cnt - _prev_count) / _prev_count * 100)
+        _d_color = "var(--hero)" if _delta_pct > 0 else ("#FF5C5C" if _delta_pct < 0 else "var(--text-mute)")
+        _d_dir   = "↑" if _delta_pct > 0 else ("↓" if _delta_pct < 0 else "→")
+        _delta_html = (
+            f'<span style="display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);'
+            f'border-radius:6px;padding:2px 8px;font-size:0.68rem;font-weight:800;color:{_d_color};">'
+            f'{_d_dir}&thinsp;{abs(_delta_pct)}% <span style="color:var(--text-mute);font-weight:600;">MoM</span></span>'
+        )
+
+    _won_month_rows += (
+        f'<div style="display:grid;grid-template-columns:160px 60px 1fr;align-items:center;gap:14px;'
+        f'padding:10px 0;border-bottom:1px solid var(--line);">'
+        f'<span style="font-size:0.8rem;color:var(--text);">{_label}{" (in progress)" if _is_current else ""}</span>'
+        f'<span style="font-size:1.1rem;font-weight:800;color:var(--hero);">{_cnt}</span>'
+        f'<span>{_delta_html}</span>'
+        f'</div>'
+    )
+    if not _is_current:
+        _prev_count = _cnt
+
 mgl_open_sales_cids = {
     opp["contactId"] for opp in mgl_opps
     if opp.get("pipelineId") == SALES_ID
@@ -578,59 +647,74 @@ for _i, (_lbl, _cnt) in enumerate(zip(mgl_week_labels, mgl_week_data)):
     )
 
 
-# ─── 6e. Stage Movement — weekly activity table ───────────────────────────────
-# For each opp in the Sales Pipeline whose current stage is one of the 4 key
-# stages, use lastStageChangeAt to determine which day it entered that stage.
-# Counts are grouped by (owner, stage, day) starting from week_start (Mon Jun 22).
+# ─── 6e. Weekly Rocks — weekly stage-entry table ─────────────────────────────
+# For each of 4 key stages, count how many DISTINCT opportunities ENTERED that
+# stage during each week (i.e. their stage on some day that week differs from
+# their stage on the previous snapshotted day, or they're newly seen). Week 1
+# (W1) is Jul 1-7, 2026 -- the first week we have snapshot data for. Note: Jul 1
+# itself has no prior-day snapshot to diff against, so entries already sitting
+# in a stage as of Jul 1 can't be counted (unknowable whether they arrived that
+# day or earlier) -- W1 only reflects entries detected Jul 2 onward.
 
-print("Computing stage movement...")
+print("Computing weekly rocks...")
 
-MOVE_TRANSITIONS = [
-    ("New Lead",       "Discovery Call"),
-    ("Discovery Call", "Strategy Call"),
-    ("Strategy Call",  "Proposal Sent"),
-    ("Proposal Sent",  "Agreement Signed"),
-]
-MOVE_LABELS = [f"{f} → {t}" for f, t in MOVE_TRANSITIONS]
-_valid_trans = {f"{f} → {t}" for f, t in MOVE_TRANSITIONS}
+STAGE_LABELS = ["Discovery Call", "Strategy Call", "Proposal Sent", "Agreement Signed"]
+MOVE_LABELS  = ["Discovery Calls", "Strategy Calls", "Proposals Sent", "Agreements Signed"]
+_stage_display = dict(zip(STAGE_LABELS, MOVE_LABELS))
 
-# Diff consecutive daily stage snapshots to compute accurate forward movements
+WEEK1_START = datetime(2026, 7, 1, tzinfo=timezone.utc).date()
+
+def _week_index(date_obj):
+    return (date_obj - WEEK1_START).days // 7 + 1
+
+# Diff consecutive daily stage snapshots: an opp "enters" a stage on the day its
+# current stage differs from its previous day's stage (or it's newly created).
 _stage_snaps = sorted(_snap_dir.glob("stage-snap-*.json"))
-movement_history = {}   # date_key → {label → count}
+weekly_movement = defaultdict(lambda: {lbl: 0 for lbl in MOVE_LABELS})
 
 for i in range(1, len(_stage_snaps)):
-    prev_data = json.loads(_stage_snaps[i-1].read_text())
+    prev_data = json.loads(_stage_snaps[i - 1].read_text())
     curr_data = json.loads(_stage_snaps[i].read_text())
-    date_key  = curr_data["date"]
-    counts    = {lbl: 0 for lbl in MOVE_LABELS}
+    _d = datetime.strptime(curr_data["date"], "%Y-%m-%d").date()
+    if _d < WEEK1_START:
+        continue
+    _wk = _week_index(_d)
     for opp_id, curr_opp in curr_data["opps"].items():
-        if opp_id not in prev_data["opps"]:
+        curr_stage = curr_opp.get("stage")
+        if curr_stage not in STAGE_LABELS:
             continue
-        label = f"{prev_data['opps'][opp_id]['stage']} → {curr_opp['stage']}"
-        if label in _valid_trans:
-            counts[label] += 1
-    movement_history[date_key] = counts
+        prev_opp   = prev_data["opps"].get(opp_id)
+        prev_stage = prev_opp["stage"] if prev_opp else None
+        if prev_stage != curr_stage:
+            weekly_movement[_wk][_stage_display[curr_stage]] += 1
 
-move_display_dates  = sorted(movement_history.keys())
+move_display_weeks = sorted(weekly_movement.keys())
+_current_week_idx  = _week_index(today.date())
+
+def _week_range_str(wk):
+    _start = WEEK1_START + timedelta(days=(wk - 1) * 7)
+    _end   = _start + timedelta(days=6)
+    return f"{_start.strftime('%b %-d')}–{_end.strftime('%-d')}"
+
 move_display_labels = [
-    datetime.strptime(d, "%Y-%m-%d").strftime("%a %-m/%-d")
-    for d in move_display_dates
+    f"W{wk}" + (" *" if wk == _current_week_idx else "")
+    for wk in move_display_weeks
 ]
-_last_week_key = week_start.strftime("%Y-%m-%d")   # used for Total column boundary
 
-print(f"  {len(_stage_snaps)} snapshots · {len(movement_history)} diffs computed")
+print(f"  {len(_stage_snaps)} snapshots · {len(weekly_movement)} week(s) computed")
 print()
 
 
 # ─── 6g. Meta Campaign Spending — last 7 days ────────────────────────────────
 print("Fetching Meta spend data...")
 meta_end   = today.date()
-meta_start = meta_end - timedelta(days=27)   # 28 days for Marketing section
+meta_start = meta_end - timedelta(days=89)   # 90 days for Marketing section date-range picker
 
 meta_resp  = meta_get(f"/v21.0/{META_ACCT}/insights", {
     "fields":         "date_start,spend,inline_link_clicks",
     "time_range":     json.dumps({"since": str(meta_start), "until": str(meta_end)}),
     "time_increment": "1",
+    "limit":          200,  # default page size (25) truncates a 90-day daily breakdown
 })
 
 if "error" in meta_resp:
@@ -646,11 +730,14 @@ for opp in mgl_opps:
         _d = datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00")).strftime("%Y-%m-%d")
         mgl_by_date[_d] += 1
 
-# Combined 28-day daily data for the Marketing & Leads metrics table
+# Combined 90-day daily data for the Marketing & Leads metrics table
+# Excludes today -- Meta spend/clicks are incomplete until the day closes out.
+_mktg_end   = meta_end - timedelta(days=1)
+_mktg_start = _mktg_end - timedelta(days=89)
 _meta_by_date = {r["date_start"]: r for r in meta_rows}
 mktg_daily = []
-for i in range(28):
-    _ds     = (meta_start + timedelta(days=i)).strftime("%Y-%m-%d")
+for i in range(90):
+    _ds     = (_mktg_start + timedelta(days=i)).strftime("%Y-%m-%d")
     _r      = _meta_by_date.get(_ds, {})
     _spend  = float(_r.get("spend", 0))
     _clicks = int(_r.get("inline_link_clicks", 0))
@@ -666,6 +753,9 @@ for i in range(28):
         "leads": _leads,
         "conv_pct": _conv,
     })
+
+mktg_min_date = mktg_daily[0]["date"]
+mktg_max_date = mktg_daily[-1]["date"]
 
 # ── CPL: last full week vs previous full week ─────────────────────────────────
 _lw_dates   = {(last_week_start + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)}
@@ -705,7 +795,7 @@ meta_total_str = f"${meta_total:,.0f}"
 meta_avg_str   = f"${meta_avg:,.0f}"
 meta_today_str = f"${meta_today_v:,.0f}"
 
-print(f"  28-day fetch | last-7: {meta_total_str} total | CPL last week: {cpl_lw_str}")
+print(f"  90-day fetch | last-7: {meta_total_str} total | CPL last week: {cpl_lw_str}")
 print()
 
 
@@ -1238,7 +1328,7 @@ HERO = f"""
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:220px 1fr 200px;gap:0;align-items:start;">
+    <div style="display:grid;grid-template-columns:220px 200px 1fr;gap:0;align-items:start;">
 
       <!-- ── Col 1: New Leads KPI ── -->
       <div style="border-right:1px solid var(--line);padding-right:24px;padding-top:2px;">
@@ -1261,26 +1351,36 @@ HERO = f"""
         </div>
       </div>
 
-      <!-- ── Col 2: Daily Performance metrics table ── -->
-      <div style="padding:0 24px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Daily Performance · MGL</div>
-          <div style="display:flex;gap:4px;">
-            <button onclick="setMktgPeriod(7,this)" class="mktg-btn mktg-btn-active">7d</button>
-            <button onclick="setMktgPeriod(14,this)" class="mktg-btn">14d</button>
-            <button onclick="setMktgPeriod(28,this)" class="mktg-btn">28d</button>
-          </div>
-        </div>
-        <div id="mktgTable" style="max-height:190px;overflow-y:auto;"></div>
-      </div>
-
-      <!-- ── Col 3: Monthly Volume + MGL badge ── -->
-      <div style="border-left:1px solid var(--line);padding-left:24px;padding-top:2px;">
+      <!-- ── Col 2: Monthly Volume + MGL badge ── -->
+      <div style="border-right:1px solid var(--line);padding:0 24px;padding-top:2px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
           <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume</div>
           <span class="mgl-pill" style="font-size:0.56rem;padding:2px 7px;white-space:nowrap;">MGL&nbsp;{mgl_14d}&nbsp;·&nbsp;{mgl_14d_pct}%</span>
         </div>
         <div style="position:relative;height:168px;"><canvas id="chartMonthly"></canvas></div>
+      </div>
+
+      <!-- ── Col 3: Daily Performance metrics table ── -->
+      <div style="padding-left:24px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Daily Performance · MGL</div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <div style="display:flex;gap:4px;">
+              <button onclick="setMktgPeriod(7,this)" class="mktg-btn mktg-btn-active">7d</button>
+              <button onclick="setMktgPeriod(14,this)" class="mktg-btn">14d</button>
+              <button onclick="setMktgPeriod(28,this)" class="mktg-btn">28d</button>
+            </div>
+            <div style="display:flex;gap:5px;align-items:center;">
+              <input type="date" id="mktgFrom" min="{mktg_min_date}" max="{mktg_max_date}" value="{mktg_min_date}"
+                style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-family:inherit;font-size:0.68rem;outline:none;color-scheme:dark;">
+              <span style="font-size:0.62rem;color:var(--text-mute);">–</span>
+              <input type="date" id="mktgTo" min="{mktg_min_date}" max="{mktg_max_date}" value="{mktg_max_date}"
+                style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-family:inherit;font-size:0.68rem;outline:none;color-scheme:dark;">
+              <button onclick="applyMktgRange()" class="mktg-btn">Go</button>
+            </div>
+          </div>
+        </div>
+        <div id="mktgTable" style="max-height:190px;overflow-y:auto;"></div>
       </div>
 
     </div>
@@ -1376,20 +1476,31 @@ MIDDLE = f"""
 
       <div class="funnel-kpis" style="margin-top:4px;">
         <div class="funnel-kpi">
+          <span class="funnel-kpi-label">Discovery to Proposal</span>
+          <span class="funnel-kpi-value">{disc_to_prop_pct}%</span>
+          <span class="funnel-kpi-sub">{prop_all_time} of {disc_all_time} discoveries</span>
+        </div>
+        <div class="funnel-kpi">
+          <span class="funnel-kpi-label">Proposal to Signed</span>
+          <span class="funnel-kpi-value">{prop_to_signed_pct}%</span>
+          <span class="funnel-kpi-sub">{signed_all_time} of {prop_all_time} proposals</span>
+        </div>
+        <div class="funnel-kpi">
           <span class="funnel-kpi-label">Lead to Won</span>
           <span class="funnel-kpi-value">{won_rate_pct}%</span>
           <span class="funnel-kpi-sub">{won_total} won of {total_sales_opps} total</span>
         </div>
         <div class="funnel-kpi">
-          <span class="funnel-kpi-label">Lead to Proposal</span>
-          <span class="funnel-kpi-value">{proposal_rate_pct}%</span>
-          <span class="funnel-kpi-sub">{proposal_reached} reached proposal</span>
+          <span class="funnel-kpi-label">Won</span>
+          <span class="funnel-kpi-value">{won_onboarding_total}</span>
+          <span class="funnel-kpi-sub">currently in Onboarding</span>
         </div>
-        <div class="funnel-kpi">
-          <span class="funnel-kpi-label">Discovery to Proposal</span>
-          <span class="funnel-kpi-value">{disc_to_prop_pct}%</span>
-          <span class="funnel-kpi-sub">{prop_all_time} of {disc_all_time} discoveries</span>
-        </div>
+      </div>
+
+      <div style="margin-top:22px;padding-top:20px;border-top:1px solid var(--line);">
+        <div class="card-label" style="margin-bottom:4px;">Won Deals — Entered Onboarding by Month</div>
+        <div style="font-size:0.68rem;color:var(--text-mute);margin-bottom:14px;">Based on lastStageChangeAt · month-over-month vs. prior completed month</div>
+        {_won_month_rows if _won_month_rows else '<div class="comp-none">None recorded yet.</div>'}
       </div>
     </div>
   </div>
@@ -1481,44 +1592,52 @@ GRANOLA_SECTION = f"""
   </section>
 """
 
-# ── 7i. Stage Movement matrix (snapshot-diff based — accurate forward movements)
+# ── 7i. Weekly Rocks matrix (snapshot-diff based — accurate forward movements)
 def _build_stage_movement():
-    if not movement_history:
+    if not weekly_movement:
         return (
             '<div class="smv-note" style="text-align:center;padding:32px 0;">'
             'First snapshot captured today — movement data will appear on the next build.'
             '</div>'
         )
 
-    day_ths  = "".join(f'<th>{lbl}</th>' for lbl in move_display_labels)
+    week_ths = "".join(
+        f'<th title="{_week_range_str(wk)}">{lbl}</th>'
+        for wk, lbl in zip(move_display_weeks, move_display_labels)
+    )
     thead    = (f'<thead><tr>'
-                f'<th class="smv-th-stage">Transition</th>'
-                f'{day_ths}'
+                f'<th class="smv-th-stage">Stage</th>'
+                f'{week_ths}'
                 f'<th class="smv-th-total">Total</th>'
                 f'</tr></thead>')
 
     tbody_rows = ""
     for label in MOVE_LABELS:
-        day_tds   = ""
+        week_tds  = ""
         row_total = 0
-        for d_key in move_display_dates:
-            val = movement_history[d_key].get(label, 0)
-            if d_key < _last_week_key:
+        for wk in move_display_weeks:
+            val = weekly_movement[wk].get(label, 0)
+            if wk != _current_week_idx:
                 row_total += val
             if val > 0:
-                day_tds += f'<td class="smv-val smv-val-pos">{val}</td>'
+                week_tds += f'<td class="smv-val smv-val-pos">{val}</td>'
             else:
-                day_tds += f'<td class="smv-val smv-val-zero">—</td>'
+                week_tds += f'<td class="smv-val smv-val-zero">—</td>'
         total_td    = f'<td class="smv-val smv-total">{row_total if row_total else "—"}</td>'
-        tbody_rows += f'<tr><td class="smv-stage-cell">{label}</td>{day_tds}{total_td}</tr>\n'
+        tbody_rows += f'<tr><td class="smv-stage-cell">{label}</td>{week_tds}{total_td}</tr>\n'
 
     tbody = f"<tbody>{tbody_rows}</tbody>"
-    note  = '<div class="smv-note">Forward movements only · Sales Pipeline · based on daily snapshots</div>'
+    note  = (
+        '<div class="smv-note">Distinct opportunities that entered each stage that week · Sales Pipeline · based on daily snapshots'
+        + ' · W1 undercounts slightly: Jul 1 was our first snapshot, so opps already sitting in a stage that day can\'t be counted as entering it'
+        + (' · * current week in progress, excluded from Total' if _current_week_idx in move_display_weeks else '')
+        + '</div>'
+    )
     return f'<div class="smv-wrap"><table class="smv-table">{thead}{tbody}</table></div>{note}'
 
 STAGE_MOVEMENT = f"""
   <section class="card" style="margin-top:22px;">
-    <div class="card-label">Stage Movement — Forward Pipeline Transitions</div>
+    <div class="card-label">Weekly Rocks</div>
     {_build_stage_movement()}
   </section>
 """
@@ -1559,7 +1678,15 @@ CHARTS_SCRIPT = """
 
     // ── Marketing & Leads — daily metrics table ──────────────────────────
     function renderMktgTable(days) {
-      const rows = MKTG_DAILY.slice(-days);
+      renderMktgRows(MKTG_DAILY.slice(-days));
+    }
+    function applyMktgRange() {
+      document.querySelectorAll(".mktg-btn").forEach(b => b.classList.remove("mktg-btn-active"));
+      const from = document.getElementById("mktgFrom").value;
+      const to   = document.getElementById("mktgTo").value;
+      renderMktgRows(MKTG_DAILY.filter(r => r.date >= from && r.date <= to));
+    }
+    function renderMktgRows(rows) {
       const totSpend  = rows.reduce((s, r) => s + r.spend,  0);
       const totClicks = rows.reduce((s, r) => s + r.clicks, 0);
       const totLeads  = rows.reduce((s, r) => s + r.leads,  0);
