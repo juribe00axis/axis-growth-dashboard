@@ -3,19 +3,19 @@
   "stages": [
     {
       "name": "New Lead",
-      "count": 12
+      "count": 11
     },
     {
       "name": "Discovery Call",
-      "count": 14
+      "count": 15
     },
     {
       "name": "Strategy Call",
-      "count": 7
+      "count": 6
     },
     {
       "name": "Proposal Sent",
-      "count": 18
+      "count": 19
     },
     {
       "name": "Closing Call",
