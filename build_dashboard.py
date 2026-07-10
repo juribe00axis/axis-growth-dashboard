@@ -400,6 +400,11 @@ SGL_SOURCES = {"SGL", "Stormer Santana's Calendar", "Fundraising Discussion"}
 mgl_opps   = [opp for opp in all_opps if opp.get("source") in MGL_SOURCES]
 mgl_ids    = {opp["contactId"] for opp in mgl_opps if opp.get("contactId")}
 sgl_opps   = [opp for opp in all_opps if opp.get("source") in SGL_SOURCES]
+
+# Current-month MGL count/pct for the Monthly Volume badge (matches the chart's
+# own timeframe -- was previously a rolling-14-day figure, which didn't line up).
+cur_month_mgl     = _month_count(mgl_opps, _this_year, _this_month)
+cur_month_mgl_pct = round(cur_month_mgl / cur_month_count * 100) if cur_month_count else 0
 other_opps = [opp for opp in all_opps if opp.get("source") not in MGL_SOURCES and opp.get("source") not in SGL_SOURCES]
 
 # Opportunities at "New Lead" stage or beyond in Sales Pipeline (all statuses)
@@ -1294,19 +1299,148 @@ HEAD = """<!DOCTYPE html>
       text-transform: uppercase;
       color: var(--surface-2);
     }
+
+    /* Glossary button + modal */
+    .glossary-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text-mute);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .glossary-btn:hover { color: var(--hero); border-color: var(--hero); }
+    #glossaryOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    #glossaryOverlay.open { display: flex; }
+    .glossary-modal {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 30px 34px;
+      max-width: 640px;
+      width: 100%;
+      max-height: 82vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.6);
+    }
+    .glossary-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .glossary-modal-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .glossary-close {
+      background: none;
+      border: none;
+      color: var(--text-mute);
+      font-size: 1.3rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+    .glossary-close:hover { color: var(--text); }
+    .glossary-sub {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      margin-bottom: 18px;
+    }
+    .glossary-term { padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .glossary-term:last-child { border-bottom: none; padding-bottom: 0; }
+    .glossary-term-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--hero);
+      margin-bottom: 4px;
+    }
+    .glossary-term-def {
+      font-size: 0.76rem;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    /* Inline info-icon tooltips on a few key metrics */
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text-mute);
+      font-size: 0.58rem;
+      font-weight: 700;
+      font-style: normal;
+      cursor: help;
+      margin-left: 5px;
+      position: relative;
+      vertical-align: middle;
+    }
+    .info-icon .tooltip-box {
+      display: none;
+      position: absolute;
+      bottom: 135%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0F0F14;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 12px;
+      width: 220px;
+      font-size: 0.68rem;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: normal;
+      color: var(--text);
+      line-height: 1.45;
+      z-index: 60;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    }
+    .info-icon:hover .tooltip-box { display: block; }
   </style>
 </head>
 <body>
 """
 
 # ── 7b. Header (f-string — embeds generated_at) ──────────────────────────────
+def _info_icon(text):
+    """Small inline (i) icon with a hover tooltip -- used on a handful of the
+    most commonly-misread metrics. Full definitions for every metric live in
+    the Glossary modal (see GLOSSARY_TERMS)."""
+    return f'<span class="info-icon">i<span class="tooltip-box">{text}</span></span>'
+
 HEADER = f"""
   <header class="header">
     <div class="header-left">
       <img src="assets/logo.svg" alt="Axis Growth" class="header-logo">
       <span class="header-title">Axis Growth</span>
     </div>
-    <span class="header-meta">Generated {generated_at}</span>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <button class="glossary-btn" onclick="document.getElementById('glossaryOverlay').classList.add('open')">? Glossary</button>
+      <span class="header-meta">Generated {generated_at}</span>
+    </div>
   </header>
 """
 
@@ -1354,8 +1488,8 @@ HERO = f"""
       <!-- ── Col 2: Monthly Volume + MGL badge ── -->
       <div style="border-right:1px solid var(--line);padding:0 24px;padding-top:2px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume</div>
-          <span class="mgl-pill" style="font-size:0.56rem;padding:2px 7px;white-space:nowrap;">MGL&nbsp;{mgl_14d}&nbsp;·&nbsp;{mgl_14d_pct}%</span>
+          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume{_info_icon("Only shows the last 3 months (2 months ago, last month, current month) by lead created date -- not all-time volume. The MGL badge is scoped to the current month shown, not a rolling window.")}</div>
+          <span class="mgl-pill" style="font-size:0.56rem;padding:2px 7px;white-space:nowrap;">MGL&nbsp;{cur_month_mgl}&nbsp;·&nbsp;{cur_month_mgl_pct}%&nbsp;·&nbsp;{cur_month_label}</span>
         </div>
         <div style="position:relative;height:168px;"><canvas id="chartMonthly"></canvas></div>
       </div>
@@ -1396,7 +1530,7 @@ SHARED_DATE_HEADER = f"""
 
 MGL_CHART = f"""
   <div class="card" style="margin-bottom:22px;">
-    <div class="card-label">Lead Sources — New Lead &amp; Beyond &nbsp;·&nbsp; <span id="sourceTotalLabel">{total_source_opps} Opportunities</span></div>
+    <div class="card-label">Lead Sources — New Lead &amp; Beyond &nbsp;·&nbsp; <span id="sourceTotalLabel">{total_source_opps} Opportunities</span>{_info_icon("This is essentially all-time, not just currently-open deals: every Sales Pipeline opportunity ever won or lost, plus any currently open at New Lead stage or beyond.")}</div>
     <div style="display:grid;grid-template-columns:3fr 2fr;gap:28px;align-items:stretch;">
 
       <!-- Left: source bar chart — constrained width so bars cluster together -->
@@ -1491,7 +1625,7 @@ MIDDLE = f"""
           <span class="funnel-kpi-sub">{won_total} won of {total_sales_opps} total</span>
         </div>
         <div class="funnel-kpi">
-          <span class="funnel-kpi-label">Won</span>
+          <span class="funnel-kpi-label">Won{_info_icon("Not GHL's won/lost status field -- this counts opportunities currently sitting in the Onboarding stage, which is how this pipeline defines a closed-won deal.")}</span>
           <span class="funnel-kpi-value">{won_onboarding_total}</span>
           <span class="funnel-kpi-sub">currently in Onboarding</span>
         </div>
@@ -1592,6 +1726,45 @@ GRANOLA_SECTION = f"""
   </section>
 """
 
+# ── 7h2. Glossary modal — plain-English definition for every metric on the page
+GLOSSARY_TERMS = [
+    ("This Week / Last Week", "New leads (opportunities created) in the Sales Pipeline, Monday-Sunday. WoW badge compares this week's count to last week's."),
+    ("CPL (Cost Per Lead)", "Last full week's Meta ad spend divided by that week's MGL leads. WoW badge compares to the prior full week. Lower is better."),
+    ("Monthly Volume (bar chart)", "Only the last 3 months (2 months ago, last month, current month) by lead created date, across all pipelines/statuses. Not all-time volume -- older months exist in the data but aren't shown here. The MGL badge next to it shows the current month's MGL count and % of that month's total leads (not a rolling window)."),
+    ("Daily Performance table (Spend/Clicks/CPC/Leads/Conv%)", "Meta ad spend, link clicks, cost-per-click, MGL leads, and lead conversion rate, one row per day. Excludes today (spend/clicks are incomplete until the day closes out). Use the date-range picker to view any custom window back to 90 days."),
+    ("Lead Sources — MGL / SGL / Other", "Essentially all-time within the Sales Pipeline: every opportunity ever won or lost, plus any currently open at New Lead stage or beyond. MGL = Marketing Generated Lead, SGL = Sales Generated Lead."),
+    ("Call Quality (Great Fit / Potential / Poor Fit / Unscored)", "Quality score set on the contact record, shown for opportunities at Discovery Call stage or beyond, broken out by source (MGL/SGL/Other)."),
+    ("Pipeline Snapshot — Open Deals by Stage", "Current count of OPEN opportunities in each Sales Pipeline stage, as of the selected daily snapshot (use the Viewing Snapshot dropdown to look at a past date)."),
+    ("Discovery to Proposal / Proposal to Signed / Lead to Won", "All-time conversion rates within the Sales Pipeline: of all opportunities that ever reached the first stage in the pair (any status), what % also reached the second stage (or won, for Lead to Won)."),
+    ("Won", "NOT GHL's won/lost status field -- this counts opportunities currently sitting in the Onboarding stage, which is how this pipeline defines a closed-won deal."),
+    ("Won Deals — Entered Onboarding by Month", "Based on lastStageChangeAt: which month each currently-Onboarding opportunity most recently moved into that stage. Month-over-month % compares to the prior completed month; the current month is marked in progress and excluded from that comparison."),
+    ("Weekly Rocks", "Distinct opportunities that ENTERED each of 4 key stages (Discovery Call, Strategy Call, Proposal Sent, Agreement Signed) per week, based on diffing daily snapshots since Jul 1, 2026 (W1). An opportunity is only counted on the week it actually moved in, not every week it happens to sit there. W1 slightly undercounts because Jul 1 was our first-ever snapshot, so opportunities already sitting in a stage that day can't be confirmed as having entered it that week. The current week is marked with * and excluded from the Total column."),
+    ("Meta Campaign Spending (bottom section)", "Last 7 days of Meta ad spend, including today's partial/incomplete spend as its own tile -- unlike the Daily Performance table above, which excludes today."),
+    ("Call Intelligence", "Cumulative, all-time data extracted from Granola call notes: fund sizes and competitors ever mentioned by prospects, and the most common discovery-call questions. Quote of the Week is replaced each update; everything else accumulates and never resets."),
+]
+
+def _glossary_rows():
+    return "\n".join(
+        f'<div class="glossary-term">'
+        f'<div class="glossary-term-label">{label}</div>'
+        f'<div class="glossary-term-def">{definition}</div>'
+        f'</div>'
+        for label, definition in GLOSSARY_TERMS
+    )
+
+GLOSSARY_MODAL = f"""
+  <div id="glossaryOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="glossary-modal">
+      <div class="glossary-modal-header">
+        <span class="glossary-modal-title">Dashboard Glossary</span>
+        <button class="glossary-close" onclick="document.getElementById('glossaryOverlay').classList.remove('open')">&times;</button>
+      </div>
+      <div class="glossary-sub">What every metric on this dashboard actually means</div>
+      {_glossary_rows()}
+    </div>
+  </div>
+"""
+
 # ── 7i. Weekly Rocks matrix (snapshot-diff based — accurate forward movements)
 def _build_stage_movement():
     if not weekly_movement:
@@ -1637,7 +1810,7 @@ def _build_stage_movement():
 
 STAGE_MOVEMENT = f"""
   <section class="card" style="margin-top:22px;">
-    <div class="card-label">Weekly Rocks</div>
+    <div class="card-label">Weekly Rocks{_info_icon("Distinct opportunities that entered each stage per week, based on daily snapshots since Jul 1, 2026 (W1). Not a running total -- each opportunity is only counted on the week it actually moved in.")}</div>
     {_build_stage_movement()}
   </section>
 """
@@ -1975,7 +2148,7 @@ CHARTS_SCRIPT = """
 # Join all sections into one string and write axis-growth.html.
 # Running this script again will overwrite the file with fresh data.
 
-html     = HEAD + HEADER + HERO + SHARED_DATE_HEADER + MGL_CHART + MIDDLE + STAGE_MOVEMENT + META_SECTION + GRANOLA_SECTION + DATA_SCRIPT + CHARTS_SCRIPT
+html     = HEAD + HEADER + HERO + SHARED_DATE_HEADER + MGL_CHART + MIDDLE + STAGE_MOVEMENT + META_SECTION + GRANOLA_SECTION + GLOSSARY_MODAL + DATA_SCRIPT + CHARTS_SCRIPT
 out_path = Path(__file__).parent / "axis-growth.html"
 out_path.write_text(html, encoding="utf-8")
 
