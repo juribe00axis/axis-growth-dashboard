@@ -15,7 +15,7 @@
     },
     {
       "name": "Proposal Sent",
-      "count": 17
+      "count": 18
     },
     {
       "name": "Closing Call",
@@ -30,7 +30,7 @@
       "count": 24
     }
   ],
-  "total_open": 84,
+  "total_open": 85,
   "source": {
     "labels": [
       "MGL",
@@ -38,10 +38,10 @@
       "Other - Referrals"
     ],
     "data": [
-      52,
+      53,
       14,
       40
     ],
-    "total": 106
+    "total": 107
   }
 }
