@@ -22,7 +22,7 @@
       "owner": "XuKNQdIV2pC3u5PUpla6"
     },
     "7VvPSdUyrFl9caGcISZM": {
-      "stage": "New Lead",
+      "stage": "Onboarding",
       "owner": "XuKNQdIV2pC3u5PUpla6"
     },
     "hiIv6ZuYE7zcy1ulUlnQ": {
@@ -78,7 +78,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "99bMsyL03fISLy7i0QLK": {
-      "stage": "New Lead",
+      "stage": "Discovery Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "22g4Ta7mINpk8z8ZfWFt": {
@@ -89,12 +89,8 @@
       "stage": "Proposal Sent",
       "owner": "XuKNQdIV2pC3u5PUpla6"
     },
-    "mVp936WCyHgPKUz56jig": {
-      "stage": "Discovery Call",
-      "owner": "XuKNQdIV2pC3u5PUpla6"
-    },
     "3KrShOPdNdxQI5BGYj7A": {
-      "stage": "Strategy Call",
+      "stage": "Discovery Call",
       "owner": "XuKNQdIV2pC3u5PUpla6"
     },
     "h0chnGkIDY3sHWEdmxyV": {
@@ -110,7 +106,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "kQVDEhI1zN4hKJyOfNWW": {
-      "stage": "Strategy Call",
+      "stage": "Proposal Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "P4Df0Zxnxn8R3I8HxOee": {
@@ -240,14 +236,6 @@
     "dUtWlc2rEAqBJiishmOC": {
       "stage": "Discovery Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
-    "vZrdJedgH2vn6c06yyUe": {
-      "stage": "New Lead",
-      "owner": "XuKNQdIV2pC3u5PUpla6"
-    },
-    "BKnUZ4tflyYKQuwxCYal": {
-      "stage": "New Lead",
-      "owner": "XuKNQdIV2pC3u5PUpla6"
     },
     "COJxfianXPpfWmt7Stgf": {
       "stage": "Strategy Call",

@@ -709,6 +709,22 @@ move_display_labels = [
 print(f"  {len(_stage_snaps)} snapshots · {len(weekly_movement)} week(s) computed")
 print()
 
+# ── 6f. Lead → Discovery conversion (since Jul 1, W1) ────────────────────────
+# Numerator accumulates over time: sum of Weekly Rocks "Discovery Calls" entries
+# across every week on record (including the current in-progress week), so this
+# metric grows as more weekly snapshots are diffed. Denominator is total leads
+# (opportunities created) since the same Jul 1 start date -- a flow-based rate,
+# not the current-stage-position snapshot the other funnel KPIs use.
+total_discovery_since_jul1 = sum(wk_counts["Discovery Calls"] for wk_counts in weekly_movement.values())
+total_leads_since_jul1 = sum(
+    1 for opp in all_opps
+    if opp.get("createdAt")
+    and datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00")).date() >= WEEK1_START
+)
+lead_to_disc_pct = round(total_discovery_since_jul1 / total_leads_since_jul1 * 100) if total_leads_since_jul1 else 0
+print(f"  Lead to Discovery: {lead_to_disc_pct}% ({total_discovery_since_jul1} of {total_leads_since_jul1} leads since Jul 1)")
+print()
+
 
 # ─── 6g. Meta Campaign Spending — last 7 days ────────────────────────────────
 print("Fetching Meta spend data...")
@@ -1168,6 +1184,24 @@ HEAD = """<!DOCTYPE html>
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
+    .prev-quote-row {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .prev-quote-row:last-child { border-bottom: none; }
+    .prev-quote-text {
+      font-size: 0.85rem;
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .prev-quote-source {
+      font-size: 0.64rem;
+      color: var(--text-mute);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
     .question-row {
       display: flex;
       align-items: flex-start;
@@ -1610,6 +1644,11 @@ MIDDLE = f"""
 
       <div class="funnel-kpis" style="margin-top:4px;">
         <div class="funnel-kpi">
+          <span class="funnel-kpi-label">Lead to Discovery{_info_icon("Since Jul 1, 2026 (W1). Numerator accumulates over time from Weekly Rocks data -- the running total of distinct opportunities that entered Discovery Call each week, including the current in-progress week. Denominator is total leads created since the same date. Unlike the other three funnel KPIs (which are all-time, based on current stage position), this one is flow-based and grows as more weeks are recorded.")}</span>
+          <span class="funnel-kpi-value">{lead_to_disc_pct}%</span>
+          <span class="funnel-kpi-sub">{total_discovery_since_jul1} of {total_leads_since_jul1} leads since Jul 1</span>
+        </div>
+        <div class="funnel-kpi">
           <span class="funnel-kpi-label">Discovery to Proposal</span>
           <span class="funnel-kpi-value">{disc_to_prop_pct}%</span>
           <span class="funnel-kpi-sub">{prop_all_time} of {disc_all_time} discoveries</span>
@@ -1669,7 +1708,8 @@ META_SECTION = f"""
 
 # ── 7h. Granola Insights — loaded from data/granola_intelligence.json ─────────
 # Fund sizes, competitors, and questions accumulate over time (never reset).
-# Quote of the week is replaced each week.
+# Quote of the week is replaced each week -- but the outgoing quote is archived
+# into previous_quotes (most recent first) rather than discarded.
 # To add a new week: ask Claude to analyze latest Granola meetings —
 # it will update the JSON, then re-run build_dashboard.py.
 
@@ -1695,6 +1735,15 @@ def _question_rows(data):
         f'<div class="question-row"><span class="q-count">×{v}</span><span>{k}</span></div>'
         for k, v in rows
     ) if rows else '<div class="comp-none">None recorded yet.</div>'
+
+def _prev_quote_rows(quotes):
+    return "\n        ".join(
+        f'<div class="prev-quote-row">'
+        f'<div class="prev-quote-text">"{q["text"]}"</div>'
+        f'<div class="prev-quote-source">{q["source"]}</div>'
+        f'</div>'
+        for q in quotes
+    ) if quotes else '<div class="comp-none">None archived yet.</div>'
 
 GRANOLA_SECTION = f"""
   <section class="card granola-section">
@@ -1722,6 +1771,11 @@ GRANOLA_SECTION = f"""
         {_question_rows(_gi["questions"])}
       </div>
 
+      <div class="g-card" style="grid-column: 1 / -1;">
+        <div class="g-card-label">Previous Highlighted Quotes</div>
+        {_prev_quote_rows(_gi["previous_quotes"])}
+      </div>
+
     </div>
   </section>
 """
@@ -1735,12 +1789,13 @@ GLOSSARY_TERMS = [
     ("Lead Sources — MGL / SGL / Other", "Essentially all-time within the Sales Pipeline: every opportunity ever won or lost, plus any currently open at New Lead stage or beyond. MGL = Marketing Generated Lead, SGL = Sales Generated Lead."),
     ("Call Quality (Great Fit / Potential / Poor Fit / Unscored)", "Quality score set on the contact record, shown for opportunities at Discovery Call stage or beyond, broken out by source (MGL/SGL/Other)."),
     ("Pipeline Snapshot — Open Deals by Stage", "Current count of OPEN opportunities in each Sales Pipeline stage, as of the selected daily snapshot (use the Viewing Snapshot dropdown to look at a past date)."),
+    ("Lead to Discovery", "Since Jul 1, 2026 (W1): total distinct opportunities that entered Discovery Call (accumulated from Weekly Rocks data across every week on record, including the current in-progress week) divided by total leads created since the same date. Flow-based and grows over time -- unlike the other three funnel KPIs below, which are all-time and based on current stage position."),
     ("Discovery to Proposal / Proposal to Signed / Lead to Won", "All-time conversion rates within the Sales Pipeline: of all opportunities that ever reached the first stage in the pair (any status), what % also reached the second stage (or won, for Lead to Won)."),
     ("Won", "NOT GHL's won/lost status field -- this counts opportunities currently sitting in the Onboarding stage, which is how this pipeline defines a closed-won deal."),
     ("Won Deals — Entered Onboarding by Month", "Based on lastStageChangeAt: which month each currently-Onboarding opportunity most recently moved into that stage. Month-over-month % compares to the prior completed month; the current month is marked in progress and excluded from that comparison."),
     ("Weekly Rocks", "Distinct opportunities that ENTERED each of 4 key stages (Discovery Call, Strategy Call, Proposal Sent, Agreement Signed) per week, based on diffing daily snapshots since Jul 1, 2026 (W1). An opportunity is only counted on the week it actually moved in, not every week it happens to sit there. W1 slightly undercounts because Jul 1 was our first-ever snapshot, so opportunities already sitting in a stage that day can't be confirmed as having entered it that week. The current week is marked with * and excluded from the Total column."),
     ("Meta Campaign Spending (bottom section)", "Last 7 days of Meta ad spend, including today's partial/incomplete spend as its own tile -- unlike the Daily Performance table above, which excludes today."),
-    ("Call Intelligence", "Cumulative, all-time data extracted from Granola call notes: fund sizes and competitors ever mentioned by prospects, and the most common discovery-call questions. Quote of the Week is replaced each update; everything else accumulates and never resets."),
+    ("Call Intelligence", "Cumulative, all-time data extracted from Granola call notes: fund sizes and competitors ever mentioned by prospects, and the most common discovery-call questions. Quote of the Week is replaced when a new standout quote comes in -- the outgoing quote is archived into Previous Highlighted Quotes rather than discarded. Everything else accumulates and never resets."),
 ]
 
 def _glossary_rows():

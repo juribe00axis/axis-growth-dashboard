@@ -354,6 +354,24 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
+    .prev-quote-row {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .prev-quote-row:last-child { border-bottom: none; }
+    .prev-quote-text {
+      font-size: 0.85rem;
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .prev-quote-source {
+      font-size: 0.64rem;
+      color: var(--text-mute);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
     .question-row {
       display: flex;
       align-items: flex-start;
@@ -616,7 +634,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:16px;">
       <button class="glossary-btn" onclick="document.getElementById('glossaryOverlay').classList.add('open')">? Glossary</button>
-      <span class="header-meta">Generated July 10, 2026 at 18:11 UTC</span>
+      <span class="header-meta">Generated July 13, 2026 at 22:37 UTC</span>
     </div>
   </header>
 
@@ -626,13 +644,13 @@
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <div class="card-label" style="margin-bottom:0;">Marketing &amp; Leads</div>
       <div style="display:flex;align-items:baseline;gap:12px;">
-        <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;">$249</div>
+        <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;">$127</div>
         <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-mute);">CPL</div>
         <div style="display:inline-flex;align-items:center;gap:5px;background:var(--surface-2);border-radius:6px;padding:3px 9px;">
-          <span style="font-size:0.8rem;font-weight:800;color:#FF5C5C;">↑&thinsp;+17%</span>
+          <span style="font-size:0.8rem;font-weight:800;color:var(--hero);">↓&thinsp;-49%</span>
           <span style="font-size:0.48rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-mute);">WoW</span>
         </div>
-        <div style="font-size:0.58rem;color:var(--text-mute);">Jun 29 – Jul 5</div>
+        <div style="font-size:0.58rem;color:var(--text-mute);">Jul 6 – Jul 12</div>
       </div>
     </div>
 
@@ -644,18 +662,18 @@
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
             <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-mute);">This Week</div>
             <div style="display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border-radius:6px;padding:2px 7px;">
-              <span style="font-size:0.75rem;font-weight:800;color:var(--hero);">↑&thinsp;+80%</span>
+              <span style="font-size:0.75rem;font-weight:800;color:#FF5C5C;">↓&thinsp;-91%</span>
               <span style="font-size:0.46rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-mute);">WoW</span>
             </div>
           </div>
-          <div style="font-size:3.4rem;font-weight:800;color:var(--hero);line-height:1;">18</div>
-          <div style="font-size:0.6rem;color:var(--text-mute);margin-top:5px;">Jul 6 – Jul 10</div>
+          <div style="font-size:3.4rem;font-weight:800;color:var(--hero);line-height:1;">2</div>
+          <div style="font-size:0.6rem;color:var(--text-mute);margin-top:5px;">Jul 13 – Jul 13</div>
         </div>
         <div style="height:1px;background:var(--line);margin-bottom:13px;"></div>
         <div>
           <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-mute);margin-bottom:5px;">Last Week</div>
-          <div style="font-size:2.0rem;font-weight:800;color:var(--text);line-height:1;">10</div>
-          <div style="font-size:0.6rem;color:var(--text-mute);margin-top:4px;">Jun 29 – Jul 5</div>
+          <div style="font-size:2.0rem;font-weight:800;color:var(--text);line-height:1;">22</div>
+          <div style="font-size:0.6rem;color:var(--text-mute);margin-top:4px;">Jul 6 – Jul 12</div>
         </div>
       </div>
 
@@ -663,7 +681,7 @@
       <div style="border-right:1px solid var(--line);padding:0 24px;padding-top:2px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
           <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume<span class="info-icon">i<span class="tooltip-box">Only shows the last 3 months (2 months ago, last month, current month) by lead created date -- not all-time volume. The MGL badge is scoped to the current month shown, not a rolling window.</span></span></div>
-          <span class="mgl-pill" style="font-size:0.56rem;padding:2px 7px;white-space:nowrap;">MGL&nbsp;15&nbsp;·&nbsp;58%&nbsp;·&nbsp;Jul</span>
+          <span class="mgl-pill" style="font-size:0.56rem;padding:2px 7px;white-space:nowrap;">MGL&nbsp;19&nbsp;·&nbsp;59%&nbsp;·&nbsp;Jul</span>
         </div>
         <div style="position:relative;height:168px;"><canvas id="chartMonthly"></canvas></div>
       </div>
@@ -679,10 +697,10 @@
               <button onclick="setMktgPeriod(28,this)" class="mktg-btn">28d</button>
             </div>
             <div style="display:flex;gap:5px;align-items:center;">
-              <input type="date" id="mktgFrom" min="2026-04-11" max="2026-07-09" value="2026-04-11"
+              <input type="date" id="mktgFrom" min="2026-04-14" max="2026-07-12" value="2026-04-14"
                 style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-family:inherit;font-size:0.68rem;outline:none;color-scheme:dark;">
               <span style="font-size:0.62rem;color:var(--text-mute);">–</span>
-              <input type="date" id="mktgTo" min="2026-04-11" max="2026-07-09" value="2026-07-09"
+              <input type="date" id="mktgTo" min="2026-04-14" max="2026-07-12" value="2026-07-12"
                 style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-family:inherit;font-size:0.68rem;outline:none;color-scheme:dark;">
               <button onclick="applyMktgRange()" class="mktg-btn">Go</button>
             </div>
@@ -700,7 +718,7 @@
   </div>
 
   <div class="card" style="margin-bottom:22px;">
-    <div class="card-label">Lead Sources — New Lead &amp; Beyond &nbsp;·&nbsp; <span id="sourceTotalLabel">107 Opportunities</span><span class="info-icon">i<span class="tooltip-box">This is essentially all-time, not just currently-open deals: every Sales Pipeline opportunity ever won or lost, plus any currently open at New Lead stage or beyond.</span></span></div>
+    <div class="card-label">Lead Sources — New Lead &amp; Beyond &nbsp;·&nbsp; <span id="sourceTotalLabel">110 Opportunities</span><span class="info-icon">i<span class="tooltip-box">This is essentially all-time, not just currently-open deals: every Sales Pipeline opportunity ever won or lost, plus any currently open at New Lead stage or beyond.</span></span></div>
     <div style="display:grid;grid-template-columns:3fr 2fr;gap:28px;align-items:stretch;">
 
       <!-- Left: source bar chart — constrained width so bars cluster together -->
@@ -720,11 +738,11 @@
           <span></span>
           <div style="text-align:center;">
             <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#C8FF01;margin-bottom:4px;">MGL</div>
-            <div style="font-size:1.5rem;font-weight:800;color:#C8FF01;line-height:1;">43</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#C8FF01;line-height:1;">44</div>
           </div>
           <div style="text-align:center;">
             <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#5B8FFF;margin-bottom:4px;">SGL</div>
-            <div style="font-size:1.5rem;font-weight:800;color:#5B8FFF;line-height:1;">12</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#5B8FFF;line-height:1;">13</div>
           </div>
           <div style="text-align:center;">
             <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#FF9F45;margin-bottom:4px;">Other</div>
@@ -735,7 +753,7 @@
         <!-- Score rows -->
         <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
           <span style="font-size:0.75rem;color:var(--text);">🟢 Great Fit</span>
-          <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">12</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">14</span>
           <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">6</span>
           <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">5</span>
         </div>
@@ -747,14 +765,14 @@
         </div>
         <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
           <span style="font-size:0.75rem;color:var(--text);">🔴 Poor Fit</span>
-          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">4</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">3</span>
           <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">0</span>
           <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">0</span>
         </div>
         <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;">
           <span style="font-size:0.75rem;color:var(--text-mute);">⬜ Unscored</span>
           <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">20</span>
-          <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">4</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">5</span>
           <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">27</span>
         </div>
       </div>
@@ -777,23 +795,28 @@
 
       <div class="funnel-kpis" style="margin-top:4px;">
         <div class="funnel-kpi">
+          <span class="funnel-kpi-label">Lead to Discovery<span class="info-icon">i<span class="tooltip-box">Since Jul 1, 2026 (W1). Numerator accumulates over time from Weekly Rocks data -- the running total of distinct opportunities that entered Discovery Call each week, including the current in-progress week. Denominator is total leads created since the same date. Unlike the other three funnel KPIs (which are all-time, based on current stage position), this one is flow-based and grows as more weeks are recorded.</span></span></span>
+          <span class="funnel-kpi-value">59%</span>
+          <span class="funnel-kpi-sub">19 of 32 leads since Jul 1</span>
+        </div>
+        <div class="funnel-kpi">
           <span class="funnel-kpi-label">Discovery to Proposal</span>
-          <span class="funnel-kpi-value">76%</span>
-          <span class="funnel-kpi-sub">69 of 91 discoveries</span>
+          <span class="funnel-kpi-value">77%</span>
+          <span class="funnel-kpi-sub">72 of 93 discoveries</span>
         </div>
         <div class="funnel-kpi">
           <span class="funnel-kpi-label">Proposal to Signed</span>
-          <span class="funnel-kpi-value">58%</span>
-          <span class="funnel-kpi-sub">40 of 69 proposals</span>
+          <span class="funnel-kpi-value">57%</span>
+          <span class="funnel-kpi-sub">41 of 72 proposals</span>
         </div>
         <div class="funnel-kpi">
           <span class="funnel-kpi-label">Lead to Won</span>
           <span class="funnel-kpi-value">12%</span>
-          <span class="funnel-kpi-sub">13 won of 107 total</span>
+          <span class="funnel-kpi-sub">13 won of 110 total</span>
         </div>
         <div class="funnel-kpi">
           <span class="funnel-kpi-label">Won<span class="info-icon">i<span class="tooltip-box">Not GHL's won/lost status field -- this counts opportunities currently sitting in the Onboarding stage, which is how this pipeline defines a closed-won deal.</span></span></span>
-          <span class="funnel-kpi-value">11</span>
+          <span class="funnel-kpi-value">12</span>
           <span class="funnel-kpi-sub">currently in Onboarding</span>
         </div>
       </div>
@@ -801,16 +824,16 @@
       <div style="margin-top:22px;padding-top:20px;border-top:1px solid var(--line);">
         <div class="card-label" style="margin-bottom:4px;">Won Deals — Entered Onboarding by Month</div>
         <div style="font-size:0.68rem;color:var(--text-mute);margin-bottom:14px;">Based on lastStageChangeAt · month-over-month vs. prior completed month</div>
-        <div style="display:grid;grid-template-columns:160px 60px 1fr;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);"><span style="font-size:0.8rem;color:var(--text);">May 2026</span><span style="font-size:1.1rem;font-weight:800;color:var(--hero);">3</span><span><span style="font-size:0.62rem;color:var(--text-mute);">first month on record</span></span></div><div style="display:grid;grid-template-columns:160px 60px 1fr;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);"><span style="font-size:0.8rem;color:var(--text);">June 2026</span><span style="font-size:1.1rem;font-weight:800;color:var(--hero);">6</span><span><span style="display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border-radius:6px;padding:2px 8px;font-size:0.68rem;font-weight:800;color:var(--hero);">↑&thinsp;100% <span style="color:var(--text-mute);font-weight:600;">MoM</span></span></span></div><div style="display:grid;grid-template-columns:160px 60px 1fr;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);"><span style="font-size:0.8rem;color:var(--text);">July 2026 (in progress)</span><span style="font-size:1.1rem;font-weight:800;color:var(--hero);">2</span><span><span style="font-size:0.62rem;color:var(--text-mute);">month in progress — not compared yet</span></span></div>
+        <div style="display:grid;grid-template-columns:160px 60px 1fr;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);"><span style="font-size:0.8rem;color:var(--text);">May 2026</span><span style="font-size:1.1rem;font-weight:800;color:var(--hero);">3</span><span><span style="font-size:0.62rem;color:var(--text-mute);">first month on record</span></span></div><div style="display:grid;grid-template-columns:160px 60px 1fr;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);"><span style="font-size:0.8rem;color:var(--text);">June 2026</span><span style="font-size:1.1rem;font-weight:800;color:var(--hero);">6</span><span><span style="display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border-radius:6px;padding:2px 8px;font-size:0.68rem;font-weight:800;color:var(--hero);">↑&thinsp;100% <span style="color:var(--text-mute);font-weight:600;">MoM</span></span></span></div><div style="display:grid;grid-template-columns:160px 60px 1fr;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);"><span style="font-size:0.8rem;color:var(--text);">July 2026 (in progress)</span><span style="font-size:1.1rem;font-weight:800;color:var(--hero);">3</span><span><span style="font-size:0.62rem;color:var(--text-mute);">month in progress — not compared yet</span></span></div>
       </div>
     </div>
   </div>
 
   <section class="card" style="margin-top:22px;">
     <div class="card-label">Weekly Rocks<span class="info-icon">i<span class="tooltip-box">Distinct opportunities that entered each stage per week, based on daily snapshots since Jul 1, 2026 (W1). Not a running total -- each opportunity is only counted on the week it actually moved in.</span></span></div>
-    <div class="smv-wrap"><table class="smv-table"><thead><tr><th class="smv-th-stage">Stage</th><th title="Jul 1–7">W1</th><th title="Jul 8–14">W2 *</th><th class="smv-th-total">Total</th></tr></thead><tbody><tr><td class="smv-stage-cell">Discovery Calls</td><td class="smv-val smv-val-pos">10</td><td class="smv-val smv-val-pos">6</td><td class="smv-val smv-total">10</td></tr>
+    <div class="smv-wrap"><table class="smv-table"><thead><tr><th class="smv-th-stage">Stage</th><th title="Jul 1–7">W1</th><th title="Jul 8–14">W2 *</th><th class="smv-th-total">Total</th></tr></thead><tbody><tr><td class="smv-stage-cell">Discovery Calls</td><td class="smv-val smv-val-pos">10</td><td class="smv-val smv-val-pos">9</td><td class="smv-val smv-total">10</td></tr>
 <tr><td class="smv-stage-cell">Strategy Calls</td><td class="smv-val smv-val-pos">3</td><td class="smv-val smv-val-pos">3</td><td class="smv-val smv-total">3</td></tr>
-<tr><td class="smv-stage-cell">Proposals Sent</td><td class="smv-val smv-val-pos">4</td><td class="smv-val smv-val-pos">7</td><td class="smv-val smv-total">4</td></tr>
+<tr><td class="smv-stage-cell">Proposals Sent</td><td class="smv-val smv-val-pos">4</td><td class="smv-val smv-val-pos">9</td><td class="smv-val smv-total">4</td></tr>
 <tr><td class="smv-stage-cell">Agreements Signed</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-total">—</td></tr>
 </tbody></table></div><div class="smv-note">Distinct opportunities that entered each stage that week · Sales Pipeline · based on daily snapshots · W1 undercounts slightly: Jul 1 was our first snapshot, so opps already sitting in a stage that day can't be counted as entering it · * current week in progress, excluded from Total</div>
   </section>
@@ -819,17 +842,17 @@
     <div class="card-label">Meta Campaign Spending — Last 7 Days</div>
     <div class="meta-top">
       <div>
-        <div class="hero-number">$1,452</div>
-        <div class="hero-sub">Jul 4 – Jul 10 · AxisKey</div>
+        <div class="hero-number">$1,435</div>
+        <div class="hero-sub">Jul 7 – Jul 13 · AxisKey</div>
       </div>
       <div class="meta-tiles">
         <div class="tile">
           <div class="tile-label">Avg Daily Spend</div>
-          <div class="tile-value accent">$207</div>
+          <div class="tile-value accent">$205</div>
         </div>
         <div class="tile">
           <div class="tile-label">Today's Spend</div>
-          <div class="tile-value">$99</div>
+          <div class="tile-value">$175</div>
           <div class="tile-sub">partial day</div>
         </div>
       </div>
@@ -840,7 +863,7 @@
   </section>
 
   <section class="card granola-section">
-    <div class="card-label">Call Intelligence — All Time &nbsp;·&nbsp; Updated Jul 8, 2026</div>
+    <div class="card-label">Call Intelligence — All Time &nbsp;·&nbsp; Updated Jul 13, 2026</div>
     <div class="granola-grid">
 
       <div class="g-card">
@@ -881,6 +904,11 @@
         <div class="question-row"><span class="q-count">×1</span><span>Can we launch before our deals are under contract?</span></div>
       </div>
 
+      <div class="g-card" style="grid-column: 1 / -1;">
+        <div class="g-card-label">Previous Highlighted Quotes</div>
+        <div class="comp-none">None archived yet.</div>
+      </div>
+
     </div>
   </section>
 
@@ -898,28 +926,29 @@
 <div class="glossary-term"><div class="glossary-term-label">Lead Sources — MGL / SGL / Other</div><div class="glossary-term-def">Essentially all-time within the Sales Pipeline: every opportunity ever won or lost, plus any currently open at New Lead stage or beyond. MGL = Marketing Generated Lead, SGL = Sales Generated Lead.</div></div>
 <div class="glossary-term"><div class="glossary-term-label">Call Quality (Great Fit / Potential / Poor Fit / Unscored)</div><div class="glossary-term-def">Quality score set on the contact record, shown for opportunities at Discovery Call stage or beyond, broken out by source (MGL/SGL/Other).</div></div>
 <div class="glossary-term"><div class="glossary-term-label">Pipeline Snapshot — Open Deals by Stage</div><div class="glossary-term-def">Current count of OPEN opportunities in each Sales Pipeline stage, as of the selected daily snapshot (use the Viewing Snapshot dropdown to look at a past date).</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Lead to Discovery</div><div class="glossary-term-def">Since Jul 1, 2026 (W1): total distinct opportunities that entered Discovery Call (accumulated from Weekly Rocks data across every week on record, including the current in-progress week) divided by total leads created since the same date. Flow-based and grows over time -- unlike the other three funnel KPIs below, which are all-time and based on current stage position.</div></div>
 <div class="glossary-term"><div class="glossary-term-label">Discovery to Proposal / Proposal to Signed / Lead to Won</div><div class="glossary-term-def">All-time conversion rates within the Sales Pipeline: of all opportunities that ever reached the first stage in the pair (any status), what % also reached the second stage (or won, for Lead to Won).</div></div>
 <div class="glossary-term"><div class="glossary-term-label">Won</div><div class="glossary-term-def">NOT GHL's won/lost status field -- this counts opportunities currently sitting in the Onboarding stage, which is how this pipeline defines a closed-won deal.</div></div>
 <div class="glossary-term"><div class="glossary-term-label">Won Deals — Entered Onboarding by Month</div><div class="glossary-term-def">Based on lastStageChangeAt: which month each currently-Onboarding opportunity most recently moved into that stage. Month-over-month % compares to the prior completed month; the current month is marked in progress and excluded from that comparison.</div></div>
 <div class="glossary-term"><div class="glossary-term-label">Weekly Rocks</div><div class="glossary-term-def">Distinct opportunities that ENTERED each of 4 key stages (Discovery Call, Strategy Call, Proposal Sent, Agreement Signed) per week, based on diffing daily snapshots since Jul 1, 2026 (W1). An opportunity is only counted on the week it actually moved in, not every week it happens to sit there. W1 slightly undercounts because Jul 1 was our first-ever snapshot, so opportunities already sitting in a stage that day can't be confirmed as having entered it that week. The current week is marked with * and excluded from the Total column.</div></div>
 <div class="glossary-term"><div class="glossary-term-label">Meta Campaign Spending (bottom section)</div><div class="glossary-term-def">Last 7 days of Meta ad spend, including today's partial/incomplete spend as its own tile -- unlike the Daily Performance table above, which excludes today.</div></div>
-<div class="glossary-term"><div class="glossary-term-label">Call Intelligence</div><div class="glossary-term-def">Cumulative, all-time data extracted from Granola call notes: fund sizes and competitors ever mentioned by prospects, and the most common discovery-call questions. Quote of the Week is replaced each update; everything else accumulates and never resets.</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Call Intelligence</div><div class="glossary-term-def">Cumulative, all-time data extracted from Granola call notes: fund sizes and competitors ever mentioned by prospects, and the most common discovery-call questions. Quote of the Week is replaced when a new standout quote comes in -- the outgoing quote is archived into Previous Highlighted Quotes rather than discarded. Everything else accumulates and never resets.</div></div>
     </div>
   </div>
 
   <script>
     // All values injected by build_dashboard.py — re-run the script to refresh.
-    const DAY7_LABELS     = ["Jul 4", "Jul 5", "Jul 6", "Jul 7", "Jul 8", "Jul 9", "Jul 10"];
-    const DAY7_DATA       = [3, 1, 3, 6, 3, 3, 3];
+    const DAY7_LABELS     = ["Jul 7", "Jul 8", "Jul 9", "Jul 10", "Jul 11", "Jul 12", "Jul 13"];
+    const DAY7_DATA       = [6, 3, 3, 3, 3, 1, 2];
     const MONTH_LABELS    = ["May", "Jun", "Jul"];
-    const MONTH_DATA      = [57, 88, 26];
-    const META_LABELS     = ["7/4", "7/5", "7/6", "7/7", "7/8", "7/9", "7/10"];
-    const META_SPEND      = [155.27, 275.91, 260.0, 233.49, 210.67, 218.36, 98.61];
+    const MONTH_DATA      = [57, 88, 32];
+    const META_LABELS     = ["7/7", "7/8", "7/9", "7/10", "7/11", "7/12", "7/13"];
+    const META_SPEND      = [233.49, 210.67, 218.36, 187.01, 116.84, 293.45, 174.75];
     const SOURCE_LABELS      = ["MGL", "SGL", "Other - Referrals"];
-    const SOURCE_DATA        = [53, 14, 40];
-    const PIPELINE_HISTORY   = {"2026-06-30": {"date": "2026-06-30", "stages": [{"name": "New Lead", "count": 50}, {"name": "Discovery Call", "count": 22}, {"name": "Strategy Call", "count": 4}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 1}], "total_open": 103}, "2026-07-01": {"date": "2026-07-01", "stages": [{"name": "New Lead", "count": 50}, {"name": "Discovery Call", "count": 20}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Agreement Signed", "count": 1}], "total_open": 104}, "2026-07-02": {"date": "2026-07-02", "stages": [{"name": "New Lead", "count": 16}, {"name": "Discovery Call", "count": 21}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 16}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 15}], "total_open": 85, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [49, 13, 42], "total": 104}}, "2026-07-03": {"date": "2026-07-03", "stages": [{"name": "New Lead", "count": 17}, {"name": "Discovery Call", "count": 19}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 84, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [48, 13, 42], "total": 103}}, "2026-07-04": {"date": "2026-07-04", "stages": [{"name": "New Lead", "count": 21}, {"name": "Discovery Call", "count": 19}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 88, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [51, 13, 42], "total": 106}}, "2026-07-05": {"date": "2026-07-05", "stages": [{"name": "New Lead", "count": 22}, {"name": "Discovery Call", "count": 19}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 89, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [52, 13, 42], "total": 107}}, "2026-07-06": {"date": "2026-07-06", "stages": [{"name": "New Lead", "count": 21}, {"name": "Discovery Call", "count": 19}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 14}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 85, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [51, 14, 40], "total": 105}}, "2026-07-07": {"date": "2026-07-07", "stages": [{"name": "New Lead", "count": 17}, {"name": "Discovery Call", "count": 24}, {"name": "Strategy Call", "count": 9}, {"name": "Proposal Sent", "count": 15}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 89, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [52, 15, 42], "total": 109}}, "2026-07-08": {"date": "2026-07-08", "stages": [{"name": "New Lead", "count": 16}, {"name": "Discovery Call", "count": 25}, {"name": "Strategy Call", "count": 5}, {"name": "Proposal Sent", "count": 16}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 86, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [52, 16, 39], "total": 107}}, "2026-07-09": {"date": "2026-07-09", "stages": [{"name": "New Lead", "count": 12}, {"name": "Discovery Call", "count": 14}, {"name": "Strategy Call", "count": 5}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 24}], "total_open": 82, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [51, 14, 39], "total": 104}}, "2026-07-10": {"date": "2026-07-10", "stages": [{"name": "New Lead", "count": 12}, {"name": "Discovery Call", "count": 14}, {"name": "Strategy Call", "count": 7}, {"name": "Proposal Sent", "count": 18}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 24}], "total_open": 85, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [53, 14, 40], "total": 107}}};
-    const PIPELINE_DATES     = ["2026-07-10", "2026-07-09", "2026-07-08", "2026-07-07", "2026-07-06", "2026-07-05", "2026-07-04", "2026-07-03", "2026-07-02", "2026-07-01", "2026-06-30"];
-    const MKTG_DAILY         = [{"date": "2026-04-11", "label": "4/11", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-12", "label": "4/12", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-13", "label": "4/13", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-14", "label": "4/14", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-15", "label": "4/15", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-16", "label": "4/16", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-17", "label": "4/17", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-18", "label": "4/18", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-19", "label": "4/19", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-20", "label": "4/20", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-21", "label": "4/21", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-22", "label": "4/22", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-23", "label": "4/23", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-24", "label": "4/24", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-25", "label": "4/25", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-26", "label": "4/26", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-27", "label": "4/27", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-28", "label": "4/28", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-29", "label": "4/29", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-30", "label": "4/30", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-01", "label": "5/1", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-02", "label": "5/2", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-03", "label": "5/3", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-04", "label": "5/4", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-05", "label": "5/5", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-06", "label": "5/6", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-07", "label": "5/7", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-08", "label": "5/8", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-09", "label": "5/9", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-10", "label": "5/10", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-11", "label": "5/11", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-12", "label": "5/12", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-13", "label": "5/13", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-14", "label": "5/14", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-15", "label": "5/15", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-16", "label": "5/16", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-17", "label": "5/17", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-18", "label": "5/18", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-19", "label": "5/19", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-20", "label": "5/20", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-21", "label": "5/21", "spend": 90.37, "clicks": 74, "cpc": 1.22, "leads": 0, "conv_pct": 0.0}, {"date": "2026-05-22", "label": "5/22", "spend": 162.05, "clicks": 155, "cpc": 1.05, "leads": 2, "conv_pct": 1.3}, {"date": "2026-05-23", "label": "5/23", "spend": 93.92, "clicks": 96, "cpc": 0.98, "leads": 0, "conv_pct": 0.0}, {"date": "2026-05-24", "label": "5/24", "spend": 149.33, "clicks": 168, "cpc": 0.89, "leads": 2, "conv_pct": 1.2}, {"date": "2026-05-25", "label": "5/25", "spend": 180.83, "clicks": 128, "cpc": 1.41, "leads": 1, "conv_pct": 0.8}, {"date": "2026-05-26", "label": "5/26", "spend": 131.39, "clicks": 190, "cpc": 0.69, "leads": 1, "conv_pct": 0.5}, {"date": "2026-05-27", "label": "5/27", "spend": 129.3, "clicks": 12, "cpc": 10.78, "leads": 0, "conv_pct": 0.0}, {"date": "2026-05-28", "label": "5/28", "spend": 131.89, "clicks": 40, "cpc": 3.3, "leads": 3, "conv_pct": 7.5}, {"date": "2026-05-29", "label": "5/29", "spend": 92.06, "clicks": 21, "cpc": 4.38, "leads": 2, "conv_pct": 9.5}, {"date": "2026-05-30", "label": "5/30", "spend": 57.5, "clicks": 9, "cpc": 6.39, "leads": 1, "conv_pct": 11.1}, {"date": "2026-05-31", "label": "5/31", "spend": 164.45, "clicks": 24, "cpc": 6.85, "leads": 1, "conv_pct": 4.2}, {"date": "2026-06-01", "label": "6/1", "spend": 131.83, "clicks": 11, "cpc": 11.98, "leads": 2, "conv_pct": 18.2}, {"date": "2026-06-02", "label": "6/2", "spend": 145.04, "clicks": 17, "cpc": 8.53, "leads": 1, "conv_pct": 5.9}, {"date": "2026-06-03", "label": "6/3", "spend": 126.73, "clicks": 14, "cpc": 9.05, "leads": 6, "conv_pct": 42.9}, {"date": "2026-06-04", "label": "6/4", "spend": 131.32, "clicks": 21, "cpc": 6.25, "leads": 4, "conv_pct": 19.0}, {"date": "2026-06-05", "label": "6/5", "spend": 117.29, "clicks": 16, "cpc": 7.33, "leads": 3, "conv_pct": 18.8}, {"date": "2026-06-06", "label": "6/6", "spend": 55.45, "clicks": 7, "cpc": 7.92, "leads": 0, "conv_pct": 0.0}, {"date": "2026-06-07", "label": "6/7", "spend": 154.02, "clicks": 33, "cpc": 4.67, "leads": 2, "conv_pct": 6.1}, {"date": "2026-06-08", "label": "6/8", "spend": 155.52, "clicks": 22, "cpc": 7.07, "leads": 4, "conv_pct": 18.2}, {"date": "2026-06-09", "label": "6/9", "spend": 153.1, "clicks": 26, "cpc": 5.89, "leads": 2, "conv_pct": 7.7}, {"date": "2026-06-10", "label": "6/10", "spend": 217.9, "clicks": 30, "cpc": 7.26, "leads": 2, "conv_pct": 6.7}, {"date": "2026-06-11", "label": "6/11", "spend": 196.22, "clicks": 29, "cpc": 6.77, "leads": 0, "conv_pct": 0.0}, {"date": "2026-06-12", "label": "6/12", "spend": 235.67, "clicks": 21, "cpc": 11.22, "leads": 1, "conv_pct": 4.8}, {"date": "2026-06-13", "label": "6/13", "spend": 140.51, "clicks": 21, "cpc": 6.69, "leads": 3, "conv_pct": 14.3}, {"date": "2026-06-14", "label": "6/14", "spend": 280.4, "clicks": 26, "cpc": 10.78, "leads": 3, "conv_pct": 11.5}, {"date": "2026-06-15", "label": "6/15", "spend": 284.12, "clicks": 39, "cpc": 7.29, "leads": 3, "conv_pct": 7.7}, {"date": "2026-06-16", "label": "6/16", "spend": 221.12, "clicks": 20, "cpc": 11.06, "leads": 1, "conv_pct": 5.0}, {"date": "2026-06-17", "label": "6/17", "spend": 213.19, "clicks": 31, "cpc": 6.88, "leads": 2, "conv_pct": 6.5}, {"date": "2026-06-18", "label": "6/18", "spend": 191.51, "clicks": 25, "cpc": 7.66, "leads": 2, "conv_pct": 8.0}, {"date": "2026-06-19", "label": "6/19", "spend": 203.77, "clicks": 22, "cpc": 9.26, "leads": 4, "conv_pct": 18.2}, {"date": "2026-06-20", "label": "6/20", "spend": 137.09, "clicks": 15, "cpc": 9.14, "leads": 1, "conv_pct": 6.7}, {"date": "2026-06-21", "label": "6/21", "spend": 283.51, "clicks": 21, "cpc": 13.5, "leads": 2, "conv_pct": 9.5}, {"date": "2026-06-22", "label": "6/22", "spend": 239.56, "clicks": 20, "cpc": 11.98, "leads": 1, "conv_pct": 5.0}, {"date": "2026-06-23", "label": "6/23", "spend": 218.73, "clicks": 27, "cpc": 8.1, "leads": 1, "conv_pct": 3.7}, {"date": "2026-06-24", "label": "6/24", "spend": 212.89, "clicks": 13, "cpc": 16.38, "leads": 1, "conv_pct": 7.7}, {"date": "2026-06-25", "label": "6/25", "spend": 198.35, "clicks": 27, "cpc": 7.35, "leads": 1, "conv_pct": 3.7}, {"date": "2026-06-26", "label": "6/26", "spend": 203.06, "clicks": 30, "cpc": 6.77, "leads": 1, "conv_pct": 3.3}, {"date": "2026-06-27", "label": "6/27", "spend": 147.14, "clicks": 40, "cpc": 3.68, "leads": 2, "conv_pct": 5.0}, {"date": "2026-06-28", "label": "6/28", "spend": 263.68, "clicks": 53, "cpc": 4.98, "leads": 0, "conv_pct": 0.0}, {"date": "2026-06-29", "label": "6/29", "spend": 229.84, "clicks": 34, "cpc": 6.76, "leads": 0, "conv_pct": 0.0}, {"date": "2026-06-30", "label": "6/30", "spend": 207.16, "clicks": 76, "cpc": 2.73, "leads": 1, "conv_pct": 1.3}, {"date": "2026-07-01", "label": "7/1", "spend": 212.37, "clicks": 40, "cpc": 5.31, "leads": 2, "conv_pct": 5.0}, {"date": "2026-07-02", "label": "7/2", "spend": 203.71, "clicks": 20, "cpc": 10.19, "leads": 0, "conv_pct": 0.0}, {"date": "2026-07-03", "label": "7/3", "spend": 208.83, "clicks": 37, "cpc": 5.64, "leads": 0, "conv_pct": 0.0}, {"date": "2026-07-04", "label": "7/4", "spend": 155.27, "clicks": 21, "cpc": 7.39, "leads": 2, "conv_pct": 9.5}, {"date": "2026-07-05", "label": "7/5", "spend": 275.91, "clicks": 14, "cpc": 19.71, "leads": 1, "conv_pct": 7.1}, {"date": "2026-07-06", "label": "7/6", "spend": 260.0, "clicks": 26, "cpc": 10.0, "leads": 2, "conv_pct": 7.7}, {"date": "2026-07-07", "label": "7/7", "spend": 233.49, "clicks": 35, "cpc": 6.67, "leads": 2, "conv_pct": 5.7}, {"date": "2026-07-08", "label": "7/8", "spend": 210.67, "clicks": 32, "cpc": 6.58, "leads": 2, "conv_pct": 6.2}, {"date": "2026-07-09", "label": "7/9", "spend": 218.36, "clicks": 20, "cpc": 10.92, "leads": 2, "conv_pct": 10.0}];
+    const SOURCE_DATA        = [56, 15, 39];
+    const PIPELINE_HISTORY   = {"2026-06-30": {"date": "2026-06-30", "stages": [{"name": "New Lead", "count": 50}, {"name": "Discovery Call", "count": 22}, {"name": "Strategy Call", "count": 4}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 1}], "total_open": 103}, "2026-07-01": {"date": "2026-07-01", "stages": [{"name": "New Lead", "count": 50}, {"name": "Discovery Call", "count": 20}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Agreement Signed", "count": 1}], "total_open": 104}, "2026-07-02": {"date": "2026-07-02", "stages": [{"name": "New Lead", "count": 16}, {"name": "Discovery Call", "count": 21}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 16}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 15}], "total_open": 85, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [49, 13, 42], "total": 104}}, "2026-07-03": {"date": "2026-07-03", "stages": [{"name": "New Lead", "count": 17}, {"name": "Discovery Call", "count": 19}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 84, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [48, 13, 42], "total": 103}}, "2026-07-04": {"date": "2026-07-04", "stages": [{"name": "New Lead", "count": 21}, {"name": "Discovery Call", "count": 19}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 88, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [51, 13, 42], "total": 106}}, "2026-07-05": {"date": "2026-07-05", "stages": [{"name": "New Lead", "count": 22}, {"name": "Discovery Call", "count": 19}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 89, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [52, 13, 42], "total": 107}}, "2026-07-06": {"date": "2026-07-06", "stages": [{"name": "New Lead", "count": 21}, {"name": "Discovery Call", "count": 19}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 14}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 85, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [51, 14, 40], "total": 105}}, "2026-07-07": {"date": "2026-07-07", "stages": [{"name": "New Lead", "count": 17}, {"name": "Discovery Call", "count": 24}, {"name": "Strategy Call", "count": 9}, {"name": "Proposal Sent", "count": 15}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 89, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [52, 15, 42], "total": 109}}, "2026-07-08": {"date": "2026-07-08", "stages": [{"name": "New Lead", "count": 16}, {"name": "Discovery Call", "count": 25}, {"name": "Strategy Call", "count": 5}, {"name": "Proposal Sent", "count": 16}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 86, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [52, 16, 39], "total": 107}}, "2026-07-09": {"date": "2026-07-09", "stages": [{"name": "New Lead", "count": 12}, {"name": "Discovery Call", "count": 14}, {"name": "Strategy Call", "count": 5}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 24}], "total_open": 82, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [51, 14, 39], "total": 104}}, "2026-07-10": {"date": "2026-07-10", "stages": [{"name": "New Lead", "count": 12}, {"name": "Discovery Call", "count": 14}, {"name": "Strategy Call", "count": 7}, {"name": "Proposal Sent", "count": 18}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 24}], "total_open": 85, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [53, 14, 40], "total": 107}}, "2026-07-13": {"date": "2026-07-13", "stages": [{"name": "New Lead", "count": 13}, {"name": "Discovery Call", "count": 16}, {"name": "Strategy Call", "count": 4}, {"name": "Proposal Sent", "count": 20}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Onboarding", "count": 1}, {"name": "Reactivation Queue", "count": 24}], "total_open": 88, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [56, 15, 39], "total": 110}}};
+    const PIPELINE_DATES     = ["2026-07-13", "2026-07-10", "2026-07-09", "2026-07-08", "2026-07-07", "2026-07-06", "2026-07-05", "2026-07-04", "2026-07-03", "2026-07-02", "2026-07-01", "2026-06-30"];
+    const MKTG_DAILY         = [{"date": "2026-04-14", "label": "4/14", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-15", "label": "4/15", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-16", "label": "4/16", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-17", "label": "4/17", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-18", "label": "4/18", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-19", "label": "4/19", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-20", "label": "4/20", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-21", "label": "4/21", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-22", "label": "4/22", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-23", "label": "4/23", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-24", "label": "4/24", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-25", "label": "4/25", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-26", "label": "4/26", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-27", "label": "4/27", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-28", "label": "4/28", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-29", "label": "4/29", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-04-30", "label": "4/30", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-01", "label": "5/1", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-02", "label": "5/2", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-03", "label": "5/3", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-04", "label": "5/4", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-05", "label": "5/5", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-06", "label": "5/6", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-07", "label": "5/7", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-08", "label": "5/8", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-09", "label": "5/9", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-10", "label": "5/10", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-11", "label": "5/11", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-12", "label": "5/12", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-13", "label": "5/13", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-14", "label": "5/14", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-15", "label": "5/15", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-16", "label": "5/16", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-17", "label": "5/17", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-18", "label": "5/18", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-19", "label": "5/19", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-20", "label": "5/20", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0}, {"date": "2026-05-21", "label": "5/21", "spend": 90.37, "clicks": 74, "cpc": 1.22, "leads": 0, "conv_pct": 0.0}, {"date": "2026-05-22", "label": "5/22", "spend": 162.05, "clicks": 155, "cpc": 1.05, "leads": 2, "conv_pct": 1.3}, {"date": "2026-05-23", "label": "5/23", "spend": 93.92, "clicks": 96, "cpc": 0.98, "leads": 0, "conv_pct": 0.0}, {"date": "2026-05-24", "label": "5/24", "spend": 149.33, "clicks": 168, "cpc": 0.89, "leads": 2, "conv_pct": 1.2}, {"date": "2026-05-25", "label": "5/25", "spend": 180.83, "clicks": 128, "cpc": 1.41, "leads": 1, "conv_pct": 0.8}, {"date": "2026-05-26", "label": "5/26", "spend": 131.39, "clicks": 190, "cpc": 0.69, "leads": 1, "conv_pct": 0.5}, {"date": "2026-05-27", "label": "5/27", "spend": 129.3, "clicks": 12, "cpc": 10.78, "leads": 0, "conv_pct": 0.0}, {"date": "2026-05-28", "label": "5/28", "spend": 131.89, "clicks": 40, "cpc": 3.3, "leads": 3, "conv_pct": 7.5}, {"date": "2026-05-29", "label": "5/29", "spend": 92.06, "clicks": 21, "cpc": 4.38, "leads": 2, "conv_pct": 9.5}, {"date": "2026-05-30", "label": "5/30", "spend": 57.5, "clicks": 9, "cpc": 6.39, "leads": 1, "conv_pct": 11.1}, {"date": "2026-05-31", "label": "5/31", "spend": 164.45, "clicks": 24, "cpc": 6.85, "leads": 1, "conv_pct": 4.2}, {"date": "2026-06-01", "label": "6/1", "spend": 131.83, "clicks": 11, "cpc": 11.98, "leads": 2, "conv_pct": 18.2}, {"date": "2026-06-02", "label": "6/2", "spend": 145.04, "clicks": 17, "cpc": 8.53, "leads": 1, "conv_pct": 5.9}, {"date": "2026-06-03", "label": "6/3", "spend": 126.73, "clicks": 14, "cpc": 9.05, "leads": 6, "conv_pct": 42.9}, {"date": "2026-06-04", "label": "6/4", "spend": 131.32, "clicks": 21, "cpc": 6.25, "leads": 4, "conv_pct": 19.0}, {"date": "2026-06-05", "label": "6/5", "spend": 117.29, "clicks": 16, "cpc": 7.33, "leads": 3, "conv_pct": 18.8}, {"date": "2026-06-06", "label": "6/6", "spend": 55.45, "clicks": 7, "cpc": 7.92, "leads": 0, "conv_pct": 0.0}, {"date": "2026-06-07", "label": "6/7", "spend": 154.02, "clicks": 33, "cpc": 4.67, "leads": 2, "conv_pct": 6.1}, {"date": "2026-06-08", "label": "6/8", "spend": 155.52, "clicks": 22, "cpc": 7.07, "leads": 4, "conv_pct": 18.2}, {"date": "2026-06-09", "label": "6/9", "spend": 153.1, "clicks": 26, "cpc": 5.89, "leads": 2, "conv_pct": 7.7}, {"date": "2026-06-10", "label": "6/10", "spend": 217.9, "clicks": 30, "cpc": 7.26, "leads": 2, "conv_pct": 6.7}, {"date": "2026-06-11", "label": "6/11", "spend": 196.22, "clicks": 29, "cpc": 6.77, "leads": 0, "conv_pct": 0.0}, {"date": "2026-06-12", "label": "6/12", "spend": 235.67, "clicks": 21, "cpc": 11.22, "leads": 1, "conv_pct": 4.8}, {"date": "2026-06-13", "label": "6/13", "spend": 140.51, "clicks": 21, "cpc": 6.69, "leads": 3, "conv_pct": 14.3}, {"date": "2026-06-14", "label": "6/14", "spend": 280.4, "clicks": 26, "cpc": 10.78, "leads": 3, "conv_pct": 11.5}, {"date": "2026-06-15", "label": "6/15", "spend": 284.12, "clicks": 39, "cpc": 7.29, "leads": 3, "conv_pct": 7.7}, {"date": "2026-06-16", "label": "6/16", "spend": 221.12, "clicks": 20, "cpc": 11.06, "leads": 1, "conv_pct": 5.0}, {"date": "2026-06-17", "label": "6/17", "spend": 213.19, "clicks": 31, "cpc": 6.88, "leads": 2, "conv_pct": 6.5}, {"date": "2026-06-18", "label": "6/18", "spend": 191.51, "clicks": 25, "cpc": 7.66, "leads": 2, "conv_pct": 8.0}, {"date": "2026-06-19", "label": "6/19", "spend": 203.77, "clicks": 22, "cpc": 9.26, "leads": 4, "conv_pct": 18.2}, {"date": "2026-06-20", "label": "6/20", "spend": 137.09, "clicks": 15, "cpc": 9.14, "leads": 1, "conv_pct": 6.7}, {"date": "2026-06-21", "label": "6/21", "spend": 283.51, "clicks": 21, "cpc": 13.5, "leads": 2, "conv_pct": 9.5}, {"date": "2026-06-22", "label": "6/22", "spend": 239.56, "clicks": 20, "cpc": 11.98, "leads": 1, "conv_pct": 5.0}, {"date": "2026-06-23", "label": "6/23", "spend": 218.73, "clicks": 27, "cpc": 8.1, "leads": 1, "conv_pct": 3.7}, {"date": "2026-06-24", "label": "6/24", "spend": 212.89, "clicks": 13, "cpc": 16.38, "leads": 1, "conv_pct": 7.7}, {"date": "2026-06-25", "label": "6/25", "spend": 198.35, "clicks": 27, "cpc": 7.35, "leads": 1, "conv_pct": 3.7}, {"date": "2026-06-26", "label": "6/26", "spend": 203.06, "clicks": 30, "cpc": 6.77, "leads": 1, "conv_pct": 3.3}, {"date": "2026-06-27", "label": "6/27", "spend": 147.14, "clicks": 40, "cpc": 3.68, "leads": 2, "conv_pct": 5.0}, {"date": "2026-06-28", "label": "6/28", "spend": 263.68, "clicks": 53, "cpc": 4.98, "leads": 0, "conv_pct": 0.0}, {"date": "2026-06-29", "label": "6/29", "spend": 229.84, "clicks": 34, "cpc": 6.76, "leads": 0, "conv_pct": 0.0}, {"date": "2026-06-30", "label": "6/30", "spend": 207.16, "clicks": 76, "cpc": 2.73, "leads": 1, "conv_pct": 1.3}, {"date": "2026-07-01", "label": "7/1", "spend": 212.37, "clicks": 40, "cpc": 5.31, "leads": 2, "conv_pct": 5.0}, {"date": "2026-07-02", "label": "7/2", "spend": 203.71, "clicks": 20, "cpc": 10.19, "leads": 0, "conv_pct": 0.0}, {"date": "2026-07-03", "label": "7/3", "spend": 208.83, "clicks": 37, "cpc": 5.64, "leads": 0, "conv_pct": 0.0}, {"date": "2026-07-04", "label": "7/4", "spend": 155.27, "clicks": 21, "cpc": 7.39, "leads": 2, "conv_pct": 9.5}, {"date": "2026-07-05", "label": "7/5", "spend": 275.91, "clicks": 14, "cpc": 19.71, "leads": 1, "conv_pct": 7.1}, {"date": "2026-07-06", "label": "7/6", "spend": 260.0, "clicks": 26, "cpc": 10.0, "leads": 2, "conv_pct": 7.7}, {"date": "2026-07-07", "label": "7/7", "spend": 233.49, "clicks": 35, "cpc": 6.67, "leads": 2, "conv_pct": 5.7}, {"date": "2026-07-08", "label": "7/8", "spend": 210.67, "clicks": 32, "cpc": 6.58, "leads": 2, "conv_pct": 6.2}, {"date": "2026-07-09", "label": "7/9", "spend": 218.36, "clicks": 20, "cpc": 10.92, "leads": 2, "conv_pct": 10.0}, {"date": "2026-07-10", "label": "7/10", "spend": 187.01, "clicks": 32, "cpc": 5.84, "leads": 2, "conv_pct": 6.2}, {"date": "2026-07-11", "label": "7/11", "spend": 116.84, "clicks": 22, "cpc": 5.31, "leads": 1, "conv_pct": 4.5}, {"date": "2026-07-12", "label": "7/12", "spend": 293.45, "clicks": 77, "cpc": 3.81, "leads": 1, "conv_pct": 1.3}];
   </script>
 
   <script>
