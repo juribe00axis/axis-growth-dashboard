@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Axis Growth — Raw Data</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #101014;
+      --surface:   #1C1C24;
+      --surface-2: #262630;
+      --hero:      #C8FF01;
+      --text:      #F5F5F7;
+      --text-mute: #9A9AA5;
+      --line:      #2E2E38;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Saira", "Eurostile", system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 32px 40px 64px;
+    }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .header-left  { display: flex; align-items: center; gap: 20px; }
+    .header-logo  { height: 44px; width: auto; display: block; }
+    .header-title { font-size: 1.55rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+    .header-sub   { font-size: 0.7rem; color: var(--text-mute); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
+    .header-meta  { font-size: 0.7rem; color: var(--text-mute); letter-spacing: 0.08em; text-transform: uppercase; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface-2); border: 1px solid var(--line); color: var(--text-mute);
+      border-radius: 8px; padding: 6px 12px; font-family: inherit; font-size: 0.68rem;
+      font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; text-decoration: none;
+    }
+    .btn:hover { color: var(--hero); border-color: var(--hero); }
+    .card { background: var(--surface); border-radius: 18px; padding: 24px 28px; box-shadow: 0 4px 28px rgba(0,0,0,0.5); }
+    .rd-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+    .rd-input, .rd-select {
+      background: var(--surface-2); color: var(--text); border: 1px solid var(--line);
+      border-radius: 6px; padding: 6px 10px; font-family: inherit; font-size: 0.74rem; outline: none;
+    }
+    .rd-input  { flex: 1; min-width: 200px; }
+    .rd-count  { font-size: 0.66rem; color: var(--text-mute); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+    .rd-wrap   { overflow-x: auto; }
+    table.rd-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .rd-table th {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-mute); text-align: left; padding: 0 10px 10px; border-bottom: 1px solid var(--line);
+      white-space: nowrap; cursor: pointer; user-select: none;
+    }
+    .rd-table th:hover { color: var(--text); }
+    .rd-table th .rd-sort-arrow { opacity: 0.6; margin-left: 3px; }
+    .rd-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); color: var(--text); white-space: nowrap; }
+    .rd-table td.rd-mute { color: var(--text-mute); }
+    .rd-table tr:hover td { background: var(--surface-2); }
+    .rd-empty { text-align: center; padding: 40px 0; color: var(--text-mute); font-size: 0.78rem; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-left">
+      <img src="assets/logo.svg" alt="Axis Growth" class="header-logo">
+      <div>
+        <div class="header-title">Axis Growth</div>
+        <div class="header-sub">Raw Data · Weekly Rocks movement log</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <button class="btn" onclick="downloadCSV()">&#8595; Download CSV</button>
+      <a href="axis-growth.html" class="btn">&larr; Dashboard</a>
+      <span class="header-meta">Generated July 14, 2026 at 16:42 UTC</span>
+    </div>
+  </header>
+
+  <section class="card">
+    <div class="rd-toolbar">
+      <input id="rdSearch" class="rd-input" type="text" placeholder="Search opportunity, contact, or owner…" oninput="rdRender()">
+      <select id="rdOwner" class="rd-select" onchange="rdRender()">
+        <option value="">All Owners</option>
+        <option value="Jennifer Verma">Jennifer Verma</option><option value="Stormer Santana">Stormer Santana</option><option value="Unassigned">Unassigned</option>
+      </select>
+      <select id="rdStage" class="rd-select" onchange="rdRender()">
+        <option value="">All Stages</option>
+        <option value="Discovery Calls">Discovery Calls</option><option value="Strategy Calls">Strategy Calls</option><option value="Proposals Sent">Proposals Sent</option><option value="Agreements Signed">Agreements Signed</option>
+      </select>
+      <select id="rdWeek" class="rd-select" onchange="rdRender()">
+        <option value="">All Weeks</option>
+        <option value="W2">W2</option><option value="W1">W1</option>
+      </select>
+      <span id="rdCount" class="rd-count"></span>
+    </div>
+    <div class="rd-wrap">
+      <table class="rd-table">
+        <thead>
+          <tr>
+            <th onclick="rdSort('date')">Date<span class="rd-sort-arrow" id="rdArrow-date"></span></th>
+            <th onclick="rdSort('week')">Week<span class="rd-sort-arrow" id="rdArrow-week"></span></th>
+            <th onclick="rdSort('stage')">Stage Entered<span class="rd-sort-arrow" id="rdArrow-stage"></span></th>
+            <th onclick="rdSort('prev_stage')">From<span class="rd-sort-arrow" id="rdArrow-prev_stage"></span></th>
+            <th onclick="rdSort('opp_name')">Opportunity<span class="rd-sort-arrow" id="rdArrow-opp_name"></span></th>
+            <th onclick="rdSort('contact')">Contact<span class="rd-sort-arrow" id="rdArrow-contact"></span></th>
+            <th onclick="rdSort('owner')">Owner<span class="rd-sort-arrow" id="rdArrow-owner"></span></th>
+            <th onclick="rdSort('source')">Source<span class="rd-sort-arrow" id="rdArrow-source"></span></th>
+          </tr>
+        </thead>
+        <tbody id="rdBody"></tbody>
+      </table>
+      <div id="rdEmpty" class="rd-empty" style="display:none;">No movements match these filters.</div>
+    </div>
+  </section>
+
+  <script>
+    const MOVEMENT_EVENTS = [{"date": "2026-07-14", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Brenner Development Group", "contact": "Mike Brenner", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-13", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "First Run", "contact": "Cullen Gilchrist", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-13", "week": "W2", "stage": "Discovery Calls", "prev_stage": "Strategy Call", "opp_name": "Pelican Peak Petroleum", "contact": "Brendon Ward", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-13", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Strategy Call", "opp_name": "Teaching Mens Fashion", "contact": "Jose Zuniga", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-10", "week": "W2", "stage": "Strategy Calls", "prev_stage": "(new)", "opp_name": "Irongate", "contact": "Daniel Melamed", "source": "", "owner": "Unassigned"}, {"date": "2026-07-10", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Baymahni", "contact": "Chad", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-10", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Avidus Capital", "contact": "Jonathan Baugh", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-10", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Evolutionary Mining", "contact": "Brandon Hives", "source": "MGL", "owner": "Jennifer Verma"}, {"date": "2026-07-10", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "EasyDwell", "contact": "Rapha L", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-10", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "River Oaks commercial Capital", "contact": "Brian de Armas", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-09", "week": "W2", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Academic Tech Ventures", "contact": "Robert L", "source": "Referral - Laura Miller", "owner": "Jennifer Verma"}, {"date": "2026-07-09", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Gary Gumm", "contact": "Gary Gumm", "source": "FORM", "owner": "Jennifer Verma"}, {"date": "2026-07-09", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Trinity Investors", "contact": "Lesley", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-09", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Nouritz", "contact": "Ernest Moore", "source": "MGL", "owner": "Jennifer Verma"}, {"date": "2026-07-09", "week": "W2", "stage": "Strategy Calls", "prev_stage": "Discovery Call", "opp_name": "Pelican Peak Petroleum", "contact": "Brendon Ward", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-08", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Avidus Capital", "contact": "Jonathan Baugh", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-08", "week": "W2", "stage": "Proposals Sent", "prev_stage": "New Lead", "opp_name": "ATS Systems, Inc", "contact": "Terry Patton", "source": "MGL", "owner": "Jennifer Verma"}, {"date": "2026-07-08", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Strategy Call", "opp_name": "Hydrogel", "contact": "Argina Mardiyan", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-08", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Strategy Call", "opp_name": "Capital Answers", "contact": "Scott Kogan", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-08", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Strategy Call", "opp_name": "The Premium Basket", "contact": "Shabbir Bata", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-08", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Academic Tech Ventures", "contact": "Corey Park", "source": "Referral - Laura Miller", "owner": "Jennifer Verma"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Baymahni", "contact": "Chad", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Fincera", "contact": "Mike", "source": "re", "owner": "Unassigned"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Trinity Investors", "contact": "Lesley", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Proposals Sent", "prev_stage": "(new)", "opp_name": "Doug Beasley - BD", "contact": "Doug Beasley", "source": "Meta Survey - Capital Raising", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Nick Jackson", "contact": "Nick Jackson", "source": "FORM", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Axci Capital", "contact": "Serephina Ha", "source": "SGL", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Nouritz", "contact": "Ernest Moore", "source": "MGL", "owner": "Jennifer Verma"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Pelican Peak Petroleum", "contact": "Brendon Ward", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-07", "week": "W1", "stage": "Strategy Calls", "prev_stage": "Discovery Call", "opp_name": "Hydrogel", "contact": "Argina Mardiyan", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Strategy Calls", "prev_stage": "New Lead", "opp_name": "The Miramar Group / Zephyr Labs", "contact": "Roy Serventi", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-07", "week": "W1", "stage": "Strategy Calls", "prev_stage": "Discovery Call", "opp_name": "The Premium Basket", "contact": "Shabbir Bata", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-06", "week": "W1", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Gabe Monticure", "contact": "Gabe Monticure", "source": "FORM", "owner": "Stormer Santana"}, {"date": "2026-07-03", "week": "W1", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Pressfit", "contact": "Anthony Skinner", "source": "MGL", "owner": "Jennifer Verma"}, {"date": "2026-07-03", "week": "W1", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "TALUS", "contact": "Tim Panza", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-02", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "JP Newman", "contact": "JP Newman", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-02", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Hydrogel", "contact": "Argina Mardiyan", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-02", "week": "W1", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Rising Phoenix Resources", "contact": "Jace Graham", "source": "MGL", "owner": "Stormer Santana"}];
+  </script>
+
+  <script>
+    let rdSortKey = "date";
+    let rdSortDir = -1; // -1 desc, 1 asc
+
+    function rdSort(key) {
+      if (rdSortKey === key) {
+        rdSortDir *= -1;
+      } else {
+        rdSortKey = key;
+        rdSortDir = 1;
+      }
+      rdRender();
+    }
+
+    function rdRender() {
+      const q     = document.getElementById("rdSearch").value.trim().toLowerCase();
+      const owner = document.getElementById("rdOwner").value;
+      const stage = document.getElementById("rdStage").value;
+      const week  = document.getElementById("rdWeek").value;
+
+      let rows = MOVEMENT_EVENTS.filter(e => {
+        if (owner && e.owner !== owner) return false;
+        if (stage && e.stage !== stage) return false;
+        if (week  && e.week  !== week)  return false;
+        if (q && !(e.opp_name.toLowerCase().includes(q) || e.contact.toLowerCase().includes(q) || e.owner.toLowerCase().includes(q))) return false;
+        return true;
+      });
+
+      rows.sort((a, b) => {
+        const av = a[rdSortKey], bv = b[rdSortKey];
+        if (av < bv) return -1 * rdSortDir;
+        if (av > bv) return  1 * rdSortDir;
+        return 0;
+      });
+
+      document.querySelectorAll(".rd-sort-arrow").forEach(el => el.textContent = "");
+      document.getElementById("rdArrow-" + rdSortKey).textContent = rdSortDir === 1 ? "▲" : "▼";
+
+      document.getElementById("rdCount").textContent = rows.length + " movement" + (rows.length === 1 ? "" : "s");
+      document.getElementById("rdEmpty").style.display = rows.length ? "none" : "block";
+
+      document.getElementById("rdBody").innerHTML = rows.map(e => `
+        <tr>
+          <td>${e.date}</td>
+          <td class="rd-mute">${e.week}</td>
+          <td>${e.stage}</td>
+          <td class="rd-mute">${e.prev_stage}</td>
+          <td>${e.opp_name}</td>
+          <td class="rd-mute">${e.contact}</td>
+          <td>${e.owner}</td>
+          <td class="rd-mute">${e.source}</td>
+        </tr>
+      `).join("");
+    }
+
+    function downloadCSV() {
+      const cols      = ["date","week","stage","prev_stage","opp_name","contact","owner","source"];
+      const headerRow = ["Date","Week","Stage Entered","From","Opportunity","Contact","Owner","Source"];
+      const esc  = v => `"${String(v).replace(/"/g, '""')}"`;
+      const lines = [headerRow.map(esc).join(",")].concat(
+        MOVEMENT_EVENTS.map(e => cols.map(c => esc(e[c])).join(","))
+      );
+      const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url;
+      a.download = "axis-weekly-rocks-raw-data.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    rdRender();
+  </script>
+</body>
+</html>

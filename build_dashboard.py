@@ -667,15 +667,41 @@ STAGE_LABELS = ["Discovery Call", "Strategy Call", "Proposal Sent", "Agreement S
 MOVE_LABELS  = ["Discovery Calls", "Strategy Calls", "Proposals Sent", "Agreements Signed"]
 _stage_display = dict(zip(STAGE_LABELS, MOVE_LABELS))
 
+# The two reps whose Weekly Rocks are tracked individually (owner ID -> display name).
+ROCK_OWNERS = {
+    "mMOdJLXRcIhuzcgsHx3M": "Stormer",
+    "XuKNQdIV2pC3u5PUpla6": "Jennifer",
+}
+
 WEEK1_START = datetime(2026, 7, 1, tzinfo=timezone.utc).date()
 
 def _week_index(date_obj):
     return (date_obj - WEEK1_START).days // 7 + 1
 
+# Lookup details for the raw movement-events table (opportunity/contact/source
+# by ID) — sourced from the current unfiltered opportunities pull, which
+# includes every status (open/won/lost), so names resolve even for opps that
+# have since closed out of the Sales Pipeline.
+opp_detail_map = {
+    opp["id"]: {
+        "name":    opp.get("name") or "(unnamed)",
+        "contact": (opp.get("contact") or {}).get("name") or "",
+        "source":  opp.get("source") or "",
+    }
+    for opp in all_opps if opp.get("id")
+}
+
 # Diff consecutive daily stage snapshots: an opp "enters" a stage on the day its
 # current stage differs from its previous day's stage (or it's newly created).
 _stage_snaps = sorted(_snap_dir.glob("stage-snap-*.json"))
 weekly_movement = defaultdict(lambda: {lbl: 0 for lbl in MOVE_LABELS})
+weekly_movement_by_owner = {
+    name: defaultdict(lambda: {lbl: 0 for lbl in MOVE_LABELS})
+    for name in ROCK_OWNERS.values()
+}
+# One row per opportunity stage-entry event — the raw data behind every count
+# in the Weekly Rocks table above, surfaced on the Raw Data page.
+movement_events = []
 
 for i in range(1, len(_stage_snaps)):
     prev_data = json.loads(_stage_snaps[i - 1].read_text())
@@ -691,7 +717,25 @@ for i in range(1, len(_stage_snaps)):
         prev_opp   = prev_data["opps"].get(opp_id)
         prev_stage = prev_opp["stage"] if prev_opp else None
         if prev_stage != curr_stage:
-            weekly_movement[_wk][_stage_display[curr_stage]] += 1
+            _label = _stage_display[curr_stage]
+            weekly_movement[_wk][_label] += 1
+            _owner_id   = curr_opp.get("owner")
+            _owner_name = ROCK_OWNERS.get(_owner_id)
+            if _owner_name:
+                weekly_movement_by_owner[_owner_name][_wk][_label] += 1
+            _detail = opp_detail_map.get(opp_id, {})
+            movement_events.append({
+                "date":       curr_data["date"],
+                "week":       f"W{_wk}",
+                "stage":      _label,
+                "prev_stage": prev_stage or "(new)",
+                "opp_name":   _detail.get("name", opp_id),
+                "contact":    _detail.get("contact", ""),
+                "source":     _detail.get("source", ""),
+                "owner":      user_map.get(_owner_id, "Unassigned") if _owner_id != "unassigned" else "Unassigned",
+            })
+
+movement_events.sort(key=lambda e: e["date"], reverse=True)
 
 move_display_weeks = sorted(weekly_movement.keys())
 _current_week_idx  = _week_index(today.date())
@@ -1472,6 +1516,7 @@ HEADER = f"""
       <span class="header-title">Axis Growth</span>
     </div>
     <div style="display:flex;align-items:center;gap:16px;">
+      <a href="axis-growth-data.html" class="glossary-btn" style="text-decoration:none;">Raw Data →</a>
       <button class="glossary-btn" onclick="document.getElementById('glossaryOverlay').classList.add('open')">? Glossary</button>
       <span class="header-meta">Generated {generated_at}</span>
     </div>
@@ -1821,7 +1866,7 @@ GLOSSARY_MODAL = f"""
 """
 
 # ── 7i. Weekly Rocks matrix (snapshot-diff based — accurate forward movements)
-def _build_stage_movement():
+def _build_stage_movement(movement_dict):
     if not weekly_movement:
         return (
             '<div class="smv-note" style="text-align:center;padding:32px 0;">'
@@ -1844,7 +1889,7 @@ def _build_stage_movement():
         week_tds  = ""
         row_total = 0
         for wk in move_display_weeks:
-            val = weekly_movement[wk].get(label, 0)
+            val = movement_dict[wk].get(label, 0)
             if wk != _current_week_idx:
                 row_total += val
             if val > 0:
@@ -1863,10 +1908,23 @@ def _build_stage_movement():
     )
     return f'<div class="smv-wrap"><table class="smv-table">{thead}{tbody}</table></div>{note}'
 
+_smv_all      = _build_stage_movement(weekly_movement)
+_smv_stormer  = _build_stage_movement(weekly_movement_by_owner["Stormer"])
+_smv_jennifer = _build_stage_movement(weekly_movement_by_owner["Jennifer"])
+
 STAGE_MOVEMENT = f"""
   <section class="card" style="margin-top:22px;">
-    <div class="card-label">Weekly Rocks{_info_icon("Distinct opportunities that entered each stage per week, based on daily snapshots since Jul 1, 2026 (W1). Not a running total -- each opportunity is only counted on the week it actually moved in.")}</div>
-    {_build_stage_movement()}
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div class="card-label" style="margin-bottom:0;">Weekly Rocks{_info_icon("Distinct opportunities that entered each stage per week, based on daily snapshots since Jul 1, 2026 (W1). Not a running total -- each opportunity is only counted on the week it actually moved in. Owner filter uses each opportunity's owner as of the day it entered the stage.")}</div>
+      <div style="display:flex;gap:4px;">
+        <button onclick="setRockOwner('all',this)" class="mktg-btn smv-owner-btn mktg-btn-active">All</button>
+        <button onclick="setRockOwner('stormer',this)" class="mktg-btn smv-owner-btn">Stormer</button>
+        <button onclick="setRockOwner('jennifer',this)" class="mktg-btn smv-owner-btn">Jennifer</button>
+      </div>
+    </div>
+    <div id="smvView-all" style="margin-top:14px;">{_smv_all}</div>
+    <div id="smvView-stormer" style="margin-top:14px;display:none;">{_smv_stormer}</div>
+    <div id="smvView-jennifer" style="margin-top:14px;display:none;">{_smv_jennifer}</div>
   </section>
 """
 
@@ -1909,7 +1967,7 @@ CHARTS_SCRIPT = """
       renderMktgRows(MKTG_DAILY.slice(-days));
     }
     function applyMktgRange() {
-      document.querySelectorAll(".mktg-btn").forEach(b => b.classList.remove("mktg-btn-active"));
+      document.querySelectorAll(".mktg-btn:not(.smv-owner-btn)").forEach(b => b.classList.remove("mktg-btn-active"));
       const from = document.getElementById("mktgFrom").value;
       const to   = document.getElementById("mktgTo").value;
       renderMktgRows(MKTG_DAILY.filter(r => r.date >= from && r.date <= to));
@@ -1954,11 +2012,20 @@ CHARTS_SCRIPT = """
         </table>`;
     }
     function setMktgPeriod(days, btn) {
-      document.querySelectorAll(".mktg-btn").forEach(b => b.classList.remove("mktg-btn-active"));
+      document.querySelectorAll(".mktg-btn:not(.smv-owner-btn)").forEach(b => b.classList.remove("mktg-btn-active"));
       btn.classList.add("mktg-btn-active");
       renderMktgTable(days);
     }
     renderMktgTable(7);
+
+    // ── Weekly Rocks — owner filter ──────────────────────────────────────
+    function setRockOwner(which, btn) {
+      document.querySelectorAll(".smv-owner-btn").forEach(b => b.classList.remove("mktg-btn-active"));
+      btn.classList.add("mktg-btn-active");
+      ["all", "stormer", "jennifer"].forEach(k => {
+        document.getElementById("smvView-" + k).style.display = (k === which) ? "" : "none";
+      });
+    }
 
     // ── Monthly volume — with inline data labels ───────────────────────────
     const monthlyDataLabels = {
@@ -2198,6 +2265,232 @@ CHARTS_SCRIPT = """
 </body>
 </html>
 """
+
+# ─── 7j. RAW DATA PAGE — one row per Weekly Rocks movement event ────────────
+# Separate static page (axis-growth-data.html), linked from the main header.
+# This is the underlying detail behind every count in the Weekly Rocks table:
+# each row is one opportunity entering one stage on one day.
+
+_rd_owners = sorted({e["owner"] for e in movement_events})
+_rd_weeks  = sorted({e["week"] for e in movement_events}, key=lambda w: int(w[1:]), reverse=True)
+
+def _rd_options(values):
+    return "".join(f'<option value="{v}">{v}</option>' for v in values)
+
+RAW_DATA_HEAD = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Axis Growth — Raw Data</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #101014;
+      --surface:   #1C1C24;
+      --surface-2: #262630;
+      --hero:      #C8FF01;
+      --text:      #F5F5F7;
+      --text-mute: #9A9AA5;
+      --line:      #2E2E38;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Saira", "Eurostile", system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 32px 40px 64px;
+    }
+    .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .header-left  { display: flex; align-items: center; gap: 20px; }
+    .header-logo  { height: 44px; width: auto; display: block; }
+    .header-title { font-size: 1.55rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
+    .header-sub   { font-size: 0.7rem; color: var(--text-mute); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 2px; }
+    .header-meta  { font-size: 0.7rem; color: var(--text-mute); letter-spacing: 0.08em; text-transform: uppercase; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--surface-2); border: 1px solid var(--line); color: var(--text-mute);
+      border-radius: 8px; padding: 6px 12px; font-family: inherit; font-size: 0.68rem;
+      font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; text-decoration: none;
+    }
+    .btn:hover { color: var(--hero); border-color: var(--hero); }
+    .card { background: var(--surface); border-radius: 18px; padding: 24px 28px; box-shadow: 0 4px 28px rgba(0,0,0,0.5); }
+    .rd-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+    .rd-input, .rd-select {
+      background: var(--surface-2); color: var(--text); border: 1px solid var(--line);
+      border-radius: 6px; padding: 6px 10px; font-family: inherit; font-size: 0.74rem; outline: none;
+    }
+    .rd-input  { flex: 1; min-width: 200px; }
+    .rd-count  { font-size: 0.66rem; color: var(--text-mute); letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap; }
+    .rd-wrap   { overflow-x: auto; }
+    table.rd-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .rd-table th {
+      font-size: 0.62rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--text-mute); text-align: left; padding: 0 10px 10px; border-bottom: 1px solid var(--line);
+      white-space: nowrap; cursor: pointer; user-select: none;
+    }
+    .rd-table th:hover { color: var(--text); }
+    .rd-table th .rd-sort-arrow { opacity: 0.6; margin-left: 3px; }
+    .rd-table td { padding: 8px 10px; border-bottom: 1px solid var(--line); color: var(--text); white-space: nowrap; }
+    .rd-table td.rd-mute { color: var(--text-mute); }
+    .rd-table tr:hover td { background: var(--surface-2); }
+    .rd-empty { text-align: center; padding: 40px 0; color: var(--text-mute); font-size: 0.78rem; }
+  </style>
+</head>
+<body>
+"""
+
+RAW_DATA_HEADER = f"""
+  <header class="header">
+    <div class="header-left">
+      <img src="assets/logo.svg" alt="Axis Growth" class="header-logo">
+      <div>
+        <div class="header-title">Axis Growth</div>
+        <div class="header-sub">Raw Data · Weekly Rocks movement log</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <button class="btn" onclick="downloadCSV()">&#8595; Download CSV</button>
+      <a href="axis-growth.html" class="btn">&larr; Dashboard</a>
+      <span class="header-meta">Generated {generated_at}</span>
+    </div>
+  </header>
+"""
+
+RAW_DATA_BODY = f"""
+  <section class="card">
+    <div class="rd-toolbar">
+      <input id="rdSearch" class="rd-input" type="text" placeholder="Search opportunity, contact, or owner…" oninput="rdRender()">
+      <select id="rdOwner" class="rd-select" onchange="rdRender()">
+        <option value="">All Owners</option>
+        {_rd_options(_rd_owners)}
+      </select>
+      <select id="rdStage" class="rd-select" onchange="rdRender()">
+        <option value="">All Stages</option>
+        {_rd_options(MOVE_LABELS)}
+      </select>
+      <select id="rdWeek" class="rd-select" onchange="rdRender()">
+        <option value="">All Weeks</option>
+        {_rd_options(_rd_weeks)}
+      </select>
+      <span id="rdCount" class="rd-count"></span>
+    </div>
+    <div class="rd-wrap">
+      <table class="rd-table">
+        <thead>
+          <tr>
+            <th onclick="rdSort('date')">Date<span class="rd-sort-arrow" id="rdArrow-date"></span></th>
+            <th onclick="rdSort('week')">Week<span class="rd-sort-arrow" id="rdArrow-week"></span></th>
+            <th onclick="rdSort('stage')">Stage Entered<span class="rd-sort-arrow" id="rdArrow-stage"></span></th>
+            <th onclick="rdSort('prev_stage')">From<span class="rd-sort-arrow" id="rdArrow-prev_stage"></span></th>
+            <th onclick="rdSort('opp_name')">Opportunity<span class="rd-sort-arrow" id="rdArrow-opp_name"></span></th>
+            <th onclick="rdSort('contact')">Contact<span class="rd-sort-arrow" id="rdArrow-contact"></span></th>
+            <th onclick="rdSort('owner')">Owner<span class="rd-sort-arrow" id="rdArrow-owner"></span></th>
+            <th onclick="rdSort('source')">Source<span class="rd-sort-arrow" id="rdArrow-source"></span></th>
+          </tr>
+        </thead>
+        <tbody id="rdBody"></tbody>
+      </table>
+      <div id="rdEmpty" class="rd-empty" style="display:none;">No movements match these filters.</div>
+    </div>
+  </section>
+"""
+
+# Data injection (f-string — just the JSON array) — kept separate from the
+# logic script below so the JS's own { } characters don't need doubling.
+RAW_DATA_SCRIPT = f"""
+  <script>
+    const MOVEMENT_EVENTS = {json.dumps(movement_events)};
+  </script>
+"""
+
+RAW_DATA_LOGIC_SCRIPT = """
+  <script>
+    let rdSortKey = "date";
+    let rdSortDir = -1; // -1 desc, 1 asc
+
+    function rdSort(key) {
+      if (rdSortKey === key) {
+        rdSortDir *= -1;
+      } else {
+        rdSortKey = key;
+        rdSortDir = 1;
+      }
+      rdRender();
+    }
+
+    function rdRender() {
+      const q     = document.getElementById("rdSearch").value.trim().toLowerCase();
+      const owner = document.getElementById("rdOwner").value;
+      const stage = document.getElementById("rdStage").value;
+      const week  = document.getElementById("rdWeek").value;
+
+      let rows = MOVEMENT_EVENTS.filter(e => {
+        if (owner && e.owner !== owner) return false;
+        if (stage && e.stage !== stage) return false;
+        if (week  && e.week  !== week)  return false;
+        if (q && !(e.opp_name.toLowerCase().includes(q) || e.contact.toLowerCase().includes(q) || e.owner.toLowerCase().includes(q))) return false;
+        return true;
+      });
+
+      rows.sort((a, b) => {
+        const av = a[rdSortKey], bv = b[rdSortKey];
+        if (av < bv) return -1 * rdSortDir;
+        if (av > bv) return  1 * rdSortDir;
+        return 0;
+      });
+
+      document.querySelectorAll(".rd-sort-arrow").forEach(el => el.textContent = "");
+      document.getElementById("rdArrow-" + rdSortKey).textContent = rdSortDir === 1 ? "▲" : "▼";
+
+      document.getElementById("rdCount").textContent = rows.length + " movement" + (rows.length === 1 ? "" : "s");
+      document.getElementById("rdEmpty").style.display = rows.length ? "none" : "block";
+
+      document.getElementById("rdBody").innerHTML = rows.map(e => `
+        <tr>
+          <td>${e.date}</td>
+          <td class="rd-mute">${e.week}</td>
+          <td>${e.stage}</td>
+          <td class="rd-mute">${e.prev_stage}</td>
+          <td>${e.opp_name}</td>
+          <td class="rd-mute">${e.contact}</td>
+          <td>${e.owner}</td>
+          <td class="rd-mute">${e.source}</td>
+        </tr>
+      `).join("");
+    }
+
+    function downloadCSV() {
+      const cols      = ["date","week","stage","prev_stage","opp_name","contact","owner","source"];
+      const headerRow = ["Date","Week","Stage Entered","From","Opportunity","Contact","Owner","Source"];
+      const esc  = v => `"${String(v).replace(/"/g, '""')}"`;
+      const lines = [headerRow.map(esc).join(",")].concat(
+        MOVEMENT_EVENTS.map(e => cols.map(c => esc(e[c])).join(","))
+      );
+      const blob = new Blob([lines.join("\\n")], { type: "text/csv" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url;
+      a.download = "axis-weekly-rocks-raw-data.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    rdRender();
+  </script>
+</body>
+</html>
+"""
+
+raw_data_html = RAW_DATA_HEAD + RAW_DATA_HEADER + RAW_DATA_BODY + RAW_DATA_SCRIPT + RAW_DATA_LOGIC_SCRIPT
+raw_data_path = Path(__file__).parent / "axis-growth-data.html"
+raw_data_path.write_text(raw_data_html, encoding="utf-8")
+print(f"Raw data page written → {raw_data_path} ({len(movement_events)} movements)")
+
 
 # ─── 8. ASSEMBLE AND WRITE ───────────────────────────────────────────────────
 # Join all sections into one string and write axis-growth.html.
