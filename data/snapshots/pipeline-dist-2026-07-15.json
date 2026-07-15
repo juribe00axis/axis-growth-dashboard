@@ -7,7 +7,7 @@
     },
     {
       "name": "Discovery Call",
-      "count": 20
+      "count": 21
     },
     {
       "name": "Strategy Call",
@@ -19,7 +19,7 @@
     },
     {
       "name": "Closing Call",
-      "count": 8
+      "count": 7
     },
     {
       "name": "Agreement Sent",
@@ -44,8 +44,8 @@
     "data": [
       57,
       17,
-      40
+      41
     ],
-    "total": 114
+    "total": 115
   }
 }
