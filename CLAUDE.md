@@ -15,6 +15,13 @@ plain language before running commands.
 - Rate limits: 100 requests per 10 seconds. Add small delays in any loop.
 - API reference: https://marketplace.gohighlevel.com/docs/
 
+## Local workflow
+- GitHub Actions auto-builds this dashboard twice a day (8am/4pm EST) and
+  commits daily snapshot files on its own, independent of any computer.
+  Because of this, always run `git pull` before running `build_dashboard.py`
+  locally or starting any edits in this folder — otherwise a local run can
+  create a same-day snapshot file that conflicts with one CI already pushed.
+
 ## Standing safety rules (do not override without explicit instruction)
 1. READ-ONLY by default. Only GET requests. Never POST, PUT, PATCH, or
    DELETE unless the operator explicitly requests a write action in that
