@@ -864,6 +864,76 @@ print(f"  90-day fetch | last-7: {meta_total_str} total | CPL last week: {cpl_lw
 print()
 
 
+# ─── 6h. Appointments Log — every calendar event since Jul 1, W1 ────────────
+# /calendars/events requires a calendarId (or userId/groupId) per call -- there
+# is no "all calendars" mode -- so we list calendars first, then fetch events
+# for each one in the same [WEEK1_START, +90 days] window and merge. The +90
+# day lookahead includes appointments already booked for future dates, not
+# just ones that already happened.
+
+print("Fetching appointments...")
+
+_appt_start_ms = int(datetime.combine(WEEK1_START, datetime.min.time(), tzinfo=timezone.utc).timestamp() * 1000)
+_appt_end_ms   = int((datetime.now(timezone.utc) + timedelta(days=90)).timestamp() * 1000)
+
+calendars = ghl_get("/calendars/", {"locationId": LOCATION_ID}).get("calendars", [])
+calendar_map = {c["id"]: (c.get("name") or c["id"]).strip() for c in calendars}
+
+# Contact names resolved from the opportunities pull (no per-contact API calls
+# needed -- every appointment in this business is tied to a pipeline contact).
+contact_name_by_id = {
+    opp["contactId"]: (opp.get("contact") or {}).get("name")
+    for opp in all_opps if opp.get("contactId") and (opp.get("contact") or {}).get("name")
+}
+
+# Weekly appointment counts for the Weekly Rocks "Appointments" mini-table
+# (same shape as weekly_movement -- wk -> {label: count} -- so it can reuse
+# the same rendering function). Capped to move_display_weeks/current week,
+# same as the stage-movement table above, for a consistent set of columns;
+# the full set including future-booked appointments lives on the Raw Data page.
+weekly_appts = defaultdict(lambda: {"Appointments": 0})
+weekly_appts_by_owner = {
+    name: defaultdict(lambda: {"Appointments": 0})
+    for name in ROCK_OWNERS.values()
+}
+
+appointment_events = []
+for cid in calendar_map:
+    _evs = ghl_get("/calendars/events", {
+        "locationId": LOCATION_ID,
+        "calendarId": cid,
+        "startTime":  _appt_start_ms,
+        "endTime":    _appt_end_ms,
+    }).get("events", [])
+    for ev in _evs:
+        if ev.get("deleted"):
+            continue
+        _start = datetime.fromisoformat(ev["startTime"])
+        if _start.date() < WEEK1_START:
+            continue
+        _owner_id = ev.get("assignedUserId")
+        appointment_events.append({
+            "date":       _start.strftime("%Y-%m-%d"),
+            "time":       _start.strftime("%-I:%M %p"),
+            "week":       f"W{_week_index(_start.date())}",
+            "calendar":   calendar_map.get(cid, cid),
+            "contact":    contact_name_by_id.get(ev.get("contactId"), ev.get("title", "")),
+            "owner":      user_map.get(_owner_id, "Unassigned") if _owner_id else "Unassigned",
+            "status":     ev.get("appointmentStatus", ""),
+            "booked_on":  ev.get("dateAdded", "")[:10],
+        })
+        _wk_ap = _week_index(_start.date())
+        if _wk_ap in move_display_weeks:
+            weekly_appts[_wk_ap]["Appointments"] += 1
+            _appt_owner_name = ROCK_OWNERS.get(_owner_id)
+            if _appt_owner_name:
+                weekly_appts_by_owner[_appt_owner_name][_wk_ap]["Appointments"] += 1
+
+appointment_events.sort(key=lambda e: (e["date"], e["time"]), reverse=True)
+print(f"  {len(appointment_events)} appointments across {len(calendar_map)} calendars")
+print()
+
+
 # ─── 7. BUILD HTML ───────────────────────────────────────────────────────────
 # The HTML is assembled in named sections.
 #
@@ -1839,6 +1909,7 @@ GLOSSARY_TERMS = [
     ("Won", "NOT GHL's won/lost status field -- this counts opportunities currently sitting in the Onboarding stage, which is how this pipeline defines a closed-won deal."),
     ("Won Deals — Entered Onboarding by Month", "Based on lastStageChangeAt: which month each currently-Onboarding opportunity most recently moved into that stage. Month-over-month % compares to the prior completed month; the current month is marked in progress and excluded from that comparison."),
     ("Weekly Rocks", "Distinct opportunities that ENTERED each of 4 key stages (Discovery Call, Strategy Call, Proposal Sent, Agreement Signed) per week, based on diffing daily snapshots since Jul 1, 2026 (W1). An opportunity is only counted on the week it actually moved in, not every week it happens to sit there. W1 slightly undercounts because Jul 1 was our first-ever snapshot, so opportunities already sitting in a stage that day can't be confirmed as having entered it that week. The current week is marked with * and excluded from the Total column."),
+    ("Weekly Rocks — Appointments", "Appointments scheduled per week (any calendar/status), from GHL's own calendar events -- a real log, not diffed from daily snapshots like the stage table above. Bucketed by the appointment's own date, using the same week grid. Owner filter uses the appointment's assigned user, not the linked opportunity's owner."),
     ("Meta Campaign Spending (bottom section)", "Last 7 days of Meta ad spend, including today's partial/incomplete spend as its own tile -- unlike the Daily Performance table above, which excludes today."),
     ("Call Intelligence", "Cumulative, all-time data extracted from Granola call notes: fund sizes and competitors ever mentioned by prospects, and the most common discovery-call questions. Quote of the Week is replaced when a new standout quote comes in -- the outgoing quote is archived into Previous Highlighted Quotes rather than discarded. Everything else accumulates and never resets."),
 ]
@@ -1865,14 +1936,11 @@ GLOSSARY_MODAL = f"""
   </div>
 """
 
-# ── 7i. Weekly Rocks matrix (snapshot-diff based — accurate forward movements)
-def _build_stage_movement(movement_dict):
-    if not weekly_movement:
-        return (
-            '<div class="smv-note" style="text-align:center;padding:32px 0;">'
-            'First snapshot captured today — movement data will appear on the next build.'
-            '</div>'
-        )
+# ── 7i. Weekly matrix builder (weeks as columns, Total column) — shared by
+# the Weekly Rocks stage table and the Appointments mini-table below it.
+def _build_weekly_matrix(movement_dict, row_labels, note_text, empty_text):
+    if not movement_dict:
+        return f'<div class="smv-note" style="text-align:center;padding:32px 0;">{empty_text}</div>'
 
     week_ths = "".join(
         f'<th title="{_week_range_str(wk)}">{lbl}</th>'
@@ -1885,7 +1953,7 @@ def _build_stage_movement(movement_dict):
                 f'</tr></thead>')
 
     tbody_rows = ""
-    for label in MOVE_LABELS:
+    for label in row_labels:
         week_tds  = ""
         row_total = 0
         for wk in move_display_weeks:
@@ -1901,16 +1969,19 @@ def _build_stage_movement(movement_dict):
 
     tbody = f"<tbody>{tbody_rows}</tbody>"
     note  = (
-        '<div class="smv-note">Distinct opportunities that entered each stage that week · Sales Pipeline · based on daily snapshots'
-        + ' · W1 undercounts slightly: Jul 1 was our first snapshot, so opps already sitting in a stage that day can\'t be counted as entering it'
+        f'<div class="smv-note">{note_text}'
         + (' · * current week in progress, excluded from Total' if _current_week_idx in move_display_weeks else '')
         + '</div>'
     )
     return f'<div class="smv-wrap"><table class="smv-table">{thead}{tbody}</table></div>{note}'
 
-_smv_all      = _build_stage_movement(weekly_movement)
-_smv_stormer  = _build_stage_movement(weekly_movement_by_owner["Stormer"])
-_smv_jennifer = _build_stage_movement(weekly_movement_by_owner["Jennifer"])
+_SMV_NOTE = ('Distinct opportunities that entered each stage that week · Sales Pipeline · based on daily snapshots'
+             ' · W1 undercounts slightly: Jul 1 was our first snapshot, so opps already sitting in a stage that day can\'t be counted as entering it')
+_SMV_EMPTY = 'First snapshot captured today — movement data will appear on the next build.'
+
+_smv_all      = _build_weekly_matrix(weekly_movement, MOVE_LABELS, _SMV_NOTE, _SMV_EMPTY)
+_smv_stormer  = _build_weekly_matrix(weekly_movement_by_owner["Stormer"], MOVE_LABELS, _SMV_NOTE, _SMV_EMPTY)
+_smv_jennifer = _build_weekly_matrix(weekly_movement_by_owner["Jennifer"], MOVE_LABELS, _SMV_NOTE, _SMV_EMPTY)
 
 STAGE_MOVEMENT = f"""
   <section class="card" style="margin-top:22px;">
@@ -1925,6 +1996,30 @@ STAGE_MOVEMENT = f"""
     <div id="smvView-all" style="margin-top:14px;">{_smv_all}</div>
     <div id="smvView-stormer" style="margin-top:14px;display:none;">{_smv_stormer}</div>
     <div id="smvView-jennifer" style="margin-top:14px;display:none;">{_smv_jennifer}</div>
+  </section>
+"""
+
+# ── 7i2. Appointments mini-table — same weekly grid, one row, owner filter ──
+_APW_NOTE = 'Appointments scheduled that week (any calendar/status) · from GHL calendar events, not snapshot-diffed'
+_APW_EMPTY = 'No appointment data for this period yet.'
+
+_apw_all      = _build_weekly_matrix(weekly_appts, ["Appointments"], _APW_NOTE, _APW_EMPTY)
+_apw_stormer  = _build_weekly_matrix(weekly_appts_by_owner["Stormer"], ["Appointments"], _APW_NOTE, _APW_EMPTY)
+_apw_jennifer = _build_weekly_matrix(weekly_appts_by_owner["Jennifer"], ["Appointments"], _APW_NOTE, _APW_EMPTY)
+
+APPT_WEEKLY_SECTION = f"""
+  <section class="card" style="margin-top:22px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div class="card-label" style="margin-bottom:0;">Weekly Rocks — Appointments{_info_icon("Appointments scheduled per week, from GHL's own calendar events (a real log, not diffed from daily snapshots like the table above). Bucketed by the appointment's own date, using the same week grid. Owner filter uses the appointment's assigned user. Full detail, including future-booked appointments, is on the Raw Data page.")}</div>
+      <div style="display:flex;gap:4px;">
+        <button onclick="setApptOwner('all',this)" class="mktg-btn smv-owner-btn2 mktg-btn-active">All</button>
+        <button onclick="setApptOwner('stormer',this)" class="mktg-btn smv-owner-btn2">Stormer</button>
+        <button onclick="setApptOwner('jennifer',this)" class="mktg-btn smv-owner-btn2">Jennifer</button>
+      </div>
+    </div>
+    <div id="apwView-all" style="margin-top:14px;">{_apw_all}</div>
+    <div id="apwView-stormer" style="margin-top:14px;display:none;">{_apw_stormer}</div>
+    <div id="apwView-jennifer" style="margin-top:14px;display:none;">{_apw_jennifer}</div>
   </section>
 """
 
@@ -1967,7 +2062,7 @@ CHARTS_SCRIPT = """
       renderMktgRows(MKTG_DAILY.slice(-days));
     }
     function applyMktgRange() {
-      document.querySelectorAll(".mktg-btn:not(.smv-owner-btn)").forEach(b => b.classList.remove("mktg-btn-active"));
+      document.querySelectorAll(".mktg-btn:not(.smv-owner-btn):not(.smv-owner-btn2)").forEach(b => b.classList.remove("mktg-btn-active"));
       const from = document.getElementById("mktgFrom").value;
       const to   = document.getElementById("mktgTo").value;
       renderMktgRows(MKTG_DAILY.filter(r => r.date >= from && r.date <= to));
@@ -2012,7 +2107,7 @@ CHARTS_SCRIPT = """
         </table>`;
     }
     function setMktgPeriod(days, btn) {
-      document.querySelectorAll(".mktg-btn:not(.smv-owner-btn)").forEach(b => b.classList.remove("mktg-btn-active"));
+      document.querySelectorAll(".mktg-btn:not(.smv-owner-btn):not(.smv-owner-btn2)").forEach(b => b.classList.remove("mktg-btn-active"));
       btn.classList.add("mktg-btn-active");
       renderMktgTable(days);
     }
@@ -2024,6 +2119,15 @@ CHARTS_SCRIPT = """
       btn.classList.add("mktg-btn-active");
       ["all", "stormer", "jennifer"].forEach(k => {
         document.getElementById("smvView-" + k).style.display = (k === which) ? "" : "none";
+      });
+    }
+
+    // ── Weekly Rocks — Appointments — owner filter ────────────────────────
+    function setApptOwner(which, btn) {
+      document.querySelectorAll(".smv-owner-btn2").forEach(b => b.classList.remove("mktg-btn-active"));
+      btn.classList.add("mktg-btn-active");
+      ["all", "stormer", "jennifer"].forEach(k => {
+        document.getElementById("apwView-" + k).style.display = (k === which) ? "" : "none";
       });
     }
 
@@ -2266,13 +2370,20 @@ CHARTS_SCRIPT = """
 </html>
 """
 
-# ─── 7j. RAW DATA PAGE — one row per Weekly Rocks movement event ────────────
-# Separate static page (axis-growth-data.html), linked from the main header.
-# This is the underlying detail behind every count in the Weekly Rocks table:
-# each row is one opportunity entering one stage on one day.
+# ─── 7j. RAW DATA PAGE — Weekly Rocks movements + Appointments log ──────────
+# Separate static page (axis-growth-data.html), linked from the main header,
+# with two tabs. "Movements" is the detail behind every Weekly Rocks count:
+# each row is one opportunity entering one stage on one day. "Appointments"
+# is GHL's own calendar-events log, filtered to Jul 1, W1 onward (unlike
+# Weekly Rocks, appointments are a real GHL record — no snapshot-diffing).
 
 _rd_owners = sorted({e["owner"] for e in movement_events})
 _rd_weeks  = sorted({e["week"] for e in movement_events}, key=lambda w: int(w[1:]), reverse=True)
+
+_ap_owners    = sorted({e["owner"] for e in appointment_events})
+_ap_calendars = sorted({e["calendar"] for e in appointment_events})
+_ap_statuses  = sorted({e["status"] for e in appointment_events if e["status"]})
+_ap_weeks     = sorted({e["week"] for e in appointment_events}, key=lambda w: int(w[1:]), reverse=True)
 
 def _rd_options(values):
     return "".join(f'<option value="{v}">{v}</option>' for v in values)
@@ -2318,6 +2429,14 @@ RAW_DATA_HEAD = """<!DOCTYPE html>
       font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; text-decoration: none;
     }
     .btn:hover { color: var(--hero); border-color: var(--hero); }
+    .rd-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+    .rd-tab {
+      background: none; border: none; color: var(--text-mute); cursor: pointer;
+      font-family: inherit; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; padding: 8px 4px; border-bottom: 2px solid transparent;
+    }
+    .rd-tab:hover { color: var(--text); }
+    .rd-tab-active { color: var(--hero); border-bottom-color: var(--hero); }
     .card { background: var(--surface); border-radius: 18px; padding: 24px 28px; box-shadow: 0 4px 28px rgba(0,0,0,0.5); }
     .rd-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
     .rd-input, .rd-select {
@@ -2350,11 +2469,10 @@ RAW_DATA_HEADER = f"""
       <img src="assets/logo.svg" alt="Axis Growth" class="header-logo">
       <div>
         <div class="header-title">Axis Growth</div>
-        <div class="header-sub">Raw Data · Weekly Rocks movement log</div>
+        <div class="header-sub">Raw Data · Movements &amp; Appointments</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:16px;">
-      <button class="btn" onclick="downloadCSV()">&#8595; Download CSV</button>
       <a href="axis-growth.html" class="btn">&larr; Dashboard</a>
       <span class="header-meta">Generated {generated_at}</span>
     </div>
@@ -2362,7 +2480,12 @@ RAW_DATA_HEADER = f"""
 """
 
 RAW_DATA_BODY = f"""
-  <section class="card">
+  <div class="rd-tabs">
+    <button class="rd-tab rd-tab-active" id="tabBtn-movements" onclick="switchTab('movements')">Weekly Rocks Movements</button>
+    <button class="rd-tab" id="tabBtn-appointments" onclick="switchTab('appointments')">Appointments</button>
+  </div>
+
+  <section class="card" id="tab-movements">
     <div class="rd-toolbar">
       <input id="rdSearch" class="rd-input" type="text" placeholder="Search opportunity, contact, or owner…" oninput="rdRender()">
       <select id="rdOwner" class="rd-select" onchange="rdRender()">
@@ -2378,6 +2501,7 @@ RAW_DATA_BODY = f"""
         {_rd_options(_rd_weeks)}
       </select>
       <span id="rdCount" class="rd-count"></span>
+      <button class="btn" onclick="downloadMovementsCSV()">&#8595; CSV</button>
     </div>
     <div class="rd-wrap">
       <table class="rd-table">
@@ -2398,28 +2522,89 @@ RAW_DATA_BODY = f"""
       <div id="rdEmpty" class="rd-empty" style="display:none;">No movements match these filters.</div>
     </div>
   </section>
+
+  <section class="card" id="tab-appointments" style="display:none;">
+    <div class="rd-toolbar">
+      <input id="apSearch" class="rd-input" type="text" placeholder="Search contact, owner, or calendar…" oninput="apRender()">
+      <select id="apOwner" class="rd-select" onchange="apRender()">
+        <option value="">All Owners</option>
+        {_rd_options(_ap_owners)}
+      </select>
+      <select id="apCalendar" class="rd-select" onchange="apRender()">
+        <option value="">All Calendars</option>
+        {_rd_options(_ap_calendars)}
+      </select>
+      <select id="apStatus" class="rd-select" onchange="apRender()">
+        <option value="">All Statuses</option>
+        {_rd_options(_ap_statuses)}
+      </select>
+      <select id="apWeek" class="rd-select" onchange="apRender()">
+        <option value="">All Weeks</option>
+        {_rd_options(_ap_weeks)}
+      </select>
+      <span id="apCount" class="rd-count"></span>
+      <button class="btn" onclick="downloadAppointmentsCSV()">&#8595; CSV</button>
+    </div>
+    <div class="rd-wrap">
+      <table class="rd-table">
+        <thead>
+          <tr>
+            <th onclick="apSort('date')">Date<span class="rd-sort-arrow" id="apArrow-date"></span></th>
+            <th onclick="apSort('time')">Time<span class="rd-sort-arrow" id="apArrow-time"></span></th>
+            <th onclick="apSort('week')">Week<span class="rd-sort-arrow" id="apArrow-week"></span></th>
+            <th onclick="apSort('calendar')">Calendar<span class="rd-sort-arrow" id="apArrow-calendar"></span></th>
+            <th onclick="apSort('contact')">Contact<span class="rd-sort-arrow" id="apArrow-contact"></span></th>
+            <th onclick="apSort('owner')">Owner<span class="rd-sort-arrow" id="apArrow-owner"></span></th>
+            <th onclick="apSort('status')">Status<span class="rd-sort-arrow" id="apArrow-status"></span></th>
+            <th onclick="apSort('booked_on')">Booked On<span class="rd-sort-arrow" id="apArrow-booked_on"></span></th>
+          </tr>
+        </thead>
+        <tbody id="apBody"></tbody>
+      </table>
+      <div id="apEmpty" class="rd-empty" style="display:none;">No appointments match these filters.</div>
+    </div>
+  </section>
 """
 
-# Data injection (f-string — just the JSON array) — kept separate from the
+# Data injection (f-string — just the JSON arrays) — kept separate from the
 # logic script below so the JS's own { } characters don't need doubling.
 RAW_DATA_SCRIPT = f"""
   <script>
-    const MOVEMENT_EVENTS = {json.dumps(movement_events)};
+    const MOVEMENT_EVENTS    = {json.dumps(movement_events)};
+    const APPOINTMENT_EVENTS = {json.dumps(appointment_events)};
   </script>
 """
 
 RAW_DATA_LOGIC_SCRIPT = """
   <script>
+    function switchTab(tab) {
+      ["movements", "appointments"].forEach(t => {
+        document.getElementById("tab-" + t).style.display = (t === tab) ? "" : "none";
+        document.getElementById("tabBtn-" + t).classList.toggle("rd-tab-active", t === tab);
+      });
+    }
+
+    function csvDownload(rows, cols, headerRow, filename) {
+      const esc  = v => `"${String(v).replace(/"/g, '""')}"`;
+      const lines = [headerRow.map(esc).join(",")].concat(
+        rows.map(e => cols.map(c => esc(e[c])).join(","))
+      );
+      const blob = new Blob([lines.join("\\n")], { type: "text/csv" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ── Weekly Rocks movements ────────────────────────────────────────────
     let rdSortKey = "date";
     let rdSortDir = -1; // -1 desc, 1 asc
+    let rdVisible = MOVEMENT_EVENTS;
 
     function rdSort(key) {
-      if (rdSortKey === key) {
-        rdSortDir *= -1;
-      } else {
-        rdSortKey = key;
-        rdSortDir = 1;
-      }
+      if (rdSortKey === key) { rdSortDir *= -1; } else { rdSortKey = key; rdSortDir = 1; }
       rdRender();
     }
 
@@ -2443,8 +2628,9 @@ RAW_DATA_LOGIC_SCRIPT = """
         if (av > bv) return  1 * rdSortDir;
         return 0;
       });
+      rdVisible = rows;
 
-      document.querySelectorAll(".rd-sort-arrow").forEach(el => el.textContent = "");
+      document.querySelectorAll("#tab-movements .rd-sort-arrow").forEach(el => el.textContent = "");
       document.getElementById("rdArrow-" + rdSortKey).textContent = rdSortDir === 1 ? "▲" : "▼";
 
       document.getElementById("rdCount").textContent = rows.length + " movement" + (rows.length === 1 ? "" : "s");
@@ -2464,23 +2650,80 @@ RAW_DATA_LOGIC_SCRIPT = """
       `).join("");
     }
 
-    function downloadCSV() {
-      const cols      = ["date","week","stage","prev_stage","opp_name","contact","owner","source"];
-      const headerRow = ["Date","Week","Stage Entered","From","Opportunity","Contact","Owner","Source"];
-      const esc  = v => `"${String(v).replace(/"/g, '""')}"`;
-      const lines = [headerRow.map(esc).join(",")].concat(
-        MOVEMENT_EVENTS.map(e => cols.map(c => esc(e[c])).join(","))
+    function downloadMovementsCSV() {
+      csvDownload(
+        rdVisible,
+        ["date","week","stage","prev_stage","opp_name","contact","owner","source"],
+        ["Date","Week","Stage Entered","From","Opportunity","Contact","Owner","Source"],
+        "axis-weekly-rocks-movements.csv"
       );
-      const blob = new Blob([lines.join("\\n")], { type: "text/csv" });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement("a");
-      a.href = url;
-      a.download = "axis-weekly-rocks-raw-data.csv";
-      a.click();
-      URL.revokeObjectURL(url);
+    }
+
+    // ── Appointments log ──────────────────────────────────────────────────
+    let apSortKey = "date";
+    let apSortDir = -1;
+    let apVisible = APPOINTMENT_EVENTS;
+
+    function apSort(key) {
+      if (apSortKey === key) { apSortDir *= -1; } else { apSortKey = key; apSortDir = 1; }
+      apRender();
+    }
+
+    function apRender() {
+      const q    = document.getElementById("apSearch").value.trim().toLowerCase();
+      const owner = document.getElementById("apOwner").value;
+      const cal   = document.getElementById("apCalendar").value;
+      const stat  = document.getElementById("apStatus").value;
+      const week  = document.getElementById("apWeek").value;
+
+      let rows = APPOINTMENT_EVENTS.filter(e => {
+        if (owner && e.owner !== owner) return false;
+        if (cal   && e.calendar !== cal) return false;
+        if (stat  && e.status !== stat) return false;
+        if (week  && e.week !== week) return false;
+        if (q && !(e.contact.toLowerCase().includes(q) || e.owner.toLowerCase().includes(q) || e.calendar.toLowerCase().includes(q))) return false;
+        return true;
+      });
+
+      rows.sort((a, b) => {
+        const av = a[apSortKey], bv = b[apSortKey];
+        if (av < bv) return -1 * apSortDir;
+        if (av > bv) return  1 * apSortDir;
+        return 0;
+      });
+      apVisible = rows;
+
+      document.querySelectorAll("#tab-appointments .rd-sort-arrow").forEach(el => el.textContent = "");
+      document.getElementById("apArrow-" + apSortKey).textContent = apSortDir === 1 ? "▲" : "▼";
+
+      document.getElementById("apCount").textContent = rows.length + " appointment" + (rows.length === 1 ? "" : "s");
+      document.getElementById("apEmpty").style.display = rows.length ? "none" : "block";
+
+      document.getElementById("apBody").innerHTML = rows.map(e => `
+        <tr>
+          <td>${e.date}</td>
+          <td class="rd-mute">${e.time}</td>
+          <td class="rd-mute">${e.week}</td>
+          <td>${e.calendar}</td>
+          <td>${e.contact}</td>
+          <td>${e.owner}</td>
+          <td>${e.status}</td>
+          <td class="rd-mute">${e.booked_on}</td>
+        </tr>
+      `).join("");
+    }
+
+    function downloadAppointmentsCSV() {
+      csvDownload(
+        apVisible,
+        ["date","time","week","calendar","contact","owner","status","booked_on"],
+        ["Date","Time","Week","Calendar","Contact","Owner","Status","Booked On"],
+        "axis-appointments.csv"
+      );
     }
 
     rdRender();
+    apRender();
   </script>
 </body>
 </html>
@@ -2489,14 +2732,14 @@ RAW_DATA_LOGIC_SCRIPT = """
 raw_data_html = RAW_DATA_HEAD + RAW_DATA_HEADER + RAW_DATA_BODY + RAW_DATA_SCRIPT + RAW_DATA_LOGIC_SCRIPT
 raw_data_path = Path(__file__).parent / "axis-growth-data.html"
 raw_data_path.write_text(raw_data_html, encoding="utf-8")
-print(f"Raw data page written → {raw_data_path} ({len(movement_events)} movements)")
+print(f"Raw data page written → {raw_data_path} ({len(movement_events)} movements, {len(appointment_events)} appointments)")
 
 
 # ─── 8. ASSEMBLE AND WRITE ───────────────────────────────────────────────────
 # Join all sections into one string and write axis-growth.html.
 # Running this script again will overwrite the file with fresh data.
 
-html     = HEAD + HEADER + HERO + SHARED_DATE_HEADER + MGL_CHART + MIDDLE + STAGE_MOVEMENT + META_SECTION + GRANOLA_SECTION + GLOSSARY_MODAL + DATA_SCRIPT + CHARTS_SCRIPT
+html     = HEAD + HEADER + HERO + SHARED_DATE_HEADER + MGL_CHART + MIDDLE + STAGE_MOVEMENT + APPT_WEEKLY_SECTION + META_SECTION + GRANOLA_SECTION + GLOSSARY_MODAL + DATA_SCRIPT + CHARTS_SCRIPT
 out_path = Path(__file__).parent / "axis-growth.html"
 out_path.write_text(html, encoding="utf-8")
 
