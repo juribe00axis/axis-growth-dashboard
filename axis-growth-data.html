@@ -39,6 +39,14 @@
       font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; text-decoration: none;
     }
     .btn:hover { color: var(--hero); border-color: var(--hero); }
+    .rd-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+    .rd-tab {
+      background: none; border: none; color: var(--text-mute); cursor: pointer;
+      font-family: inherit; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; padding: 8px 4px; border-bottom: 2px solid transparent;
+    }
+    .rd-tab:hover { color: var(--text); }
+    .rd-tab-active { color: var(--hero); border-bottom-color: var(--hero); }
     .card { background: var(--surface); border-radius: 18px; padding: 24px 28px; box-shadow: 0 4px 28px rgba(0,0,0,0.5); }
     .rd-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
     .rd-input, .rd-select {
@@ -69,22 +77,26 @@
       <img src="assets/logo.svg" alt="Axis Growth" class="header-logo">
       <div>
         <div class="header-title">Axis Growth</div>
-        <div class="header-sub">Raw Data · Weekly Rocks movement log</div>
+        <div class="header-sub">Raw Data · Movements &amp; Appointments</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:16px;">
-      <button class="btn" onclick="downloadCSV()">&#8595; Download CSV</button>
       <a href="axis-growth.html" class="btn">&larr; Dashboard</a>
-      <span class="header-meta">Generated July 14, 2026 at 16:42 UTC</span>
+      <span class="header-meta">Generated July 16, 2026 at 16:45 UTC</span>
     </div>
   </header>
 
-  <section class="card">
+  <div class="rd-tabs">
+    <button class="rd-tab rd-tab-active" id="tabBtn-movements" onclick="switchTab('movements')">Weekly Rocks Movements</button>
+    <button class="rd-tab" id="tabBtn-appointments" onclick="switchTab('appointments')">Appointments</button>
+  </div>
+
+  <section class="card" id="tab-movements">
     <div class="rd-toolbar">
       <input id="rdSearch" class="rd-input" type="text" placeholder="Search opportunity, contact, or owner…" oninput="rdRender()">
       <select id="rdOwner" class="rd-select" onchange="rdRender()">
         <option value="">All Owners</option>
-        <option value="Jennifer Verma">Jennifer Verma</option><option value="Stormer Santana">Stormer Santana</option><option value="Unassigned">Unassigned</option>
+        <option value="Jennifer Verma Deactivated">Jennifer Verma Deactivated</option><option value="Stormer Santana">Stormer Santana</option><option value="Unassigned">Unassigned</option>
       </select>
       <select id="rdStage" class="rd-select" onchange="rdRender()">
         <option value="">All Stages</option>
@@ -92,9 +104,10 @@
       </select>
       <select id="rdWeek" class="rd-select" onchange="rdRender()">
         <option value="">All Weeks</option>
-        <option value="W2">W2</option><option value="W1">W1</option>
+        <option value="W3">W3</option><option value="W2">W2</option><option value="W1">W1</option>
       </select>
       <span id="rdCount" class="rd-count"></span>
+      <button class="btn" onclick="downloadMovementsCSV()">&#8595; CSV</button>
     </div>
     <div class="rd-wrap">
       <table class="rd-table">
@@ -116,21 +129,82 @@
     </div>
   </section>
 
+  <section class="card" id="tab-appointments" style="display:none;">
+    <div class="rd-toolbar">
+      <input id="apSearch" class="rd-input" type="text" placeholder="Search contact, owner, or calendar…" oninput="apRender()">
+      <select id="apOwner" class="rd-select" onchange="apRender()">
+        <option value="">All Owners</option>
+        <option value="Jennifer Verma Deactivated">Jennifer Verma Deactivated</option><option value="Stormer Santana">Stormer Santana</option>
+      </select>
+      <select id="apCalendar" class="rd-select" onchange="apRender()">
+        <option value="">All Calendars</option>
+        <option value="AxisKey Discovery Call">AxisKey Discovery Call</option><option value="Fundraising Discussion">Fundraising Discussion</option><option value="Jennifer Verma's Calendar">Jennifer Verma's Calendar</option><option value="Stormer Santana's Calendar">Stormer Santana's Calendar</option>
+      </select>
+      <select id="apStatus" class="rd-select" onchange="apRender()">
+        <option value="">All Statuses</option>
+        <option value="cancelled">cancelled</option><option value="confirmed">confirmed</option><option value="noshow">noshow</option>
+      </select>
+      <select id="apWeek" class="rd-select" onchange="apRender()">
+        <option value="">All Weeks</option>
+        <option value="W5">W5</option><option value="W4">W4</option><option value="W3">W3</option><option value="W2">W2</option><option value="W1">W1</option>
+      </select>
+      <span id="apCount" class="rd-count"></span>
+      <button class="btn" onclick="downloadAppointmentsCSV()">&#8595; CSV</button>
+    </div>
+    <div class="rd-wrap">
+      <table class="rd-table">
+        <thead>
+          <tr>
+            <th onclick="apSort('date')">Date<span class="rd-sort-arrow" id="apArrow-date"></span></th>
+            <th onclick="apSort('time')">Time<span class="rd-sort-arrow" id="apArrow-time"></span></th>
+            <th onclick="apSort('week')">Week<span class="rd-sort-arrow" id="apArrow-week"></span></th>
+            <th onclick="apSort('calendar')">Calendar<span class="rd-sort-arrow" id="apArrow-calendar"></span></th>
+            <th onclick="apSort('contact')">Contact<span class="rd-sort-arrow" id="apArrow-contact"></span></th>
+            <th onclick="apSort('owner')">Owner<span class="rd-sort-arrow" id="apArrow-owner"></span></th>
+            <th onclick="apSort('status')">Status<span class="rd-sort-arrow" id="apArrow-status"></span></th>
+            <th onclick="apSort('booked_on')">Booked On<span class="rd-sort-arrow" id="apArrow-booked_on"></span></th>
+          </tr>
+        </thead>
+        <tbody id="apBody"></tbody>
+      </table>
+      <div id="apEmpty" class="rd-empty" style="display:none;">No appointments match these filters.</div>
+    </div>
+  </section>
+
   <script>
-    const MOVEMENT_EVENTS = [{"date": "2026-07-14", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Brenner Development Group", "contact": "Mike Brenner", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-13", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "First Run", "contact": "Cullen Gilchrist", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-13", "week": "W2", "stage": "Discovery Calls", "prev_stage": "Strategy Call", "opp_name": "Pelican Peak Petroleum", "contact": "Brendon Ward", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-13", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Strategy Call", "opp_name": "Teaching Mens Fashion", "contact": "Jose Zuniga", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-10", "week": "W2", "stage": "Strategy Calls", "prev_stage": "(new)", "opp_name": "Irongate", "contact": "Daniel Melamed", "source": "", "owner": "Unassigned"}, {"date": "2026-07-10", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Baymahni", "contact": "Chad", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-10", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Avidus Capital", "contact": "Jonathan Baugh", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-10", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Evolutionary Mining", "contact": "Brandon Hives", "source": "MGL", "owner": "Jennifer Verma"}, {"date": "2026-07-10", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "EasyDwell", "contact": "Rapha L", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-10", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "River Oaks commercial Capital", "contact": "Brian de Armas", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-09", "week": "W2", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Academic Tech Ventures", "contact": "Robert L", "source": "Referral - Laura Miller", "owner": "Jennifer Verma"}, {"date": "2026-07-09", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Gary Gumm", "contact": "Gary Gumm", "source": "FORM", "owner": "Jennifer Verma"}, {"date": "2026-07-09", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Trinity Investors", "contact": "Lesley", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-09", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Nouritz", "contact": "Ernest Moore", "source": "MGL", "owner": "Jennifer Verma"}, {"date": "2026-07-09", "week": "W2", "stage": "Strategy Calls", "prev_stage": "Discovery Call", "opp_name": "Pelican Peak Petroleum", "contact": "Brendon Ward", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-08", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Avidus Capital", "contact": "Jonathan Baugh", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-08", "week": "W2", "stage": "Proposals Sent", "prev_stage": "New Lead", "opp_name": "ATS Systems, Inc", "contact": "Terry Patton", "source": "MGL", "owner": "Jennifer Verma"}, {"date": "2026-07-08", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Strategy Call", "opp_name": "Hydrogel", "contact": "Argina Mardiyan", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-08", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Strategy Call", "opp_name": "Capital Answers", "contact": "Scott Kogan", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-08", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Strategy Call", "opp_name": "The Premium Basket", "contact": "Shabbir Bata", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-08", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Academic Tech Ventures", "contact": "Corey Park", "source": "Referral - Laura Miller", "owner": "Jennifer Verma"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Baymahni", "contact": "Chad", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Fincera", "contact": "Mike", "source": "re", "owner": "Unassigned"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Trinity Investors", "contact": "Lesley", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Proposals Sent", "prev_stage": "(new)", "opp_name": "Doug Beasley - BD", "contact": "Doug Beasley", "source": "Meta Survey - Capital Raising", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Nick Jackson", "contact": "Nick Jackson", "source": "FORM", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Axci Capital", "contact": "Serephina Ha", "source": "SGL", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Nouritz", "contact": "Ernest Moore", "source": "MGL", "owner": "Jennifer Verma"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Pelican Peak Petroleum", "contact": "Brendon Ward", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-07", "week": "W1", "stage": "Strategy Calls", "prev_stage": "Discovery Call", "opp_name": "Hydrogel", "contact": "Argina Mardiyan", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Strategy Calls", "prev_stage": "New Lead", "opp_name": "The Miramar Group / Zephyr Labs", "contact": "Roy Serventi", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-07", "week": "W1", "stage": "Strategy Calls", "prev_stage": "Discovery Call", "opp_name": "The Premium Basket", "contact": "Shabbir Bata", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-06", "week": "W1", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Gabe Monticure", "contact": "Gabe Monticure", "source": "FORM", "owner": "Stormer Santana"}, {"date": "2026-07-03", "week": "W1", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Pressfit", "contact": "Anthony Skinner", "source": "MGL", "owner": "Jennifer Verma"}, {"date": "2026-07-03", "week": "W1", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "TALUS", "contact": "Tim Panza", "source": "SGL", "owner": "Jennifer Verma"}, {"date": "2026-07-02", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "JP Newman", "contact": "JP Newman", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-02", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Hydrogel", "contact": "Argina Mardiyan", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-02", "week": "W1", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Rising Phoenix Resources", "contact": "Jace Graham", "source": "MGL", "owner": "Stormer Santana"}];
+    const MOVEMENT_EVENTS    = [{"date": "2026-07-16", "week": "W3", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Pax Capital", "contact": "Max Caruana", "source": "", "owner": "Unassigned"}, {"date": "2026-07-16", "week": "W3", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Gary Gumm", "contact": "Gary Gumm", "source": "FORM", "owner": "Stormer Santana"}, {"date": "2026-07-16", "week": "W3", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "First Run", "contact": "Cullen Gilchrist", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-15", "week": "W3", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "JID Investments", "contact": "John Rubino", "source": "", "owner": "Unassigned"}, {"date": "2026-07-15", "week": "W3", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "James Di Bartolo", "contact": "James Di Bartolo", "source": "FORM", "owner": "Stormer Santana"}, {"date": "2026-07-15", "week": "W3", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Cohen Investment Group", "contact": "Hugh Cohen", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-14", "week": "W2", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "StorageBlue", "contact": "Alan Mruvka", "source": "Rob Saracco", "owner": "Stormer Santana"}, {"date": "2026-07-14", "week": "W2", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Bob Weissman", "contact": "Bob Weissman", "source": "", "owner": "Unassigned"}, {"date": "2026-07-14", "week": "W2", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "ProStyl Sports", "contact": "Derrick Love", "source": "SGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-14", "week": "W2", "stage": "Strategy Calls", "prev_stage": "New Lead", "opp_name": "Helsiun Holdings", "contact": "Terry Patton 2", "source": "SGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-14", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Brenner Development Group", "contact": "Mike Brenner", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-14", "week": "W2", "stage": "Strategy Calls", "prev_stage": "Discovery Call", "opp_name": "Gary Gumm", "contact": "Gary Gumm", "source": "FORM", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-13", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "First Run", "contact": "Cullen Gilchrist", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-13", "week": "W2", "stage": "Discovery Calls", "prev_stage": "Strategy Call", "opp_name": "Pelican Peak Petroleum", "contact": "Brendon Ward", "source": "SGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-13", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Strategy Call", "opp_name": "Teaching Mens Fashion", "contact": "Jose Zuniga", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-10", "week": "W2", "stage": "Strategy Calls", "prev_stage": "(new)", "opp_name": "Irongate", "contact": "Daniel Melamed", "source": "", "owner": "Unassigned"}, {"date": "2026-07-10", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Baymahni", "contact": "Chad", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-10", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Avidus Capital", "contact": "Jonathan Baugh", "source": "SGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-10", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Evolutionary Mining", "contact": "Brandon Hives", "source": "MGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-10", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "EasyDwell", "contact": "Rapha L", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-10", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "River Oaks commercial Capital", "contact": "Brian de Armas", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-09", "week": "W2", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Academic Tech Ventures", "contact": "Robert L", "source": "Referral - Laura Miller", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-09", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Gary Gumm", "contact": "Gary Gumm", "source": "FORM", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-09", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Trinity Investors", "contact": "Lesley", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-09", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Nouritz", "contact": "Ernest Moore", "source": "MGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-09", "week": "W2", "stage": "Strategy Calls", "prev_stage": "Discovery Call", "opp_name": "Pelican Peak Petroleum", "contact": "Brendon Ward", "source": "SGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-08", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Avidus Capital", "contact": "Jonathan Baugh", "source": "SGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-08", "week": "W2", "stage": "Proposals Sent", "prev_stage": "New Lead", "opp_name": "ATS Systems, Inc", "contact": "Terry Patton", "source": "MGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-08", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Strategy Call", "opp_name": "Hydrogel", "contact": "Argina Mardiyan", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-08", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Strategy Call", "opp_name": "Capital Answers", "contact": "Scott Kogan", "source": "SGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-08", "week": "W2", "stage": "Proposals Sent", "prev_stage": "Strategy Call", "opp_name": "The Premium Basket", "contact": "Shabbir Bata", "source": "SGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-08", "week": "W2", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Academic Tech Ventures", "contact": "Corey Park", "source": "Referral - Laura Miller", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Baymahni", "contact": "Chad", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Fincera", "contact": "Mike", "source": "re", "owner": "Unassigned"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Trinity Investors", "contact": "Lesley", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Proposals Sent", "prev_stage": "(new)", "opp_name": "Doug Beasley - BD", "contact": "Doug Beasley", "source": "Meta Survey - Capital Raising", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Nick Jackson", "contact": "Nick Jackson", "source": "FORM", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Axci Capital", "contact": "Serephina Ha", "source": "SGL", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Nouritz", "contact": "Ernest Moore", "source": "MGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-07", "week": "W1", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Pelican Peak Petroleum", "contact": "Brendon Ward", "source": "SGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-07", "week": "W1", "stage": "Strategy Calls", "prev_stage": "Discovery Call", "opp_name": "Hydrogel", "contact": "Argina Mardiyan", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-07", "week": "W1", "stage": "Strategy Calls", "prev_stage": "New Lead", "opp_name": "The Miramar Group / Zephyr Labs", "contact": "Roy Serventi", "source": "SGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-07", "week": "W1", "stage": "Strategy Calls", "prev_stage": "Discovery Call", "opp_name": "The Premium Basket", "contact": "Shabbir Bata", "source": "SGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-06", "week": "W1", "stage": "Discovery Calls", "prev_stage": "New Lead", "opp_name": "Gabe Monticure", "contact": "Gabe Monticure", "source": "FORM", "owner": "Stormer Santana"}, {"date": "2026-07-03", "week": "W1", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Pressfit", "contact": "Anthony Skinner", "source": "MGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-03", "week": "W1", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "TALUS", "contact": "Tim Panza", "source": "SGL", "owner": "Jennifer Verma Deactivated"}, {"date": "2026-07-02", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "JP Newman", "contact": "JP Newman", "source": "", "owner": "Stormer Santana"}, {"date": "2026-07-02", "week": "W1", "stage": "Discovery Calls", "prev_stage": "(new)", "opp_name": "Hydrogel", "contact": "Argina Mardiyan", "source": "MGL", "owner": "Stormer Santana"}, {"date": "2026-07-02", "week": "W1", "stage": "Proposals Sent", "prev_stage": "Discovery Call", "opp_name": "Rising Phoenix Resources", "contact": "Jace Graham", "source": "MGL", "owner": "Stormer Santana"}];
+    const APPOINTMENT_EVENTS = [{"date": "2026-07-31", "time": "11:30 AM", "week": "W5", "calendar": "Fundraising Discussion", "contact": "Brandon Ramirez", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-11"}, {"date": "2026-07-23", "time": "4:30 PM", "week": "W4", "calendar": "Jennifer Verma's Calendar", "contact": "Derrick Love", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-14"}, {"date": "2026-07-21", "time": "12:30 PM", "week": "W3", "calendar": "Fundraising Discussion", "contact": "Steve Schwat", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-15"}, {"date": "2026-07-20", "time": "9:30 AM", "week": "W3", "calendar": "Fundraising Discussion", "contact": "Mary Wheeler", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-16"}, {"date": "2026-07-20", "time": "1:00 PM", "week": "W3", "calendar": "AxisKey Discovery Call", "contact": "Gary Gumm", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-16"}, {"date": "2026-07-20", "time": "10:00 AM", "week": "W3", "calendar": "AxisKey Discovery Call", "contact": "James Di Bartolo", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-15"}, {"date": "2026-07-16", "time": "5:00 PM", "week": "W3", "calendar": "Fundraising Discussion", "contact": "Kristopher Martin", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-15"}, {"date": "2026-07-16", "time": "2:00 PM", "week": "W3", "calendar": "Jennifer Verma's Calendar", "contact": "Robert L", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-09"}, {"date": "2026-07-16", "time": "2:00 PM", "week": "W3", "calendar": "Fundraising Discussion", "contact": "Justine Li", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-09"}, {"date": "2026-07-16", "time": "12:00 PM", "week": "W3", "calendar": "Jennifer Verma's Calendar", "contact": "Gary Gumm", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-14"}, {"date": "2026-07-16", "time": "11:30 AM", "week": "W3", "calendar": "Fundraising Discussion", "contact": "Brandon Ramirez", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-15"}, {"date": "2026-07-15", "time": "9:30 AM", "week": "W3", "calendar": "Fundraising Discussion", "contact": "Hugh Cohen", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-14"}, {"date": "2026-07-15", "time": "3:30 PM", "week": "W3", "calendar": "Fundraising Discussion", "contact": "Kristopher Martin", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-12"}, {"date": "2026-07-15", "time": "2:00 PM", "week": "W3", "calendar": "Fundraising Discussion", "contact": "Devin Brock", "owner": "Jennifer Verma Deactivated", "status": "noshow", "booked_on": "2026-07-14"}, {"date": "2026-07-14", "time": "6:00 PM", "week": "W2", "calendar": "Fundraising Discussion", "contact": "Gary Gumm", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-09"}, {"date": "2026-07-14", "time": "4:30 PM", "week": "W2", "calendar": "Fundraising Discussion", "contact": "Derrick Love", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-14"}, {"date": "2026-07-14", "time": "2:30 PM", "week": "W2", "calendar": "Jennifer Verma's Calendar", "contact": "Terry Patton 2", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-14"}, {"date": "2026-07-14", "time": "1:30 PM", "week": "W2", "calendar": "Fundraising Discussion", "contact": "Bee Sau", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-13"}, {"date": "2026-07-14", "time": "10:30 AM", "week": "W2", "calendar": "Fundraising Discussion", "contact": "Mike Brenner", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-08"}, {"date": "2026-07-13", "time": "3:00 PM", "week": "W2", "calendar": "Fundraising Discussion", "contact": "James Albers", "owner": "Jennifer Verma Deactivated", "status": "noshow", "booked_on": "2026-07-10"}, {"date": "2026-07-13", "time": "3:00 PM", "week": "W2", "calendar": "Fundraising Discussion", "contact": "Cullen Gilchrist", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-06"}, {"date": "2026-07-13", "time": "12:30 PM", "week": "W2", "calendar": "Fundraising Discussion", "contact": "shamane alexandria-stegenga", "owner": "Jennifer Verma Deactivated", "status": "noshow", "booked_on": "2026-07-10"}, {"date": "2026-07-10", "time": "1:00 PM", "week": "W2", "calendar": "Fundraising Discussion", "contact": "Brandon Hives", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-04"}, {"date": "2026-07-10", "time": "12:30 PM", "week": "W2", "calendar": "AxisKey Discovery Call", "contact": "Nick Jackson", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-07"}, {"date": "2026-07-10", "time": "12:00 PM", "week": "W2", "calendar": "Jennifer Verma's Calendar", "contact": "Jonathan Baugh", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-08"}, {"date": "2026-07-10", "time": "11:30 AM", "week": "W2", "calendar": "Fundraising Discussion", "contact": "Rapha L", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-08"}, {"date": "2026-07-09", "time": "2:30 PM", "week": "W2", "calendar": "Jennifer Verma's Calendar", "contact": "Ernest Moore", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-07"}, {"date": "2026-07-09", "time": "2:00 PM", "week": "W2", "calendar": "Fundraising Discussion", "contact": "Gary Gumm", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-08"}, {"date": "2026-07-09", "time": "12:30 PM", "week": "W2", "calendar": "Jennifer Verma's Calendar", "contact": "Roy Serventi", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-07"}, {"date": "2026-07-09", "time": "12:00 PM", "week": "W2", "calendar": "Jennifer Verma's Calendar", "contact": "Brendon Ward", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-07"}, {"date": "2026-07-08", "time": "9:30 AM", "week": "W2", "calendar": "Fundraising Discussion", "contact": "AxisKey - Sanjay Test <> Stormer Santana", "owner": "Stormer Santana", "status": "cancelled", "booked_on": "2026-06-18"}, {"date": "2026-07-08", "time": "4:30 PM", "week": "W2", "calendar": "Fundraising Discussion", "contact": "Terry Patton", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-08"}, {"date": "2026-07-08", "time": "12:30 PM", "week": "W2", "calendar": "AxisKey Discovery Call", "contact": "Gabe Monticure", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-06"}, {"date": "2026-07-08", "time": "11:00 AM", "week": "W2", "calendar": "Fundraising Discussion", "contact": "Terry Patton", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-06"}, {"date": "2026-07-08", "time": "10:00 AM", "week": "W2", "calendar": "Fundraising Discussion", "contact": "Jonathan Baugh", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-07"}, {"date": "2026-07-07", "time": "5:00 PM", "week": "W1", "calendar": "Jennifer Verma's Calendar", "contact": "Brendon Ward", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-07"}, {"date": "2026-07-07", "time": "4:30 PM", "week": "W1", "calendar": "Jennifer Verma's Calendar", "contact": "Shabbir Bata", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-06-29"}, {"date": "2026-07-07", "time": "2:30 PM", "week": "W1", "calendar": "Stormer Santana's Calendar", "contact": "Serephina Ha", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-06"}, {"date": "2026-07-07", "time": "2:00 PM", "week": "W1", "calendar": "Fundraising Discussion", "contact": "Rev. Hooman", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-04"}, {"date": "2026-07-07", "time": "12:30 PM", "week": "W1", "calendar": "Jennifer Verma's Calendar", "contact": "Roy Serventi", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-03"}, {"date": "2026-07-07", "time": "12:00 PM", "week": "W1", "calendar": "Fundraising Discussion", "contact": "Ernest Moore", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-07-05"}, {"date": "2026-07-06", "time": "3:00 PM", "week": "W1", "calendar": "Fundraising Discussion", "contact": "Domenic G", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-04"}, {"date": "2026-07-06", "time": "1:00 PM", "week": "W1", "calendar": "Fundraising Discussion", "contact": "Brian de Armas", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-03"}, {"date": "2026-07-06", "time": "10:00 AM", "week": "W1", "calendar": "Fundraising Discussion", "contact": "Gabe Monticure", "owner": "Stormer Santana", "status": "noshow", "booked_on": "2026-07-01"}, {"date": "2026-07-03", "time": "3:00 PM", "week": "W1", "calendar": "Jennifer Verma's Calendar", "contact": "Anthony Skinner", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-06-29"}, {"date": "2026-07-03", "time": "12:00 PM", "week": "W1", "calendar": "Fundraising Discussion", "contact": "Roy Serventi", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-06-29"}, {"date": "2026-07-03", "time": "11:00 AM", "week": "W1", "calendar": "Jennifer Verma's Calendar", "contact": "Tim Panza", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-06-29"}, {"date": "2026-07-02", "time": "1:30 PM", "week": "W1", "calendar": "Fundraising Discussion", "contact": "Argina Mardiyan", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-07-01"}, {"date": "2026-07-01", "time": "5:00 PM", "week": "W1", "calendar": "Jennifer Verma's Calendar", "contact": "Gyles Uhlenhopp", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-06-29"}, {"date": "2026-07-01", "time": "3:30 PM", "week": "W1", "calendar": "Jennifer Verma's Calendar", "contact": "Scott Kogan", "owner": "Jennifer Verma Deactivated", "status": "confirmed", "booked_on": "2026-06-29"}, {"date": "2026-07-01", "time": "3:30 PM", "week": "W1", "calendar": "Fundraising Discussion", "contact": "Desmond Desmond", "owner": "Stormer Santana", "status": "confirmed", "booked_on": "2026-06-30"}];
   </script>
 
   <script>
+    function switchTab(tab) {
+      ["movements", "appointments"].forEach(t => {
+        document.getElementById("tab-" + t).style.display = (t === tab) ? "" : "none";
+        document.getElementById("tabBtn-" + t).classList.toggle("rd-tab-active", t === tab);
+      });
+    }
+
+    function csvDownload(rows, cols, headerRow, filename) {
+      const esc  = v => `"${String(v).replace(/"/g, '""')}"`;
+      const lines = [headerRow.map(esc).join(",")].concat(
+        rows.map(e => cols.map(c => esc(e[c])).join(","))
+      );
+      const blob = new Blob([lines.join("\n")], { type: "text/csv" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // ── Weekly Rocks movements ────────────────────────────────────────────
     let rdSortKey = "date";
     let rdSortDir = -1; // -1 desc, 1 asc
+    let rdVisible = MOVEMENT_EVENTS;
 
     function rdSort(key) {
-      if (rdSortKey === key) {
-        rdSortDir *= -1;
-      } else {
-        rdSortKey = key;
-        rdSortDir = 1;
-      }
+      if (rdSortKey === key) { rdSortDir *= -1; } else { rdSortKey = key; rdSortDir = 1; }
       rdRender();
     }
 
@@ -154,8 +228,9 @@
         if (av > bv) return  1 * rdSortDir;
         return 0;
       });
+      rdVisible = rows;
 
-      document.querySelectorAll(".rd-sort-arrow").forEach(el => el.textContent = "");
+      document.querySelectorAll("#tab-movements .rd-sort-arrow").forEach(el => el.textContent = "");
       document.getElementById("rdArrow-" + rdSortKey).textContent = rdSortDir === 1 ? "▲" : "▼";
 
       document.getElementById("rdCount").textContent = rows.length + " movement" + (rows.length === 1 ? "" : "s");
@@ -175,23 +250,80 @@
       `).join("");
     }
 
-    function downloadCSV() {
-      const cols      = ["date","week","stage","prev_stage","opp_name","contact","owner","source"];
-      const headerRow = ["Date","Week","Stage Entered","From","Opportunity","Contact","Owner","Source"];
-      const esc  = v => `"${String(v).replace(/"/g, '""')}"`;
-      const lines = [headerRow.map(esc).join(",")].concat(
-        MOVEMENT_EVENTS.map(e => cols.map(c => esc(e[c])).join(","))
+    function downloadMovementsCSV() {
+      csvDownload(
+        rdVisible,
+        ["date","week","stage","prev_stage","opp_name","contact","owner","source"],
+        ["Date","Week","Stage Entered","From","Opportunity","Contact","Owner","Source"],
+        "axis-weekly-rocks-movements.csv"
       );
-      const blob = new Blob([lines.join("\n")], { type: "text/csv" });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement("a");
-      a.href = url;
-      a.download = "axis-weekly-rocks-raw-data.csv";
-      a.click();
-      URL.revokeObjectURL(url);
+    }
+
+    // ── Appointments log ──────────────────────────────────────────────────
+    let apSortKey = "date";
+    let apSortDir = -1;
+    let apVisible = APPOINTMENT_EVENTS;
+
+    function apSort(key) {
+      if (apSortKey === key) { apSortDir *= -1; } else { apSortKey = key; apSortDir = 1; }
+      apRender();
+    }
+
+    function apRender() {
+      const q    = document.getElementById("apSearch").value.trim().toLowerCase();
+      const owner = document.getElementById("apOwner").value;
+      const cal   = document.getElementById("apCalendar").value;
+      const stat  = document.getElementById("apStatus").value;
+      const week  = document.getElementById("apWeek").value;
+
+      let rows = APPOINTMENT_EVENTS.filter(e => {
+        if (owner && e.owner !== owner) return false;
+        if (cal   && e.calendar !== cal) return false;
+        if (stat  && e.status !== stat) return false;
+        if (week  && e.week !== week) return false;
+        if (q && !(e.contact.toLowerCase().includes(q) || e.owner.toLowerCase().includes(q) || e.calendar.toLowerCase().includes(q))) return false;
+        return true;
+      });
+
+      rows.sort((a, b) => {
+        const av = a[apSortKey], bv = b[apSortKey];
+        if (av < bv) return -1 * apSortDir;
+        if (av > bv) return  1 * apSortDir;
+        return 0;
+      });
+      apVisible = rows;
+
+      document.querySelectorAll("#tab-appointments .rd-sort-arrow").forEach(el => el.textContent = "");
+      document.getElementById("apArrow-" + apSortKey).textContent = apSortDir === 1 ? "▲" : "▼";
+
+      document.getElementById("apCount").textContent = rows.length + " appointment" + (rows.length === 1 ? "" : "s");
+      document.getElementById("apEmpty").style.display = rows.length ? "none" : "block";
+
+      document.getElementById("apBody").innerHTML = rows.map(e => `
+        <tr>
+          <td>${e.date}</td>
+          <td class="rd-mute">${e.time}</td>
+          <td class="rd-mute">${e.week}</td>
+          <td>${e.calendar}</td>
+          <td>${e.contact}</td>
+          <td>${e.owner}</td>
+          <td>${e.status}</td>
+          <td class="rd-mute">${e.booked_on}</td>
+        </tr>
+      `).join("");
+    }
+
+    function downloadAppointmentsCSV() {
+      csvDownload(
+        apVisible,
+        ["date","time","week","calendar","contact","owner","status","booked_on"],
+        ["Date","Time","Week","Calendar","Contact","Owner","Status","Booked On"],
+        "axis-appointments.csv"
+      );
     }
 
     rdRender();
+    apRender();
   </script>
 </body>
 </html>
