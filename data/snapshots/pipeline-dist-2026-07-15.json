@@ -1,13 +1,13 @@
 {
-  "date": "2026-07-14",
+  "date": "2026-07-15",
   "stages": [
     {
       "name": "New Lead",
-      "count": 12
+      "count": 14
     },
     {
       "name": "Discovery Call",
-      "count": 19
+      "count": 21
     },
     {
       "name": "Strategy Call",
@@ -19,7 +19,7 @@
     },
     {
       "name": "Closing Call",
-      "count": 9
+      "count": 7
     },
     {
       "name": "Agreement Sent",
@@ -31,10 +31,10 @@
     },
     {
       "name": "Reactivation Queue",
-      "count": 24
+      "count": 23
     }
   ],
-  "total_open": 90,
+  "total_open": 91,
   "source": {
     "labels": [
       "MGL",
@@ -42,10 +42,10 @@
       "Other - Referrals"
     ],
     "data": [
-      54,
+      57,
       17,
       41
     ],
-    "total": 112
+    "total": 115
   }
 }
