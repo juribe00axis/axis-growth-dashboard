@@ -3,7 +3,7 @@
   "stages": [
     {
       "name": "New Lead",
-      "count": 25
+      "count": 23
     },
     {
       "name": "Discovery Call",
@@ -34,7 +34,7 @@
       "count": 23
     }
   ],
-  "total_open": 109,
+  "total_open": 107,
   "source": {
     "labels": [
       "MGL",
@@ -42,10 +42,10 @@
       "Other - Referrals"
     ],
     "data": [
-      71,
+      69,
       17,
       46
     ],
-    "total": 134
+    "total": 132
   }
 }
