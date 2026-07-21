@@ -52,6 +52,7 @@ jobs:
         run: |
           mkdir -p dist
           cp axis-growth.html dist/index.html
+          cp axis-growth-data.html dist/
           cp -r assets dist/
 
       - name: Deploy to GitHub Pages
