@@ -3,11 +3,11 @@
   "stages": [
     {
       "name": "New Lead",
-      "count": 23
+      "count": 20
     },
     {
       "name": "Discovery Call",
-      "count": 24
+      "count": 28
     },
     {
       "name": "Strategy Call",
@@ -23,7 +23,7 @@
     },
     {
       "name": "Agreement Sent",
-      "count": 4
+      "count": 3
     },
     {
       "name": "Onboarding",
@@ -42,10 +42,10 @@
       "Other - Referrals"
     ],
     "data": [
-      69,
+      68,
       17,
-      46
+      48
     ],
-    "total": 132
+    "total": 133
   }
 }
