@@ -1,6 +1,10 @@
 {
   "date": "2026-07-22",
   "opps": {
+    "eRYl6PdZdoF1PbwPYZWm": {
+      "stage": "New Lead",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
     "H5Xu09XZe7Oo5YXLje2i": {
       "stage": "Discovery Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
@@ -278,8 +282,8 @@
       "owner": "XuKNQdIV2pC3u5PUpla6"
     },
     "uFHHik8s3pshRwBLCb3O": {
-      "stage": "Proposal Sent",
-      "owner": "XuKNQdIV2pC3u5PUpla6"
+      "stage": "Strategy Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "XxWXXd1vIpWqxyVdtuT2": {
       "stage": "Reactivation Queue",
