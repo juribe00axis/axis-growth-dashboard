@@ -882,6 +882,21 @@ _appt_end_ms   = int((datetime.now(timezone.utc) + timedelta(days=90)).timestamp
 calendars = ghl_get("/calendars/", {"locationId": LOCATION_ID}).get("calendars", [])
 calendar_map = {c["id"]: (c.get("name") or c["id"]).strip() for c in calendars}
 
+# Discovery vs. Strategy Call classification comes from the calendar's GROUP,
+# not its name -- calendar names repeat across groups (e.g. two different
+# calendars both called "Alex Zinny Personal Calendar" exist, one in the
+# "Discovery" group and one in the newer "Strategy Call" group), so name
+# matching alone would misclassify. The "Strategy Call" group was created
+# 2026-07-23; any calendar not in a group whose name contains "strategy"
+# defaults to Discovery Call, which correctly buckets all pre-7/23 history
+# (no separate strategy calendars existed yet).
+_calendar_groups = ghl_get("/calendars/groups", {"locationId": LOCATION_ID}).get("groups", [])
+_group_name_map = {g["id"]: g.get("name", "") for g in _calendar_groups}
+calendar_type_map = {
+    c["id"]: ("Strategy Call" if "strategy" in _group_name_map.get(c.get("groupId"), "").lower() else "Discovery Call")
+    for c in calendars
+}
+
 # Contact names resolved from the opportunities pull (no per-contact API calls
 # needed -- every appointment in this business is tied to a pipeline contact).
 contact_name_by_id = {
@@ -891,12 +906,15 @@ contact_name_by_id = {
 
 # Weekly appointment counts for the Weekly Rocks "Appointments" mini-table
 # (same shape as weekly_movement -- wk -> {label: count} -- so it can reuse
-# the same rendering function). Capped to move_display_weeks/current week,
-# same as the stage-movement table above, for a consistent set of columns;
-# the full set including future-booked appointments lives on the Raw Data page.
-weekly_appts = defaultdict(lambda: {"Appointments": 0})
+# the same rendering function), split into Discovery Calls / Strategy Calls
+# by the calendar's group (see calendar_type_map above). Capped to
+# move_display_weeks/current week, same as the stage-movement table above,
+# for a consistent set of columns; the full set including future-booked
+# appointments lives on the Raw Data page.
+APPT_TYPE_LABELS = ["Discovery Calls", "Strategy Calls"]
+weekly_appts = defaultdict(lambda: {lbl: 0 for lbl in APPT_TYPE_LABELS})
 weekly_appts_by_owner = {
-    name: defaultdict(lambda: {"Appointments": 0})
+    name: defaultdict(lambda: {lbl: 0 for lbl in APPT_TYPE_LABELS})
     for name in ROCK_OWNERS.values()
 }
 
@@ -914,12 +932,15 @@ for cid in calendar_map:
         _start = datetime.fromisoformat(ev["startTime"])
         if _start.date() < WEEK1_START:
             continue
-        _owner_id = ev.get("assignedUserId")
+        _owner_id  = ev.get("assignedUserId")
+        _appt_type = calendar_type_map.get(cid, "Discovery Call")
+        _appt_type_label = "Strategy Calls" if _appt_type == "Strategy Call" else "Discovery Calls"
         appointment_events.append({
             "date":       _start.strftime("%Y-%m-%d"),
             "time":       _start.strftime("%-I:%M %p"),
             "week":       f"W{_week_index(_start.date())}",
             "calendar":   calendar_map.get(cid, cid),
+            "type":       _appt_type,
             "contact":    contact_name_by_id.get(ev.get("contactId"), ev.get("title", "")),
             "owner":      user_map.get(_owner_id, "Unassigned") if _owner_id else "Unassigned",
             "status":     ev.get("appointmentStatus", ""),
@@ -927,10 +948,10 @@ for cid in calendar_map:
         })
         _wk_ap = _week_index(_start.date())
         if _wk_ap in move_display_weeks:
-            weekly_appts[_wk_ap]["Appointments"] += 1
+            weekly_appts[_wk_ap][_appt_type_label] += 1
             _appt_owner_name = ROCK_OWNERS.get(_owner_id)
             if _appt_owner_name:
-                weekly_appts_by_owner[_appt_owner_name][_wk_ap]["Appointments"] += 1
+                weekly_appts_by_owner[_appt_owner_name][_wk_ap][_appt_type_label] += 1
 
 appointment_events.sort(key=lambda e: (e["date"], e["time"]), reverse=True)
 print(f"  {len(appointment_events)} appointments across {len(calendar_map)} calendars")
@@ -2006,18 +2027,19 @@ STAGE_MOVEMENT = f"""
 """
 
 # ── 7i2. Appointments mini-table — same weekly grid, one row, owner filter ──
-_APW_NOTE = 'Appointments scheduled that week (any calendar/status) · from GHL calendar events, not snapshot-diffed'
+_APW_NOTE = ('Appointments scheduled that week (any calendar/status) · from GHL calendar events, not snapshot-diffed'
+             ' · split by calendar group: the "Strategy Call" group was created 2026-07-23, so everything before that date falls under Discovery Calls')
 _APW_EMPTY = 'No appointment data for this period yet.'
 
-_apw_all      = _build_weekly_matrix(weekly_appts, ["Appointments"], _APW_NOTE, _APW_EMPTY)
-_apw_stormer  = _build_weekly_matrix(weekly_appts_by_owner["Stormer"], ["Appointments"], _APW_NOTE, _APW_EMPTY)
-_apw_alex     = _build_weekly_matrix(weekly_appts_by_owner["Alex"], ["Appointments"], _APW_NOTE, _APW_EMPTY)
-_apw_joncarlo = _build_weekly_matrix(weekly_appts_by_owner["Joncarlo"], ["Appointments"], _APW_NOTE, _APW_EMPTY)
+_apw_all      = _build_weekly_matrix(weekly_appts, APPT_TYPE_LABELS, _APW_NOTE, _APW_EMPTY)
+_apw_stormer  = _build_weekly_matrix(weekly_appts_by_owner["Stormer"], APPT_TYPE_LABELS, _APW_NOTE, _APW_EMPTY)
+_apw_alex     = _build_weekly_matrix(weekly_appts_by_owner["Alex"], APPT_TYPE_LABELS, _APW_NOTE, _APW_EMPTY)
+_apw_joncarlo = _build_weekly_matrix(weekly_appts_by_owner["Joncarlo"], APPT_TYPE_LABELS, _APW_NOTE, _APW_EMPTY)
 
 APPT_WEEKLY_SECTION = f"""
   <section class="card" style="margin-top:22px;">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <div class="card-label" style="margin-bottom:0;">Weekly Rocks — Appointments{_info_icon("Appointments scheduled per week, from GHL's own calendar events (a real log, not diffed from daily snapshots like the table above). Bucketed by the appointment's own date, using the same week grid. Owner filter uses the appointment's assigned user. Full detail, including future-booked appointments, is on the Raw Data page.")}</div>
+      <div class="card-label" style="margin-bottom:0;">Weekly Rocks — Appointments{_info_icon("Appointments scheduled per week, from GHL's own calendar events (a real log, not diffed from daily snapshots like the table above). Bucketed by the appointment's own date, using the same week grid. Split into Discovery Calls vs. Strategy Calls by the calendar's GHL calendar group (not its name -- some calendars share a name across groups). Owner filter uses the appointment's assigned user. Full detail, including future-booked appointments, is on the Raw Data page.")}</div>
       <div style="display:flex;gap:4px;">
         <button onclick="setApptOwner('all',this)" class="mktg-btn smv-owner-btn2 mktg-btn-active">All</button>
         <button onclick="setApptOwner('stormer',this)" class="mktg-btn smv-owner-btn2">Stormer</button>
@@ -2391,6 +2413,7 @@ _rd_weeks  = sorted({e["week"] for e in movement_events}, key=lambda w: int(w[1:
 
 _ap_owners    = sorted({e["owner"] for e in appointment_events})
 _ap_calendars = sorted({e["calendar"] for e in appointment_events})
+_ap_types     = sorted({e["type"] for e in appointment_events})
 _ap_statuses  = sorted({e["status"] for e in appointment_events if e["status"]})
 _ap_weeks     = sorted({e["week"] for e in appointment_events}, key=lambda w: int(w[1:]), reverse=True)
 
@@ -2543,6 +2566,10 @@ RAW_DATA_BODY = f"""
         <option value="">All Calendars</option>
         {_rd_options(_ap_calendars)}
       </select>
+      <select id="apType" class="rd-select" onchange="apRender()">
+        <option value="">All Types</option>
+        {_rd_options(_ap_types)}
+      </select>
       <select id="apStatus" class="rd-select" onchange="apRender()">
         <option value="">All Statuses</option>
         {_rd_options(_ap_statuses)}
@@ -2562,6 +2589,7 @@ RAW_DATA_BODY = f"""
             <th onclick="apSort('time')">Time<span class="rd-sort-arrow" id="apArrow-time"></span></th>
             <th onclick="apSort('week')">Week<span class="rd-sort-arrow" id="apArrow-week"></span></th>
             <th onclick="apSort('calendar')">Calendar<span class="rd-sort-arrow" id="apArrow-calendar"></span></th>
+            <th onclick="apSort('type')">Type<span class="rd-sort-arrow" id="apArrow-type"></span></th>
             <th onclick="apSort('contact')">Contact<span class="rd-sort-arrow" id="apArrow-contact"></span></th>
             <th onclick="apSort('owner')">Owner<span class="rd-sort-arrow" id="apArrow-owner"></span></th>
             <th onclick="apSort('status')">Status<span class="rd-sort-arrow" id="apArrow-status"></span></th>
@@ -2682,12 +2710,14 @@ RAW_DATA_LOGIC_SCRIPT = """
       const q    = document.getElementById("apSearch").value.trim().toLowerCase();
       const owner = document.getElementById("apOwner").value;
       const cal   = document.getElementById("apCalendar").value;
+      const typ   = document.getElementById("apType").value;
       const stat  = document.getElementById("apStatus").value;
       const week  = document.getElementById("apWeek").value;
 
       let rows = APPOINTMENT_EVENTS.filter(e => {
         if (owner && e.owner !== owner) return false;
         if (cal   && e.calendar !== cal) return false;
+        if (typ   && e.type !== typ) return false;
         if (stat  && e.status !== stat) return false;
         if (week  && e.week !== week) return false;
         if (q && !(e.contact.toLowerCase().includes(q) || e.owner.toLowerCase().includes(q) || e.calendar.toLowerCase().includes(q))) return false;
@@ -2714,6 +2744,7 @@ RAW_DATA_LOGIC_SCRIPT = """
           <td class="rd-mute">${e.time}</td>
           <td class="rd-mute">${e.week}</td>
           <td>${e.calendar}</td>
+          <td class="rd-mute">${e.type}</td>
           <td>${e.contact}</td>
           <td>${e.owner}</td>
           <td>${e.status}</td>
@@ -2725,8 +2756,8 @@ RAW_DATA_LOGIC_SCRIPT = """
     function downloadAppointmentsCSV() {
       csvDownload(
         apVisible,
-        ["date","time","week","calendar","contact","owner","status","booked_on"],
-        ["Date","Time","Week","Calendar","Contact","Owner","Status","Booked On"],
+        ["date","time","week","calendar","type","contact","owner","status","booked_on"],
+        ["Date","Time","Week","Calendar","Type","Contact","Owner","Status","Booked On"],
         "axis-appointments.csv"
       );
     }

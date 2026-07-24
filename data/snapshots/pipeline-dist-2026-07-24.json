@@ -27,10 +27,10 @@
     },
     {
       "name": "Reactivation Queue",
-      "count": 23
+      "count": 24
     }
   ],
-  "total_open": 108,
+  "total_open": 109,
   "source": {
     "labels": [
       "MGL",
@@ -38,10 +38,10 @@
       "Other - Referrals"
     ],
     "data": [
-      72,
+      73,
       16,
       48
     ],
-    "total": 136
+    "total": 137
   }
 }
