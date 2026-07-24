@@ -11,7 +11,7 @@
     },
     {
       "name": "Strategy Call",
-      "count": 6
+      "count": 7
     },
     {
       "name": "Proposal Sent",
@@ -30,7 +30,7 @@
       "count": 24
     }
   ],
-  "total_open": 109,
+  "total_open": 110,
   "source": {
     "labels": [
       "MGL",
@@ -40,8 +40,8 @@
     "data": [
       73,
       16,
-      48
+      49
     ],
-    "total": 137
+    "total": 138
   }
 }
