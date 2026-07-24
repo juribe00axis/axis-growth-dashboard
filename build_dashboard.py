@@ -667,10 +667,13 @@ STAGE_LABELS = ["Discovery Call", "Strategy Call", "Proposal Sent", "Agreement S
 MOVE_LABELS  = ["Discovery Calls", "Strategy Calls", "Proposals Sent", "Agreements Signed"]
 _stage_display = dict(zip(STAGE_LABELS, MOVE_LABELS))
 
-# The two reps whose Weekly Rocks are tracked individually (owner ID -> display name).
+# The reps whose Weekly Rocks are tracked individually (owner ID -> display name).
+# Jennifer left the team (2026-07-24) and is no longer mapped -- her historical
+# movements/appointments still show under "All" but not a dedicated tab.
 ROCK_OWNERS = {
     "mMOdJLXRcIhuzcgsHx3M": "Stormer",
-    "XuKNQdIV2pC3u5PUpla6": "Jennifer",
+    "NftaswY26aPKq64te7Hn": "Alex",
+    "kNU1jv4vrjjoehHNhlne": "Joncarlo",
 }
 
 WEEK1_START = datetime(2026, 7, 1, tzinfo=timezone.utc).date()
@@ -1981,7 +1984,8 @@ _SMV_EMPTY = 'First snapshot captured today — movement data will appear on the
 
 _smv_all      = _build_weekly_matrix(weekly_movement, MOVE_LABELS, _SMV_NOTE, _SMV_EMPTY)
 _smv_stormer  = _build_weekly_matrix(weekly_movement_by_owner["Stormer"], MOVE_LABELS, _SMV_NOTE, _SMV_EMPTY)
-_smv_jennifer = _build_weekly_matrix(weekly_movement_by_owner["Jennifer"], MOVE_LABELS, _SMV_NOTE, _SMV_EMPTY)
+_smv_alex     = _build_weekly_matrix(weekly_movement_by_owner["Alex"], MOVE_LABELS, _SMV_NOTE, _SMV_EMPTY)
+_smv_joncarlo = _build_weekly_matrix(weekly_movement_by_owner["Joncarlo"], MOVE_LABELS, _SMV_NOTE, _SMV_EMPTY)
 
 STAGE_MOVEMENT = f"""
   <section class="card" style="margin-top:22px;">
@@ -1990,12 +1994,14 @@ STAGE_MOVEMENT = f"""
       <div style="display:flex;gap:4px;">
         <button onclick="setRockOwner('all',this)" class="mktg-btn smv-owner-btn mktg-btn-active">All</button>
         <button onclick="setRockOwner('stormer',this)" class="mktg-btn smv-owner-btn">Stormer</button>
-        <button onclick="setRockOwner('jennifer',this)" class="mktg-btn smv-owner-btn">Jennifer</button>
+        <button onclick="setRockOwner('alex',this)" class="mktg-btn smv-owner-btn">Alex</button>
+        <button onclick="setRockOwner('joncarlo',this)" class="mktg-btn smv-owner-btn">Joncarlo</button>
       </div>
     </div>
     <div id="smvView-all" style="margin-top:14px;">{_smv_all}</div>
     <div id="smvView-stormer" style="margin-top:14px;display:none;">{_smv_stormer}</div>
-    <div id="smvView-jennifer" style="margin-top:14px;display:none;">{_smv_jennifer}</div>
+    <div id="smvView-alex" style="margin-top:14px;display:none;">{_smv_alex}</div>
+    <div id="smvView-joncarlo" style="margin-top:14px;display:none;">{_smv_joncarlo}</div>
   </section>
 """
 
@@ -2005,7 +2011,8 @@ _APW_EMPTY = 'No appointment data for this period yet.'
 
 _apw_all      = _build_weekly_matrix(weekly_appts, ["Appointments"], _APW_NOTE, _APW_EMPTY)
 _apw_stormer  = _build_weekly_matrix(weekly_appts_by_owner["Stormer"], ["Appointments"], _APW_NOTE, _APW_EMPTY)
-_apw_jennifer = _build_weekly_matrix(weekly_appts_by_owner["Jennifer"], ["Appointments"], _APW_NOTE, _APW_EMPTY)
+_apw_alex     = _build_weekly_matrix(weekly_appts_by_owner["Alex"], ["Appointments"], _APW_NOTE, _APW_EMPTY)
+_apw_joncarlo = _build_weekly_matrix(weekly_appts_by_owner["Joncarlo"], ["Appointments"], _APW_NOTE, _APW_EMPTY)
 
 APPT_WEEKLY_SECTION = f"""
   <section class="card" style="margin-top:22px;">
@@ -2014,12 +2021,14 @@ APPT_WEEKLY_SECTION = f"""
       <div style="display:flex;gap:4px;">
         <button onclick="setApptOwner('all',this)" class="mktg-btn smv-owner-btn2 mktg-btn-active">All</button>
         <button onclick="setApptOwner('stormer',this)" class="mktg-btn smv-owner-btn2">Stormer</button>
-        <button onclick="setApptOwner('jennifer',this)" class="mktg-btn smv-owner-btn2">Jennifer</button>
+        <button onclick="setApptOwner('alex',this)" class="mktg-btn smv-owner-btn2">Alex</button>
+        <button onclick="setApptOwner('joncarlo',this)" class="mktg-btn smv-owner-btn2">Joncarlo</button>
       </div>
     </div>
     <div id="apwView-all" style="margin-top:14px;">{_apw_all}</div>
     <div id="apwView-stormer" style="margin-top:14px;display:none;">{_apw_stormer}</div>
-    <div id="apwView-jennifer" style="margin-top:14px;display:none;">{_apw_jennifer}</div>
+    <div id="apwView-alex" style="margin-top:14px;display:none;">{_apw_alex}</div>
+    <div id="apwView-joncarlo" style="margin-top:14px;display:none;">{_apw_joncarlo}</div>
   </section>
 """
 
@@ -2117,7 +2126,7 @@ CHARTS_SCRIPT = """
     function setRockOwner(which, btn) {
       document.querySelectorAll(".smv-owner-btn").forEach(b => b.classList.remove("mktg-btn-active"));
       btn.classList.add("mktg-btn-active");
-      ["all", "stormer", "jennifer"].forEach(k => {
+      ["all", "stormer", "alex", "joncarlo"].forEach(k => {
         document.getElementById("smvView-" + k).style.display = (k === which) ? "" : "none";
       });
     }
@@ -2126,7 +2135,7 @@ CHARTS_SCRIPT = """
     function setApptOwner(which, btn) {
       document.querySelectorAll(".smv-owner-btn2").forEach(b => b.classList.remove("mktg-btn-active"));
       btn.classList.add("mktg-btn-active");
-      ["all", "stormer", "jennifer"].forEach(k => {
+      ["all", "stormer", "alex", "joncarlo"].forEach(k => {
         document.getElementById("apwView-" + k).style.display = (k === which) ? "" : "none";
       });
     }
