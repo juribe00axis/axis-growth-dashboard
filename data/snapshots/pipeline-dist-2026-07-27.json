@@ -3,11 +3,11 @@
   "stages": [
     {
       "name": "New Lead",
-      "count": 28
+      "count": 27
     },
     {
       "name": "Discovery Call",
-      "count": 28
+      "count": 29
     },
     {
       "name": "Strategy Call",
@@ -38,9 +38,9 @@
       "Other - Referrals"
     ],
     "data": [
-      77,
+      76,
       17,
-      49
+      50
     ],
     "total": 143
   }
