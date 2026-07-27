@@ -447,6 +447,27 @@ total_source_opps   = len(source_opps)
 
 print(f"  Source breakdown ({total_source_opps} opps): MGL={_src_mgl} SGL={_src_sgl} Other={_src_other}")
 
+# Monthly source mix -- lets the Lead Sources card compare how the MGL/SGL/Other
+# split evolves month over month (created-date based), instead of only ever
+# showing the flat all-time total. "All Time" (the totals above) stays the
+# dropdown default so existing behavior/screenshots don't change.
+def _created_month_key(opp):
+    _c = opp.get("createdAt") or ""
+    return _c[:7] if len(_c) >= 7 else None
+
+_source_months = sorted({mk for o in source_opps if (mk := _created_month_key(o))})
+source_by_month = {}
+for _mk in _source_months:
+    _m_opps  = [o for o in source_opps if _created_month_key(o) == _mk]
+    _m_mgl   = sum(1 for o in _m_opps if (o.get("source") or "") in MGL_SOURCES)
+    _m_sgl   = sum(1 for o in _m_opps if (o.get("source") or "") in SGL_SOURCES)
+    _m_other = len(_m_opps) - _m_mgl - _m_sgl
+    source_by_month[_mk] = {
+        "labels": source_chart_labels,
+        "data":   [_m_mgl, _m_sgl, _m_other],
+        "total":  len(_m_opps),
+    }
+
 # Append today's source breakdown into the same daily snapshot file written in 6b,
 # so the shared date selector can look up both pipeline stages and source mix per day.
 _dist_data = json.loads(_dist_path.read_text())
@@ -1748,14 +1769,19 @@ SHARED_DATE_HEADER = f"""
 
 MGL_CHART = f"""
   <div class="card" style="margin-bottom:22px;">
-    <div class="card-label">Lead Sources — New Lead &amp; Beyond &nbsp;·&nbsp; <span id="sourceTotalLabel">{total_source_opps} Opportunities</span>{_info_icon("This is essentially all-time, not just currently-open deals: every Sales Pipeline opportunity ever won or lost, plus any currently open at New Lead stage or beyond.")}</div>
-    <div style="display:grid;grid-template-columns:3fr 2fr;gap:28px;align-items:stretch;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div class="card-label" style="margin-bottom:0;">Lead Sources — New Lead &amp; Beyond &nbsp;·&nbsp; <span id="sourceTotalLabel">{total_source_opps} Opportunities</span>{_info_icon("This is essentially all-time, not just currently-open deals: every Sales Pipeline opportunity ever won or lost, plus any currently open at New Lead stage or beyond. Use the month selector to compare how the MGL/SGL/Other mix evolves month over month, by opportunity created date, instead of the flat all-time total.")}</div>
+      <select id="sourceMonthSelect" style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 12px;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;outline:none;">
+        <option value="">All Time</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:3fr 2fr;gap:28px;align-items:stretch;margin-top:16px;">
 
       <!-- Left: source bar chart — constrained width so bars cluster together -->
       <div style="display:flex;align-items:center;justify-content:center;">
         <div style="position:relative;width:300px;height:100%;">
           <canvas id="chartSource"></canvas>
-          <div id="sourceNoData" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;font-size:0.7rem;color:var(--text-mute);padding:0 20px;">Source breakdown wasn't tracked for this date yet.</div>
+          <div id="sourceNoData" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;font-size:0.7rem;color:var(--text-mute);padding:0 20px;">No source data for this period.</div>
         </div>
       </div>
 
@@ -2119,6 +2145,9 @@ DATA_SCRIPT = f"""
     const META_SPEND      = {json.dumps(meta_spends)};
     const SOURCE_LABELS      = {json.dumps(source_chart_labels)};
     const SOURCE_DATA        = {json.dumps(source_chart_data)};
+    const SOURCE_TOTAL       = {json.dumps(total_source_opps)};
+    const SOURCE_BY_MONTH    = {json.dumps(source_by_month)};
+    const SOURCE_MONTHS      = {json.dumps(_source_months)};
     const PIPELINE_HISTORY   = {json.dumps(pipeline_history)};
     const PIPELINE_DATES     = {json.dumps(pipeline_dates)};
     const MKTG_DAILY         = {json.dumps(mktg_daily)};
@@ -2412,34 +2441,51 @@ CHARTS_SCRIPT = """
       }).join("");
     }
 
-    // ── Lead Source bar — driven by the same shared date selector ─────────
-    function renderSource(dateKey) {
-      const snap = PIPELINE_HISTORY[dateKey];
-      const src  = snap.source;
-      const noDataEl = document.getElementById("sourceNoData");
-
-      if (!src) {
-        noDataEl.style.display = "flex";
-        sourceChart.data.datasets[0].data = [0, 0, 0];
-        sourceChart.update();
-        document.getElementById("sourceTotalLabel").textContent = "No data for this date";
-        return;
-      }
-
-      noDataEl.style.display = "none";
-      sourceChart.data.labels             = src.labels;
-      sourceChart.data.datasets[0].data   = src.data;
-      sourceChart.update();
-      document.getElementById("sourceTotalLabel").textContent = `${src.total} Opportunities`;
-    }
-
     function renderShared(dateKey) {
       renderPipeline(dateKey);
-      renderSource(dateKey);
     }
 
     renderShared(PIPELINE_DATES[0]);
     pipeSel.addEventListener("change", () => renderShared(pipeSel.value));
+
+    // ── Lead Source bar — independent month selector (created-date based) ──
+    // Compares how the MGL/SGL/Other mix evolves by calendar month, separate
+    // from the "Viewing Snapshot" picker above (which is a point-in-time
+    // cumulative pipeline state, a different question from "how did leads
+    // sourced in a given month break down").
+    function fmtSourceMonth(m) {
+      const [y, mo] = m.split("-");
+      return new Date(y, mo - 1, 1).toLocaleDateString("en-US", {month:"long", year:"numeric"});
+    }
+
+    const sourceMonthSel = document.getElementById("sourceMonthSelect");
+    SOURCE_MONTHS.slice().reverse().forEach(m => {
+      const opt = document.createElement("option");
+      opt.value = m; opt.textContent = fmtSourceMonth(m);
+      sourceMonthSel.appendChild(opt);
+    });
+
+    function renderSourceByMonth(monthKey) {
+      const src = monthKey ? SOURCE_BY_MONTH[monthKey] : {labels: SOURCE_LABELS, data: SOURCE_DATA, total: SOURCE_TOTAL};
+      const noDataEl = document.getElementById("sourceNoData");
+
+      if (!src || src.total === 0) {
+        noDataEl.style.display = "flex";
+        sourceChart.data.datasets[0].data = [0, 0, 0];
+        sourceChart.update();
+        document.getElementById("sourceTotalLabel").textContent = "No data for this month";
+        return;
+      }
+
+      noDataEl.style.display = "none";
+      sourceChart.data.labels           = src.labels;
+      sourceChart.data.datasets[0].data = src.data;
+      sourceChart.update();
+      document.getElementById("sourceTotalLabel").textContent = `${src.total} Opportunities`;
+    }
+
+    renderSourceByMonth("");
+    sourceMonthSel.addEventListener("change", () => renderSourceByMonth(sourceMonthSel.value));
 
   </script>
 </body>
