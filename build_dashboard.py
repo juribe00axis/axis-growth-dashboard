@@ -57,20 +57,33 @@ HEADERS = {
     "Accept":        "application/json",
 }
 
-def ghl_get(path, params=None):
-    """Make one GET request to the GHL API and return parsed JSON."""
+def ghl_get(path, params=None, max_retries=3):
+    """Make one GET request to the GHL API and return parsed JSON.
+
+    Retries transient failures (429, 5xx, or a body reporting a timeout —
+    GHL sometimes wraps its own backend timeouts in a 401) with backoff,
+    since these clear up on their own rather than indicating a bad token.
+    """
     url_path = path
     if params:
         url_path += "?" + urllib.parse.urlencode(params)
-    conn = http.client.HTTPSConnection(
-        "services.leadconnectorhq.com",
-        context=ssl.create_default_context(),
-    )
-    conn.request("GET", url_path, headers=HEADERS)
-    resp = conn.getresponse()
-    if resp.status != 200:
-        raise Exception(f"HTTP {resp.status} on {url_path}: {resp.read().decode()}")
-    return json.loads(resp.read())
+    for attempt in range(max_retries + 1):
+        conn = http.client.HTTPSConnection(
+            "services.leadconnectorhq.com",
+            context=ssl.create_default_context(),
+        )
+        conn.request("GET", url_path, headers=HEADERS)
+        resp = conn.getresponse()
+        if resp.status == 200:
+            return json.loads(resp.read())
+        body = resp.read().decode()
+        transient = resp.status == 429 or resp.status >= 500 or "timed out" in body.lower()
+        if transient and attempt < max_retries:
+            wait = 2 ** attempt
+            print(f"  Transient error (HTTP {resp.status}) on {url_path}, retrying in {wait}s...")
+            time.sleep(wait)
+            continue
+        raise Exception(f"HTTP {resp.status} on {url_path}: {body}")
 
 
 def meta_get(path, params):
