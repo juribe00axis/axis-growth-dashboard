@@ -756,6 +756,51 @@ move_display_labels = [
 print(f"  {len(_stage_snaps)} snapshots · {len(weekly_movement)} week(s) computed")
 print()
 
+# ─── 6e2. Field-based movement events (new, more accurate source) ───────────
+# GHL workflows ("Date Entered - <Stage>") now write the actual stage-entry
+# date directly onto each opportunity via 6 DATE custom fields -- fixed and
+# validated live 2026-07-27. Unlike the snapshot-diff approach above (which
+# infers movement by comparing day-over-day snapshots and can miss same-day
+# transitions or misdate historical entries), these fields hold the true
+# entry date GHL recorded at the moment the opportunity hit that stage, no
+# diffing required. Kept as a separate, parallel data source on the Raw Data
+# page for now so it can be validated against the snapshot method before
+# Weekly Rocks is switched over to read from it.
+FIELD_DATE_STAGES = {
+    "YOUfzDu5jq9T3EpsdtgL": "New Lead",
+    "fb5FWif6GUyl4c3E60bR": "Discovery Call",
+    "aVXVp6kynBp7taut7l3Z": "Strategy Call",
+    "hiccRLHd3sqdrYPErOkc": "Proposal Sent",
+    "NJjKKBDgxFzoIEhkfFbq": "Agreement Sent",
+    "Qru4091H66VTPvH2rQKO": "Agreement Signed",
+}
+FIELD_STAGE_LABELS = list(FIELD_DATE_STAGES.values())
+
+field_movement_events = []
+for opp in all_opps:
+    for cf in (opp.get("customFields") or []):
+        _stage_name = FIELD_DATE_STAGES.get(cf.get("id"))
+        _ms = cf.get("fieldValueDate")
+        if not _stage_name or not _ms:
+            continue
+        _fd = datetime.fromtimestamp(_ms / 1000, tz=timezone.utc).date()
+        if _fd < WEEK1_START:
+            continue
+        _owner_id = opp.get("assignedTo")
+        field_movement_events.append({
+            "date":     _fd.strftime("%Y-%m-%d"),
+            "week":     f"W{_week_index(_fd)}",
+            "stage":    _stage_name,
+            "opp_name": opp.get("name") or "(unnamed)",
+            "contact":  (opp.get("contact") or {}).get("name") or "",
+            "owner":    user_map.get(_owner_id, "Unassigned") if _owner_id else "Unassigned",
+            "source":   opp.get("source") or "",
+        })
+
+field_movement_events.sort(key=lambda e: e["date"], reverse=True)
+print(f"  {len(field_movement_events)} field-based movement events (from opportunity date fields)")
+print()
+
 # ── 6f. Lead → Discovery conversion (since Jul 1, W1) ────────────────────────
 # Numerator accumulates over time: sum of Weekly Rocks "Discovery Calls" entries
 # across every week on record (including the current in-progress week), so this
@@ -2417,6 +2462,9 @@ _ap_types     = sorted({e["type"] for e in appointment_events})
 _ap_statuses  = sorted({e["status"] for e in appointment_events if e["status"]})
 _ap_weeks     = sorted({e["week"] for e in appointment_events}, key=lambda w: int(w[1:]), reverse=True)
 
+_fm_owners = sorted({e["owner"] for e in field_movement_events})
+_fm_weeks  = sorted({e["week"] for e in field_movement_events}, key=lambda w: int(w[1:]), reverse=True)
+
 def _rd_options(values):
     return "".join(f'<option value="{v}">{v}</option>' for v in values)
 
@@ -2515,6 +2563,7 @@ RAW_DATA_BODY = f"""
   <div class="rd-tabs">
     <button class="rd-tab rd-tab-active" id="tabBtn-movements" onclick="switchTab('movements')">Weekly Rocks Movements</button>
     <button class="rd-tab" id="tabBtn-appointments" onclick="switchTab('appointments')">Appointments</button>
+    <button class="rd-tab" id="tabBtn-fieldmoves" onclick="switchTab('fieldmoves')">Field Movements <span style="opacity:0.6;">(new)</span></button>
   </div>
 
   <section class="card" id="tab-movements">
@@ -2601,21 +2650,62 @@ RAW_DATA_BODY = f"""
       <div id="apEmpty" class="rd-empty" style="display:none;">No appointments match these filters.</div>
     </div>
   </section>
+
+  <section class="card" id="tab-fieldmoves" style="display:none;">
+    <div style="font-size:0.72rem;color:var(--text-mute);margin-bottom:14px;">
+      Read directly off each opportunity's own "Date Entered" custom fields (New Lead / Discovery Call / Strategy Call / Proposal Sent / Agreement Sent / Agreement Signed) -- populated by GHL workflows fixed and validated live on 2026-07-27. This is the true stage-entry date GHL recorded, no day-over-day snapshot diffing involved. Still building up history since the workflow fix; being tracked here in parallel with the snapshot-based Weekly Rocks Movements tab for validation before Weekly Rocks switches over to this source.
+    </div>
+    <div class="rd-toolbar">
+      <input id="fmSearch" class="rd-input" type="text" placeholder="Search opportunity, contact, or owner…" oninput="fmRender()">
+      <select id="fmOwner" class="rd-select" onchange="fmRender()">
+        <option value="">All Owners</option>
+        {_rd_options(_fm_owners)}
+      </select>
+      <select id="fmStage" class="rd-select" onchange="fmRender()">
+        <option value="">All Stages</option>
+        {_rd_options(FIELD_STAGE_LABELS)}
+      </select>
+      <select id="fmWeek" class="rd-select" onchange="fmRender()">
+        <option value="">All Weeks</option>
+        {_rd_options(_fm_weeks)}
+      </select>
+      <span id="fmCount" class="rd-count"></span>
+      <button class="btn" onclick="downloadFieldMovementsCSV()">&#8595; CSV</button>
+    </div>
+    <div class="rd-wrap">
+      <table class="rd-table">
+        <thead>
+          <tr>
+            <th onclick="fmSort('date')">Date<span class="rd-sort-arrow" id="fmArrow-date"></span></th>
+            <th onclick="fmSort('week')">Week<span class="rd-sort-arrow" id="fmArrow-week"></span></th>
+            <th onclick="fmSort('stage')">Stage Entered<span class="rd-sort-arrow" id="fmArrow-stage"></span></th>
+            <th onclick="fmSort('opp_name')">Opportunity<span class="rd-sort-arrow" id="fmArrow-opp_name"></span></th>
+            <th onclick="fmSort('contact')">Contact<span class="rd-sort-arrow" id="fmArrow-contact"></span></th>
+            <th onclick="fmSort('owner')">Owner<span class="rd-sort-arrow" id="fmArrow-owner"></span></th>
+            <th onclick="fmSort('source')">Source<span class="rd-sort-arrow" id="fmArrow-source"></span></th>
+          </tr>
+        </thead>
+        <tbody id="fmBody"></tbody>
+      </table>
+      <div id="fmEmpty" class="rd-empty" style="display:none;">No field-based movements match these filters.</div>
+    </div>
+  </section>
 """
 
 # Data injection (f-string — just the JSON arrays) — kept separate from the
 # logic script below so the JS's own { } characters don't need doubling.
 RAW_DATA_SCRIPT = f"""
   <script>
-    const MOVEMENT_EVENTS    = {json.dumps(movement_events)};
-    const APPOINTMENT_EVENTS = {json.dumps(appointment_events)};
+    const MOVEMENT_EVENTS       = {json.dumps(movement_events)};
+    const APPOINTMENT_EVENTS    = {json.dumps(appointment_events)};
+    const FIELD_MOVEMENT_EVENTS = {json.dumps(field_movement_events)};
   </script>
 """
 
 RAW_DATA_LOGIC_SCRIPT = """
   <script>
     function switchTab(tab) {
-      ["movements", "appointments"].forEach(t => {
+      ["movements", "appointments", "fieldmoves"].forEach(t => {
         document.getElementById("tab-" + t).style.display = (t === tab) ? "" : "none";
         document.getElementById("tabBtn-" + t).classList.toggle("rd-tab-active", t === tab);
       });
@@ -2762,8 +2852,69 @@ RAW_DATA_LOGIC_SCRIPT = """
       );
     }
 
+    // ── Field-based movements (from opportunity "Date Entered" fields) ─────
+    let fmSortKey = "date";
+    let fmSortDir = -1;
+    let fmVisible = FIELD_MOVEMENT_EVENTS;
+
+    function fmSort(key) {
+      if (fmSortKey === key) { fmSortDir *= -1; } else { fmSortKey = key; fmSortDir = 1; }
+      fmRender();
+    }
+
+    function fmRender() {
+      const q     = document.getElementById("fmSearch").value.trim().toLowerCase();
+      const owner = document.getElementById("fmOwner").value;
+      const stage = document.getElementById("fmStage").value;
+      const week  = document.getElementById("fmWeek").value;
+
+      let rows = FIELD_MOVEMENT_EVENTS.filter(e => {
+        if (owner && e.owner !== owner) return false;
+        if (stage && e.stage !== stage) return false;
+        if (week  && e.week  !== week)  return false;
+        if (q && !(e.opp_name.toLowerCase().includes(q) || e.contact.toLowerCase().includes(q) || e.owner.toLowerCase().includes(q))) return false;
+        return true;
+      });
+
+      rows.sort((a, b) => {
+        const av = a[fmSortKey], bv = b[fmSortKey];
+        if (av < bv) return -1 * fmSortDir;
+        if (av > bv) return  1 * fmSortDir;
+        return 0;
+      });
+      fmVisible = rows;
+
+      document.querySelectorAll("#tab-fieldmoves .rd-sort-arrow").forEach(el => el.textContent = "");
+      document.getElementById("fmArrow-" + fmSortKey).textContent = fmSortDir === 1 ? "▲" : "▼";
+
+      document.getElementById("fmCount").textContent = rows.length + " movement" + (rows.length === 1 ? "" : "s");
+      document.getElementById("fmEmpty").style.display = rows.length ? "none" : "block";
+
+      document.getElementById("fmBody").innerHTML = rows.map(e => `
+        <tr>
+          <td>${e.date}</td>
+          <td class="rd-mute">${e.week}</td>
+          <td>${e.stage}</td>
+          <td>${e.opp_name}</td>
+          <td class="rd-mute">${e.contact}</td>
+          <td>${e.owner}</td>
+          <td class="rd-mute">${e.source}</td>
+        </tr>
+      `).join("");
+    }
+
+    function downloadFieldMovementsCSV() {
+      csvDownload(
+        fmVisible,
+        ["date","week","stage","opp_name","contact","owner","source"],
+        ["Date","Week","Stage Entered","Opportunity","Contact","Owner","Source"],
+        "axis-field-movements.csv"
+      );
+    }
+
     rdRender();
     apRender();
+    fmRender();
   </script>
 </body>
 </html>

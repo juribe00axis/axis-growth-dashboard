@@ -1,6 +1,10 @@
 {
   "date": "2026-07-27",
   "opps": {
+    "53RbxJTByxK2J5deE2XJ": {
+      "stage": "New Lead",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
     "vb4DcBd7lF4Si4Q13FOx": {
       "stage": "New Lead",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
@@ -18,7 +22,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "jDGT62267Lkllu2VaZ7H": {
-      "stage": "New Lead",
+      "stage": "Discovery Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "m46wiNn9Uvht1sqxVGhL": {
@@ -38,10 +42,6 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "v1VAUJEEvl5fgd9zb726": {
-      "stage": "New Lead",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
-    "0f3Cr5qGd9tUM6lUl22g": {
       "stage": "New Lead",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
@@ -214,8 +214,8 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "lAG77KU7lPgP8493GJQC": {
-      "stage": "Discovery Call",
-      "owner": "unassigned"
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "QK939UWYmUYFzTRCTG13": {
       "stage": "Proposal Sent",
