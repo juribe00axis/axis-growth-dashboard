@@ -1,6 +1,14 @@
 {
   "date": "2026-07-28",
   "opps": {
+    "K27xouUyltfjH7xxI07q": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "s0NY6uCrIHoFDHFlhl8E": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
     "Rc2HLIgjqoNJwDvUlZ0i": {
       "stage": "Onboarding",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
@@ -78,7 +86,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "jZslR8cfqOggSxCm6YC1": {
-      "stage": "Discovery Call",
+      "stage": "Strategy Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "O62tfDTRygZ16bUiPCYg": {
@@ -121,10 +129,6 @@
       "stage": "New Lead",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
-    "LuJiEk7swQFH39k10XEz": {
-      "stage": "Agreement Sent",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
     "owYrYxM0JwQ6qQNtdUlZ": {
       "stage": "New Lead",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
@@ -134,8 +138,8 @@
       "owner": "unassigned"
     },
     "zbmJ39Yascx3WlUOeFkR": {
-      "stage": "Discovery Call",
-      "owner": "unassigned"
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "FG5S9wL173vbi2LS82Bm": {
       "stage": "Discovery Call",
@@ -146,7 +150,7 @@
       "owner": "unassigned"
     },
     "aUASzB7p3xxnlQ0weKwe": {
-      "stage": "Discovery Call",
+      "stage": "Strategy Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "Z4uON4nLs59czTOrOau3": {
@@ -222,10 +226,6 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "RM0racM0bT8M4dY5I2LU": {
-      "stage": "Proposal Sent",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
-    "lAG77KU7lPgP8493GJQC": {
       "stage": "Proposal Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
@@ -460,6 +460,10 @@
     "pHrQ9vVzsForY4RQP88g": {
       "stage": "New Lead",
       "owner": "unassigned"
+    },
+    "T3bkiX7H70OZoE6kdqpZ": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "LYXL19KhvEMv2hR7Mcrs": {
       "stage": "Closing Call",
