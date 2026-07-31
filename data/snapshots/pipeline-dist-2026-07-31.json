@@ -3,19 +3,19 @@
   "stages": [
     {
       "name": "New Lead",
-      "count": 28
+      "count": 30
     },
     {
       "name": "Discovery Call",
-      "count": 31
+      "count": 32
     },
     {
       "name": "Strategy Call",
-      "count": 10
+      "count": 7
     },
     {
       "name": "Proposal Sent",
-      "count": 16
+      "count": 18
     },
     {
       "name": "Closing Call",
@@ -23,7 +23,7 @@
     },
     {
       "name": "Agreement Sent",
-      "count": 8
+      "count": 6
     },
     {
       "name": "Reactivation Queue",
@@ -40,8 +40,8 @@
     "data": [
       83,
       17,
-      55
+      57
     ],
-    "total": 155
+    "total": 157
   }
 }

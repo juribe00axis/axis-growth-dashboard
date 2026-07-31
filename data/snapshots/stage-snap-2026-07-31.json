@@ -1,6 +1,14 @@
 {
   "date": "2026-07-31",
   "opps": {
+    "w3O8KNNoz6euZQmrpTFo": {
+      "stage": "New Lead",
+      "owner": "L9Ntyu8qzZFuCdjINcco"
+    },
+    "GKaRzrgDceacRWGS9u0q": {
+      "stage": "New Lead",
+      "owner": "L9Ntyu8qzZFuCdjINcco"
+    },
     "vE5QQWX3MAK6RAaPA50z": {
       "stage": "Discovery Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
@@ -22,7 +30,7 @@
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "mHyeKRnl0JDiSwXTqgkR": {
-      "stage": "Strategy Call",
+      "stage": "Discovery Call",
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "yfIHctUxFWlV3mmNMMl7": {
@@ -50,11 +58,11 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "s0NY6uCrIHoFDHFlhl8E": {
-      "stage": "Discovery Call",
+      "stage": "Proposal Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "6dC6Jum2FGr5B4yApv3v": {
-      "stage": "Strategy Call",
+      "stage": "Discovery Call",
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "1KmxveH6SMipsoYTpXuo": {
@@ -70,7 +78,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "EDg6XkLLAtj93PjxjpBj": {
-      "stage": "Strategy Call",
+      "stage": "Discovery Call",
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "6FLaVbOcQ1AY90kwCjFM": {
@@ -79,10 +87,6 @@
     },
     "jDGT62267Lkllu2VaZ7H": {
       "stage": "Discovery Call",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
-    "m46wiNn9Uvht1sqxVGhL": {
-      "stage": "Agreement Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "G2lkJ7BsWt9WmdTmrg9R": {
@@ -257,10 +261,6 @@
       "stage": "Proposal Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
-    "RM0racM0bT8M4dY5I2LU": {
-      "stage": "Agreement Sent",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
     "QK939UWYmUYFzTRCTG13": {
       "stage": "Proposal Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
@@ -270,7 +270,7 @@
       "owner": "XuKNQdIV2pC3u5PUpla6"
     },
     "aWqBWXXN9kWFUfF2FZDL": {
-      "stage": "Discovery Call",
+      "stage": "Proposal Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "22g4Ta7mINpk8z8ZfWFt": {
