@@ -376,6 +376,25 @@ month1_label   = datetime(_m1_year, _m1_month, 1).strftime("%b")
 month2_label   = datetime(_m2_year, _m2_month, 1).strftime("%b")
 cur_month_label = today.strftime("%b")
 
+# Full month-by-month history for the Monthly Volume "expand" view -- May 2026
+# is the earliest month with real lead data, so nothing older is lost even
+# though the compact 3-month view above only shows the most recent quarter.
+ALL_MONTHS_START = (2026, 5)
+def _month_seq(start_year, start_month, end_year, end_month):
+    y, m = start_year, start_month
+    out = []
+    while (y, m) <= (end_year, end_month):
+        out.append((y, m))
+        m += 1
+        if m > 12:
+            m, y = 1, y + 1
+    return out
+
+monthly_full = [
+    {"label": datetime(y, m, 1).strftime("%b"), "count": _month_count(all_opps, y, m)}
+    for (y, m) in _month_seq(*ALL_MONTHS_START, _this_year, _this_month)
+]
+
 # Last 7 days slice from the 14-day arrays (already computed)
 day_7_labels = date_labels_short[-7:]
 day_7_data   = daily_data[-7:]
@@ -891,6 +910,7 @@ for i in range(90):
     _cpc    = round(_spend / _clicks, 2) if _clicks else 0
     _leads  = mgl_by_date.get(_ds, 0)
     _conv   = round(_leads / _clicks * 100, 1) if _clicks else 0
+    _cpl    = round(_spend / _leads, 2) if _leads else 0
     mktg_daily.append({
         "date": _ds,
         "label": datetime.strptime(_ds, "%Y-%m-%d").strftime("%-m/%-d"),
@@ -899,33 +919,17 @@ for i in range(90):
         "cpc": _cpc,
         "leads": _leads,
         "conv_pct": _conv,
+        "cpl": _cpl,
     })
 
 mktg_min_date = mktg_daily[0]["date"]
 mktg_max_date = mktg_daily[-1]["date"]
 
-# ── CPL: last full week vs previous full week ─────────────────────────────────
-_lw_dates   = {(last_week_start + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)}
-_prev_dates = {(last_week_start - timedelta(days=7-i)).strftime("%Y-%m-%d") for i in range(7)}
-
-_lw_spend   = sum(float(r.get("spend", 0)) for r in meta_rows if r["date_start"] in _lw_dates)
-_lw_leads   = sum(mgl_by_date.get(d, 0) for d in _lw_dates)
-_prev_spend = sum(float(r.get("spend", 0)) for r in meta_rows if r["date_start"] in _prev_dates)
-_prev_leads = sum(mgl_by_date.get(d, 0) for d in _prev_dates)
-
-cpl_lw   = _lw_spend   / _lw_leads   if _lw_leads   else None
-cpl_prev = _prev_spend / _prev_leads if _prev_leads else None
-cpl_lw_str = f"${cpl_lw:.0f}" if cpl_lw else "—"
-
-if cpl_lw and cpl_prev:
-    _cpl_delta     = round((cpl_lw - cpl_prev) / cpl_prev * 100)
-    cpl_wow_str    = f"+{_cpl_delta}%" if _cpl_delta >= 0 else f"{_cpl_delta}%"
-    cpl_wow_dir    = "↑" if _cpl_delta > 0 else ("↓" if _cpl_delta < 0 else "→")
-    cpl_wow_color  = "#FF5C5C" if _cpl_delta > 0 else "var(--hero)"  # lower CPL = better
-else:
-    cpl_wow_str = "—"; cpl_wow_dir = ""; cpl_wow_color = "var(--text-mute)"
-
-_cpl_range_str = f"{last_week_start.strftime('%b %-d')} – {(last_week_start + timedelta(days=6)).strftime('%b %-d')}"
+# ── MGL CPL hero: computed client-side from MKTG_DAILY (see setCplPeriod JS) ──
+# so it can be toggled between Last 7 / 30 / 90 Days without a rebuild.
+_cpl_7d_leads = sum(mgl_by_date.get(d["date"], 0) for d in mktg_daily[-7:])
+_cpl_7d_spend = sum(d["spend"] for d in mktg_daily[-7:])
+cpl_lw_str = f"${_cpl_7d_spend / _cpl_7d_leads:.0f}" if _cpl_7d_leads else "—"
 
 # Last 7-day window for the Meta spending section (bottom of dashboard)
 meta_rows_7  = meta_rows[-7:]
@@ -998,6 +1002,7 @@ weekly_appts_by_owner = {
 }
 
 appointment_events = []
+_appt_owner_ids = {}
 for cid in calendar_map:
     _evs = ghl_get("/calendars/events", {
         "locationId": LOCATION_ID,
@@ -1013,8 +1018,7 @@ for cid in calendar_map:
             continue
         _owner_id  = ev.get("assignedUserId")
         _appt_type = calendar_type_map.get(cid, "Discovery Call")
-        _appt_type_label = "Strategy Calls" if _appt_type == "Strategy Call" else "Discovery Calls"
-        appointment_events.append({
+        _rec = {
             "date":       _start.strftime("%Y-%m-%d"),
             "time":       _start.strftime("%-I:%M %p"),
             "week":       f"W{_week_index(_start.date())}",
@@ -1024,13 +1028,42 @@ for cid in calendar_map:
             "owner":      user_map.get(_owner_id, "Unassigned") if _owner_id else "Unassigned",
             "status":     ev.get("appointmentStatus", ""),
             "booked_on":  ev.get("dateAdded", "")[:10],
-        })
-        _wk_ap = _week_index(_start.date())
-        if _wk_ap in move_display_weeks:
-            weekly_appts[_wk_ap][_appt_type_label] += 1
-            _appt_owner_name = ROCK_OWNERS.get(_owner_id)
-            if _appt_owner_name:
-                weekly_appts_by_owner[_appt_owner_name][_wk_ap][_appt_type_label] += 1
+        }
+        appointment_events.append(_rec)
+        _appt_owner_ids[id(_rec)] = _owner_id
+
+# De-dupe mirrored bookings: some reps' personal calendars carry a second copy
+# of a meeting already booked on the shared "AxisKey — Discovery/Strategy Call"
+# calendar (e.g. "AxisKey - David Richert <> Stormer Santana" on Alex Zinny's
+# Personal Calendar duplicating "David Richert" on AxisKey — Discovery Call,
+# same date/time) -- found by spot-checking W4, confirmed 2026-07-30. Two
+# events are only treated as the same meeting when they share date+time AND
+# one contact/title is a substring of the other's; same-time slots with two
+# different contacts are real, separate appointments and must not be merged.
+# The shared-calendar copy is kept over the personal-calendar mirror.
+def _appt_names_match(a, b):
+    a, b = a.lower().strip(), b.lower().strip()
+    return bool(a) and bool(b) and (a in b or b in a)
+
+_deduped_appts = []
+for ev in sorted(appointment_events, key=lambda e: "personal calendar" in e["calendar"].lower()):
+    if any(
+        other["date"] == ev["date"] and other["time"] == ev["time"]
+        and _appt_names_match(ev["contact"], other["contact"])
+        for other in _deduped_appts
+    ):
+        continue
+    _deduped_appts.append(ev)
+appointment_events = _deduped_appts
+
+for ev in appointment_events:
+    _wk_ap = int(ev["week"][1:])
+    _appt_type_label = "Strategy Calls" if ev["type"] == "Strategy Call" else "Discovery Calls"
+    if _wk_ap in move_display_weeks:
+        weekly_appts[_wk_ap][_appt_type_label] += 1
+        _appt_owner_name = ROCK_OWNERS.get(_appt_owner_ids.get(id(ev)))
+        if _appt_owner_name:
+            weekly_appts_by_owner[_appt_owner_name][_wk_ap][_appt_type_label] += 1
 
 appointment_events.sort(key=lambda e: (e["date"], e["time"]), reverse=True)
 print(f"  {len(appointment_events)} appointments across {len(calendar_map)} calendars")
@@ -1580,6 +1613,33 @@ HEAD = """<!DOCTYPE html>
       padding: 40px;
     }
     #glossaryOverlay.open { display: flex; }
+    #monthlyOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    #monthlyOverlay.open { display: flex; }
+    .expand-icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text-mute);
+      font-size: 0.62rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+    }
+    .expand-icon-btn:hover { color: var(--hero); border-color: var(--hero); }
     .glossary-modal {
       background: var(--surface);
       border-radius: 18px;
@@ -1700,17 +1760,22 @@ HEADER = f"""
 HERO = f"""
   <section class="section-hero card">
 
-    <!-- Title row + CPL hero -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <!-- Title row + MGL CPL hero -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
       <div class="card-label" style="margin-bottom:0;">Marketing &amp; Leads</div>
-      <div style="display:flex;align-items:baseline;gap:12px;">
-        <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;">{cpl_lw_str}</div>
-        <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-mute);">CPL</div>
-        <div style="display:inline-flex;align-items:center;gap:5px;background:var(--surface-2);border-radius:6px;padding:3px 9px;">
-          <span style="font-size:0.8rem;font-weight:800;color:{cpl_wow_color};">{cpl_wow_dir}&thinsp;{cpl_wow_str}</span>
-          <span style="font-size:0.48rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-mute);">WoW</span>
+      <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;gap:4px;">
+          <button onclick="setCplPeriod(7,this)" class="mktg-btn cpl-period-btn mktg-btn-active">7D</button>
+          <button onclick="setCplPeriod(30,this)" class="mktg-btn cpl-period-btn">30D</button>
+          <button onclick="setCplPeriod(90,this)" class="mktg-btn cpl-period-btn">90D</button>
         </div>
-        <div style="font-size:0.58rem;color:var(--text-mute);">{_cpl_range_str}</div>
+        <div id="cplHeroValue" style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;">{cpl_lw_str}</div>
+        <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-mute);">MGL CPL{_info_icon("Meta ad spend divided by MGL-source leads for the selected period. Compared against the immediately preceding period of equal length (e.g. last 7 days vs. the 7 days before that); no comparison is shown for 90 Days since only 90 days of spend history are fetched. Lower is better.")}</div>
+        <div id="cplHeroDelta" style="display:none;align-items:center;gap:5px;background:var(--surface-2);border-radius:6px;padding:3px 9px;">
+          <span id="cplHeroDeltaVal" style="font-size:0.8rem;font-weight:800;"></span>
+          <span style="font-size:0.48rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-mute);">vs prior</span>
+        </div>
+        <div id="cplHeroRange" style="font-size:0.58rem;color:var(--text-mute);"></div>
       </div>
     </div>
 
@@ -1740,7 +1805,10 @@ HERO = f"""
       <!-- ── Col 2: Monthly Volume + MGL badge ── -->
       <div style="border-right:1px solid var(--line);padding:0 24px;padding-top:2px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume{_info_icon("Only shows the last 3 months (2 months ago, last month, current month) by lead created date -- not all-time volume. The MGL badge is scoped to the current month shown, not a rolling window.")}</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume{_info_icon("Compact view shows the last 3 months (2 months ago, last month, current month) by lead created date. The expand icon opens every month back to May 2026 in a popout. The MGL badge is always scoped to the current month, not a rolling window.")}</div>
+            <button class="expand-icon-btn" onclick="openMonthlyModal()" title="View full month-by-month history" aria-label="Expand Monthly Volume">⤢</button>
+          </div>
           <span class="mgl-pill" style="font-size:0.56rem;padding:2px 7px;white-space:nowrap;">MGL&nbsp;{cur_month_mgl}&nbsp;·&nbsp;{cur_month_mgl_pct}%&nbsp;·&nbsp;{cur_month_label}</span>
         </div>
         <div style="position:relative;height:168px;"><canvas id="chartMonthly"></canvas></div>
@@ -2006,9 +2074,9 @@ GRANOLA_SECTION = f"""
 # ── 7h2. Glossary modal — plain-English definition for every metric on the page
 GLOSSARY_TERMS = [
     ("This Week / Last Week", "New leads (opportunities created) in the Sales Pipeline, Monday-Sunday. WoW badge compares this week's count to last week's."),
-    ("CPL (Cost Per Lead)", "Last full week's Meta ad spend divided by that week's MGL leads. WoW badge compares to the prior full week. Lower is better."),
+    ("MGL CPL", "Meta ad spend divided by MGL-source leads for the selected period (7D/30D/90D toggle). The delta badge compares to the immediately preceding period of equal length; hidden for 90D since spend history only goes back 90 days. Lower is better."),
     ("Monthly Volume (bar chart)", "Only the last 3 months (2 months ago, last month, current month) by lead created date, across all pipelines/statuses. Not all-time volume -- older months exist in the data but aren't shown here. The MGL badge next to it shows the current month's MGL count and % of that month's total leads (not a rolling window)."),
-    ("Daily Performance table (Spend/Clicks/CPC/Leads/Conv%)", "Meta ad spend, link clicks, cost-per-click, MGL leads, and lead conversion rate, one row per day. Excludes today (spend/clicks are incomplete until the day closes out). Use the date-range picker to view any custom window back to 90 days."),
+    ("Daily Performance table (Spend/Clicks/CPC/Leads/Conv%/CPL)", "Meta ad spend, link clicks, cost-per-click, MGL leads, lead conversion rate, and cost per MGL lead, one row per day. Excludes today (spend/clicks are incomplete until the day closes out). Use the date-range picker to view any custom window back to 90 days."),
     ("Lead Sources — MGL / SGL / Other", "Essentially all-time within the Sales Pipeline: every opportunity ever won or lost, plus any currently open at New Lead stage or beyond. MGL = Marketing Generated Lead, SGL = Sales Generated Lead."),
     ("Call Quality (Great Fit / Potential / Poor Fit / Unscored)", "Quality score set on the contact record, shown for opportunities at Discovery Call stage or beyond, broken out by source (MGL/SGL/Other)."),
     ("Pipeline Snapshot — Open Deals by Stage", "Current count of OPEN opportunities in each Sales Pipeline stage, as of the selected daily snapshot (use the Viewing Snapshot dropdown to look at a past date)."),
@@ -2040,6 +2108,19 @@ GLOSSARY_MODAL = f"""
       </div>
       <div class="glossary-sub">What every metric on this dashboard actually means</div>
       {_glossary_rows()}
+    </div>
+  </div>
+"""
+
+MONTHLY_MODAL = """
+  <div id="monthlyOverlay" onclick="if(event.target===this)closeMonthlyModal()">
+    <div class="glossary-modal" style="max-width:820px;">
+      <div class="glossary-modal-header">
+        <span class="glossary-modal-title">Monthly Volume — Full History</span>
+        <button class="glossary-close" onclick="closeMonthlyModal()">&times;</button>
+      </div>
+      <div class="glossary-sub">New leads by month, since May 2026 (by lead created date)</div>
+      <div style="position:relative;height:380px;"><canvas id="chartMonthlyFull"></canvas></div>
     </div>
   </div>
 """
@@ -2154,6 +2235,7 @@ DATA_SCRIPT = f"""
     const DAY7_DATA       = {json.dumps(day_7_data)};
     const MONTH_LABELS    = {json.dumps([month2_label, month1_label, cur_month_label])};
     const MONTH_DATA      = {json.dumps([month2_count, month1_count, cur_month_count])};
+    const MONTHLY_FULL     = {json.dumps(monthly_full)};
     const META_LABELS     = {json.dumps(meta_labels)};
     const META_SPEND      = {json.dumps(meta_spends)};
     const SOURCE_LABELS      = {json.dumps(source_chart_labels)};
@@ -2180,7 +2262,7 @@ CHARTS_SCRIPT = """
       renderMktgRows(MKTG_DAILY.slice(-days));
     }
     function applyMktgRange() {
-      document.querySelectorAll(".mktg-btn:not(.smv-owner-btn):not(.smv-owner-btn2)").forEach(b => b.classList.remove("mktg-btn-active"));
+      document.querySelectorAll(".mktg-btn:not(.smv-owner-btn):not(.smv-owner-btn2):not(.cpl-period-btn)").forEach(b => b.classList.remove("mktg-btn-active"));
       const from = document.getElementById("mktgFrom").value;
       const to   = document.getElementById("mktgTo").value;
       renderMktgRows(MKTG_DAILY.filter(r => r.date >= from && r.date <= to));
@@ -2191,6 +2273,7 @@ CHARTS_SCRIPT = """
       const totLeads  = rows.reduce((s, r) => s + r.leads,  0);
       const totCpc    = totClicks ? totSpend / totClicks : 0;
       const totConv   = totClicks ? (totLeads / totClicks * 100) : 0;
+      const totCpl    = totLeads  ? totSpend / totLeads  : 0;
       const fS  = v => v >= 1000 ? `$${(v/1000).toFixed(1)}k` : `$${v.toFixed(0)}`;
       const fC  = v => `$${v.toFixed(2)}`;
       const th  = (t, a) => `<th style="text-align:${a||'right'};padding:3px 5px 5px ${a==='left'?'0':'5px'};color:var(--text-mute);font-size:0.65rem;font-weight:600;white-space:nowrap;">${t}</th>`;
@@ -2205,6 +2288,7 @@ CHARTS_SCRIPT = """
           ${td(r.cpc > 0 ? fC(r.cpc) : "—", r.cpc > 0 ? undefined : "var(--text-mute)")}
           ${td(r.leads > 0 ? r.leads : "—", r.leads > 0 ? "var(--hero)" : "var(--text-mute)")}
           ${td(r.conv_pct > 0 ? r.conv_pct + "%" : "—", r.conv_pct > 0 ? undefined : "var(--text-mute)")}
+          ${td(r.cpl > 0 ? fC(r.cpl) : "—", r.cpl > 0 ? "var(--hero)" : "var(--text-mute)")}
         </tr>`;
       });
       const foot = `<tr style="border-top:1px solid var(--line);">
@@ -2214,22 +2298,59 @@ CHARTS_SCRIPT = """
         ${td(totClicks ? fC(totCpc) : "—", totClicks ? undefined : "var(--text-mute)", 700)}
         ${td(totLeads > 0 ? totLeads : "—", totLeads > 0 ? "var(--hero)" : "var(--text-mute)", 700)}
         ${td(totConv > 0 ? totConv.toFixed(1) + "%" : "—", totConv > 0 ? undefined : "var(--text-mute)", 700)}
+        ${td(totCpl > 0 ? fC(totCpl) : "—", totCpl > 0 ? "var(--hero)" : "var(--text-mute)", 700)}
       </tr>`;
       document.getElementById("mktgTable").innerHTML =
         `<table style="width:100%;border-collapse:collapse;">
           <thead><tr style="border-bottom:1px solid var(--line);">
-            ${th("Date","left")}${th("Spend")}${th("Clicks")}${th("CPC")}${th("Leads")}${th("Conv%")}
+            ${th("Date","left")}${th("Spend")}${th("Clicks")}${th("CPC")}${th("Leads")}${th("Conv%")}${th("CPL")}
           </tr></thead>
           <tbody>${body}</tbody>
           <tfoot>${foot}</tfoot>
         </table>`;
     }
     function setMktgPeriod(days, btn) {
-      document.querySelectorAll(".mktg-btn:not(.smv-owner-btn):not(.smv-owner-btn2)").forEach(b => b.classList.remove("mktg-btn-active"));
+      document.querySelectorAll(".mktg-btn:not(.smv-owner-btn):not(.smv-owner-btn2):not(.cpl-period-btn)").forEach(b => b.classList.remove("mktg-btn-active"));
       btn.classList.add("mktg-btn-active");
       renderMktgTable(days);
     }
     renderMktgTable(7);
+
+    // ── Marketing & Leads — MGL CPL hero (segmented 7D / 30D / 90D) ──────
+    function setCplPeriod(days, btn) {
+      document.querySelectorAll(".cpl-period-btn").forEach(b => b.classList.remove("mktg-btn-active"));
+      btn.classList.add("mktg-btn-active");
+      renderCplHero(days);
+    }
+    function renderCplHero(days) {
+      const cur  = MKTG_DAILY.slice(-days);
+      const prev = MKTG_DAILY.slice(0, MKTG_DAILY.length - days).slice(-days);
+      const sum  = (rows, k) => rows.reduce((s, r) => s + r[k], 0);
+      const curLeads = sum(cur, "leads");
+      const curCpl   = curLeads ? sum(cur, "spend") / curLeads : null;
+
+      document.getElementById("cplHeroValue").textContent = curCpl != null ? `$${curCpl.toFixed(0)}` : "—";
+
+      const fmtD = ds => new Date(ds + "T00:00:00").toLocaleDateString("en-US", {month: "short", day: "numeric"});
+      document.getElementById("cplHeroRange").textContent =
+        cur.length ? `${fmtD(cur[0].date)} – ${fmtD(cur[cur.length - 1].date)}` : "";
+
+      const deltaEl = document.getElementById("cplHeroDelta");
+      const prevLeads = prev.length === days ? sum(prev, "leads") : 0;
+      const prevCpl   = prevLeads ? sum(prev, "spend") / prevLeads : null;
+      if (curCpl != null && prevCpl) {
+        const delta = Math.round((curCpl - prevCpl) / prevCpl * 100);
+        const dir   = delta > 0 ? "↑" : (delta < 0 ? "↓" : "→");
+        const color = delta > 0 ? "#FF5C5C" : "var(--hero)";  // lower CPL = better
+        const valEl = document.getElementById("cplHeroDeltaVal");
+        valEl.textContent = `${dir} ${delta >= 0 ? "+" : ""}${delta}%`;
+        valEl.style.color = color;
+        deltaEl.style.display = "inline-flex";
+      } else {
+        deltaEl.style.display = "none";
+      }
+    }
+    renderCplHero(7);
 
     // ── Weekly Rocks — owner filter ──────────────────────────────────────
     function setRockOwner(which, btn) {
@@ -2300,6 +2421,50 @@ CHARTS_SCRIPT = """
       },
       plugins: [monthlyDataLabels],
     });
+
+    // ── Monthly volume — full-history popout (built lazily on first open) ──
+    let chartMonthlyFull = null;
+    function openMonthlyModal() {
+      document.getElementById("monthlyOverlay").classList.add("open");
+      if (!chartMonthlyFull) {
+        chartMonthlyFull = new Chart(document.getElementById("chartMonthlyFull"), {
+          type: "bar",
+          data: {
+            labels: MONTHLY_FULL.map(m => m.label),
+            datasets: [{
+              data:               MONTHLY_FULL.map(m => m.count),
+              backgroundColor:    MONTHLY_FULL.map((m, i) => i === MONTHLY_FULL.length - 1 ? "rgba(200,255,1,0.30)" : "#5B8FFF"),
+              borderRadius:       6,
+              borderSkipped:      false,
+              barPercentage:      0.70,
+              categoryPercentage: 0.68,
+            }],
+          },
+          options: {
+            responsive:          true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 24 } },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                displayColors: false,
+                callbacks: { label: ctx => ` ${ctx.parsed.y} new leads` },
+              },
+            },
+            scales: {
+              x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 12 } } },
+              y: { display: false, beginAtZero: true },
+            },
+          },
+          plugins: [monthlyDataLabels],
+        });
+      } else {
+        chartMonthlyFull.resize();
+      }
+    }
+    function closeMonthlyModal() {
+      document.getElementById("monthlyOverlay").classList.remove("open");
+    }
 
     // ── Lead Source Breakdown (vertical bar) ──────────────────────────────
     const sourceDataLabels = {
@@ -2989,7 +3154,7 @@ print(f"Raw data page written → {raw_data_path} ({len(movement_events)} moveme
 # Join all sections into one string and write axis-growth.html.
 # Running this script again will overwrite the file with fresh data.
 
-html     = HEAD + HEADER + HERO + SHARED_DATE_HEADER + MGL_CHART + MIDDLE + STAGE_MOVEMENT + APPT_WEEKLY_SECTION + META_SECTION + GRANOLA_SECTION + GLOSSARY_MODAL + DATA_SCRIPT + CHARTS_SCRIPT
+html     = HEAD + HEADER + HERO + SHARED_DATE_HEADER + MGL_CHART + MIDDLE + STAGE_MOVEMENT + APPT_WEEKLY_SECTION + META_SECTION + GRANOLA_SECTION + GLOSSARY_MODAL + MONTHLY_MODAL + DATA_SCRIPT + CHARTS_SCRIPT
 out_path = Path(__file__).parent / "axis-growth.html"
 out_path.write_text(html, encoding="utf-8")
 
