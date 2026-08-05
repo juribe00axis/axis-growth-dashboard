@@ -3,11 +3,11 @@
   "stages": [
     {
       "name": "New Lead",
-      "count": 38
+      "count": 43
     },
     {
       "name": "Discovery Call",
-      "count": 47
+      "count": 37
     },
     {
       "name": "Strategy Call",
@@ -23,14 +23,14 @@
     },
     {
       "name": "Agreement Sent",
-      "count": 6
+      "count": 7
     },
     {
       "name": "Reactivation Queue",
       "count": 31
     }
   ],
-  "total_open": 153,
+  "total_open": 149,
   "source": {
     "labels": [
       "MGL",
@@ -38,10 +38,10 @@
       "Other - Referrals"
     ],
     "data": [
-      102,
+      99,
       17,
-      68
+      67
     ],
-    "total": 187
+    "total": 183
   }
 }
