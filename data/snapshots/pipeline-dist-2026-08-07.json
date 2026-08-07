@@ -7,19 +7,19 @@
     },
     {
       "name": "Discovery Call",
-      "count": 26
+      "count": 27
     },
     {
       "name": "Strategy Call",
-      "count": 9
+      "count": 11
     },
     {
       "name": "Proposal Sent",
-      "count": 19
+      "count": 17
     },
     {
       "name": "Closing Call",
-      "count": 4
+      "count": 6
     },
     {
       "name": "Agreement Sent",
@@ -30,7 +30,7 @@
       "count": 40
     }
   ],
-  "total_open": 137,
+  "total_open": 140,
   "source": {
     "labels": [
       "MGL",
@@ -39,9 +39,9 @@
     ],
     "data": [
       92,
-      17,
-      61
+      20,
+      62
     ],
-    "total": 170
+    "total": 174
   }
 }
