@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Axis Growth</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* Design tokens from style/style.md */
+    :root {
+      --bg:        #101014;
+      --surface:   #1C1C24;
+      --surface-2: #262630;
+      --hero:      #C8FF01;
+      --text:      #F5F5F7;
+      --text-mute: #9A9AA5;
+      --won:       #C8FF01;
+      --lost:      #FF5C5C;
+      --line:      #2E2E38;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Saira", "Eurostile", system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 32px 40px 64px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 40px;
+    }
+    .header-left  { display: flex; align-items: center; gap: 58px; }
+    .header-logo  { height: 44px; width: auto; display: block; }
+    .header-title {
+      font-size: 1.55rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .header-meta {
+      font-size: 0.7rem;
+      color: var(--text-mute);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 28px 32px;
+      box-shadow: 0 4px 28px rgba(0,0,0,0.5);
+    }
+    .card-label {
+      font-size: 0.67rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-bottom: 14px;
+    }
+
+    /* Hero section */
+    .section-hero  { margin-bottom: 22px; }
+    .hero-number {
+      font-size: 4.2rem;
+      font-weight: 800;
+      color: var(--hero);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .hero-sub {
+      font-size: 0.72rem;
+      color: var(--text-mute);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+    .chart-wrap { position: relative; height: 200px; }
+
+    /* Funnel KPI chips */
+    .funnel-kpis { display: flex; gap: 16px; margin-bottom: 20px; }
+    .funnel-kpi {
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 14px 20px;
+      flex: 1;
+    }
+    .funnel-kpi-label {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      display: block;
+      margin-bottom: 6px;
+    }
+    .funnel-kpi-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--hero);
+      line-height: 1;
+    }
+    .funnel-kpi-sub {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      display: block;
+      margin-top: 5px;
+    }
+
+    /* Funnel table */
+    .funnel-table { margin-top: 4px; }
+    .funnel-row {
+      display: grid;
+      grid-template-columns: 148px 1fr 38px;
+      align-items: center;
+      gap: 14px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .funnel-row:last-child { border-bottom: none; }
+    .funnel-stage { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+    .funnel-bar-wrap { display: block; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
+    .funnel-bar { display: block; height: 100%; background: rgba(200,255,1,0.45); border-radius: 3px; }
+    .funnel-count { font-size: 0.95rem; font-weight: 800; color: var(--text); text-align: right; }
+    .funnel-won-sep { height: 1px; background: var(--line); margin: 4px 0; }
+    .funnel-row.won-row .funnel-stage { color: var(--hero); }
+    .funnel-row.won-row .funnel-bar   { background: var(--hero); }
+    .funnel-row.won-row .funnel-count { color: var(--hero); }
+    .pipeline-note {
+      font-size: 0.66rem;
+      color: var(--text-mute);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    /* Summary tiles */
+    .tiles { display: flex; flex-direction: column; gap: 16px; }
+    .tile {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 24px 26px;
+      box-shadow: 0 4px 28px rgba(0,0,0,0.5);
+      flex: 1;
+    }
+    .tile-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-bottom: 10px;
+    }
+    .tile-value {
+      font-size: 3.2rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+    .tile-value.accent { color: var(--hero); }
+    .tile-sub {
+      font-size: 0.72rem;
+      color: var(--text-mute);
+      margin-top: 8px;
+    }
+
+    /* MGL stat line inside hero */
+    .mgl-stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.72rem;
+      color: var(--text-mute);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 22px;
+    }
+    .mgl-pill {
+      background: rgba(200,255,1,0.12);
+      border: 1px solid rgba(200,255,1,0.35);
+      color: var(--hero);
+      font-size: 0.7rem;
+      font-weight: 700;
+      border-radius: 20px;
+      padding: 2px 10px;
+      letter-spacing: 0.04em;
+    }
+
+    /* MGL score table */
+    .mgl-row {
+      display: grid;
+      grid-template-columns: 1fr 200px;
+      gap: 20px;
+      align-items: start;
+    }
+    .score-table { display: flex; flex-direction: column; }
+    .score-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.88rem;
+    }
+    .score-row:last-child { border-bottom: none; }
+    .score-row.hdr {
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      padding-bottom: 6px;
+    }
+    .score-row.hdr .score-n { font-size: 0.6rem; font-weight: 600; }
+    .score-n { font-weight: 700; font-size: 1.05rem; text-align: right; min-width: 28px; }
+    .score-n.accent { color: var(--hero); }
+    .score-n.dim    { color: var(--text-mute); }
+    .score-row.total-row { border-top: 1px solid var(--line); margin-top: 2px; }
+    .score-row.total-row .score-lbl { font-size: 0.72rem; color: var(--text-mute); }
+    .score-row.total-row .score-n   { font-size: 0.9rem; color: var(--text-mute); }
+
+    /* Hero weekly stat blocks */
+    .hero-top {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 36px;
+      align-items: start;
+      margin-bottom: 18px;
+    }
+    .hero-stat-block {
+      border-left: 1px solid var(--line);
+      padding-left: 24px;
+      min-width: 110px;
+    }
+    .hero-stat-lbl {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-bottom: 8px;
+    }
+    .hero-stat-num {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+    .hero-stat-num.accent { color: var(--hero); }
+    .hero-stat-sub-s {
+      font-size: 0.7rem;
+      color: var(--text-mute);
+      margin-top: 6px;
+    }
+
+    /* Meta Campaign Spending section */
+    .meta-section { margin-top: 22px; }
+    .meta-top {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 24px;
+      align-items: start;
+      margin-bottom: 22px;
+    }
+    .meta-tiles { display: flex; gap: 16px; }
+    .meta-tiles .tile { min-width: 140px; }
+
+    /* Granola Insights section */
+    .granola-section { margin-top: 22px; }
+    .granola-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .g-card {
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 20px 22px;
+    }
+    .g-card-label {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-bottom: 14px;
+    }
+    .fund-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .fund-row:last-child { border-bottom: none; }
+    .fund-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      background: rgba(200,255,1,0.12);
+      color: var(--hero);
+      border: 1px solid rgba(200,255,1,0.3);
+      border-radius: 20px;
+      padding: 2px 10px;
+      letter-spacing: 0.05em;
+    }
+    .comp-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.9rem;
+    }
+    .comp-row:last-child { border-bottom: none; }
+    .comp-count {
+      font-size: 0.72rem;
+      color: var(--text-mute);
+    }
+    .comp-none {
+      font-size: 0.82rem;
+      color: var(--text-mute);
+      font-style: italic;
+      padding: 8px 0;
+    }
+    .quote-text {
+      font-size: 1.05rem;
+      font-weight: 600;
+      line-height: 1.55;
+      color: var(--text);
+      border-left: 3px solid var(--hero);
+      padding-left: 14px;
+      margin-bottom: 10px;
+    }
+    .quote-source {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .prev-quote-row {
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .prev-quote-row:last-child { border-bottom: none; }
+    .prev-quote-text {
+      font-size: 0.85rem;
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+    .prev-quote-source {
+      font-size: 0.64rem;
+      color: var(--text-mute);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .question-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+    .question-row:last-child { border-bottom: none; }
+    .q-count {
+      min-width: 28px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--hero);
+      padding-top: 2px;
+    }
+
+    /* MGL weekly table */
+    .mgl-table { display: flex; flex-direction: column; gap: 7px; }
+    .mgl-tr { display: grid; grid-template-columns: 54px 1fr 26px; align-items: center; gap: 10px; }
+    .mgl-tw { font-size: 0.68rem; color: var(--text-mute); letter-spacing: 0.04em; white-space: nowrap; }
+    .mgl-tbar-wrap { display: block; height: 7px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+    .mgl-tbar { display: block; height: 100%; background: #C8FF01; border-radius: 4px; }
+    .mgl-tc { font-size: 0.82rem; font-weight: 700; color: var(--text); text-align: right; }
+    .mgl-tr.current .mgl-tbar { background: rgba(200,255,1,0.38); }
+    .mgl-tr.current .mgl-tc  { color: var(--text-mute); }
+    .mgl-tr.current .mgl-tw  { color: rgba(154,154,165,0.6); }
+
+    /* Stage movement table */
+    .smv-wrap { overflow-x: auto; }
+    .smv-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .smv-table th {
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      padding: 0 10px 12px;
+      text-align: center;
+      white-space: nowrap;
+      border-bottom: 1px solid var(--line);
+    }
+    .smv-table th.smv-th-owner { text-align: left; min-width: 130px; padding-left: 0; }
+    .smv-table th.smv-th-stage { text-align: left; min-width: 142px; }
+    .smv-table td {
+      padding: 7px 10px;
+      text-align: center;
+      border-bottom: 1px solid var(--line);
+      color: var(--text);
+      font-weight: 600;
+    }
+    .smv-table td.smv-owner-cell {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text);
+      text-align: left;
+      padding-left: 0;
+      vertical-align: middle;
+      border-right: 1px solid var(--line);
+      padding-right: 14px;
+    }
+    .smv-table td.smv-stage-cell {
+      text-align: left;
+      font-weight: 400;
+      font-size: 0.78rem;
+      color: var(--text-mute);
+      padding-left: 12px;
+      white-space: nowrap;
+    }
+    .smv-table td.smv-val { font-size: 0.88rem; font-weight: 700; }
+    .smv-table td.smv-val-pos { color: var(--hero); }
+    .smv-table td.smv-val-zero { color: var(--surface-2); }
+    .smv-table th.smv-th-total { border-left: 1px solid var(--line); color: var(--text); }
+    .smv-table td.smv-total { border-left: 1px solid var(--line); color: var(--text); font-size: 0.88rem; font-weight: 800; }
+    .smv-table tr.smv-owner-last-row td { border-bottom: 2px solid var(--line); }
+    .smv-table tr.smv-owner-last-row:last-child td { border-bottom: none; }
+    .smv-note {
+      font-size: 0.66rem;
+      color: var(--text-mute);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    /* Marketing & Leads — period toggle buttons */
+    .mktg-btn {
+      background: var(--surface-2);
+      color: var(--text-mute);
+      border: none;
+      border-radius: 5px;
+      padding: 3px 8px;
+      font-family: inherit;
+      font-size: 0.62rem;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.06em;
+    }
+    .mktg-btn-active {
+      background: var(--hero);
+      color: #000;
+    }
+
+    /* Coming soon placeholder */
+    .section-coming {
+      border: 2px dashed var(--line);
+      border-radius: 18px;
+      padding: 42px 32px;
+      text-align: center;
+    }
+    .coming-label {
+      font-size: 0.66rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-bottom: 10px;
+    }
+    .coming-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--surface-2);
+    }
+
+    /* Glossary button + modal */
+    .glossary-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text-mute);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .glossary-btn:hover { color: var(--hero); border-color: var(--hero); }
+    #glossaryOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    #glossaryOverlay.open { display: flex; }
+    #monthlyOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    #monthlyOverlay.open { display: flex; }
+    .expand-icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text-mute);
+      font-size: 0.62rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0;
+    }
+    .expand-icon-btn:hover { color: var(--hero); border-color: var(--hero); }
+    .glossary-modal {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 30px 34px;
+      max-width: 640px;
+      width: 100%;
+      max-height: 82vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 70px rgba(0,0,0,0.6);
+    }
+    .glossary-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .glossary-modal-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+    .glossary-close {
+      background: none;
+      border: none;
+      color: var(--text-mute);
+      font-size: 1.3rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px 8px;
+    }
+    .glossary-close:hover { color: var(--text); }
+    .glossary-sub {
+      font-size: 0.68rem;
+      color: var(--text-mute);
+      margin-bottom: 18px;
+    }
+    .glossary-term { padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .glossary-term:last-child { border-bottom: none; padding-bottom: 0; }
+    .glossary-term-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--hero);
+      margin-bottom: 4px;
+    }
+    .glossary-term-def {
+      font-size: 0.76rem;
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    /* Inline info-icon tooltips on a few key metrics */
+    .info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      color: var(--text-mute);
+      font-size: 0.58rem;
+      font-weight: 700;
+      font-style: normal;
+      cursor: help;
+      margin-left: 5px;
+      position: relative;
+      vertical-align: middle;
+    }
+    .info-icon .tooltip-box {
+      display: none;
+      position: absolute;
+      bottom: 135%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0F0F14;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 12px;
+      width: 220px;
+      font-size: 0.68rem;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: normal;
+      color: var(--text);
+      line-height: 1.45;
+      z-index: 60;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.55);
+    }
+    .info-icon:hover .tooltip-box { display: block; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-left">
+      <img src="assets/logo.svg" alt="Axis Growth" class="header-logo">
+      <span class="header-title">Axis Growth</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <a href="axis-growth-data.html" class="glossary-btn" style="text-decoration:none;">Raw Data →</a>
+      <button class="glossary-btn" onclick="document.getElementById('glossaryOverlay').classList.add('open')">? Glossary</button>
+      <span class="header-meta">Generated August 8, 2026 at 13:01 UTC</span>
+    </div>
+  </header>
+
+  <section class="section-hero card">
+
+    <!-- Title row + MGL CPL hero -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+      <div class="card-label" style="margin-bottom:0;">Marketing &amp; Leads</div>
+      <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;">
+        <div style="display:flex;gap:4px;">
+          <button onclick="setCplPeriod(7,this)" class="mktg-btn cpl-period-btn mktg-btn-active">7D</button>
+          <button onclick="setCplPeriod(30,this)" class="mktg-btn cpl-period-btn">30D</button>
+          <button onclick="setCplPeriod(90,this)" class="mktg-btn cpl-period-btn">90D</button>
+        </div>
+        <div id="cplHeroValue" style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;">$116</div>
+        <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-mute);">MGL CPL<span class="info-icon">i<span class="tooltip-box">Meta ad spend divided by MGL-source leads for the selected period. Compared against the immediately preceding period of equal length (e.g. last 7 days vs. the 7 days before that); no comparison is shown for 90 Days since only 90 days of spend history are fetched. Lower is better.</span></span></div>
+        <div id="cplHeroDelta" style="display:none;align-items:center;gap:5px;background:var(--surface-2);border-radius:6px;padding:3px 9px;">
+          <span id="cplHeroDeltaVal" style="font-size:0.8rem;font-weight:800;"></span>
+          <span style="font-size:0.48rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-mute);">vs prior</span>
+        </div>
+        <div id="cplHeroRange" style="font-size:0.58rem;color:var(--text-mute);"></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:220px 200px 1fr;gap:0;align-items:start;">
+
+      <!-- ── Col 1: New Leads KPI ── -->
+      <div style="border-right:1px solid var(--line);padding-right:24px;padding-top:2px;">
+        <div style="margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-mute);">This Week</div>
+            <div style="display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border-radius:6px;padding:2px 7px;">
+              <span style="font-size:0.75rem;font-weight:800;color:var(--hero);">↑&thinsp;+13%</span>
+              <span style="font-size:0.46rem;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-mute);">WoW</span>
+            </div>
+          </div>
+          <div style="font-size:3.4rem;font-weight:800;color:var(--hero);line-height:1;">34</div>
+          <div style="font-size:0.6rem;color:var(--text-mute);margin-top:5px;">Aug 3 – Aug 8</div>
+        </div>
+        <div style="height:1px;background:var(--line);margin-bottom:13px;"></div>
+        <div>
+          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-mute);margin-bottom:5px;">Last Week</div>
+          <div style="font-size:2.0rem;font-weight:800;color:var(--text);line-height:1;">30</div>
+          <div style="font-size:0.6rem;color:var(--text-mute);margin-top:4px;">Jul 27 – Aug 2</div>
+        </div>
+      </div>
+
+      <!-- ── Col 2: Monthly Volume + MGL badge ── -->
+      <div style="border-right:1px solid var(--line);padding:0 24px;padding-top:2px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume<span class="info-icon">i<span class="tooltip-box">Compact view shows the last 3 months (2 months ago, last month, current month) by lead created date. The expand icon opens every month back to May 2026 in a popout. The MGL badge is always scoped to the current month, not a rolling window.</span></span></div>
+            <button class="expand-icon-btn" onclick="openMonthlyModal()" title="View full month-by-month history" aria-label="Expand Monthly Volume">⤢</button>
+          </div>
+          <span class="mgl-pill" style="font-size:0.56rem;padding:2px 7px;white-space:nowrap;">MGL&nbsp;33&nbsp;·&nbsp;77%&nbsp;·&nbsp;Aug</span>
+        </div>
+        <div style="position:relative;height:168px;"><canvas id="chartMonthly"></canvas></div>
+      </div>
+
+      <!-- ── Col 3: Daily Performance metrics table ── -->
+      <div style="padding-left:24px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+          <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Daily Performance · MGL</div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <div style="display:flex;gap:4px;">
+              <button onclick="setMktgPeriod(7,this)" class="mktg-btn mktg-btn-active">7d</button>
+              <button onclick="setMktgPeriod(14,this)" class="mktg-btn">14d</button>
+              <button onclick="setMktgPeriod(28,this)" class="mktg-btn">28d</button>
+            </div>
+            <div style="display:flex;gap:5px;align-items:center;">
+              <input type="date" id="mktgFrom" min="2026-05-10" max="2026-08-07" value="2026-05-10"
+                style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-family:inherit;font-size:0.68rem;outline:none;color-scheme:dark;">
+              <span style="font-size:0.62rem;color:var(--text-mute);">–</span>
+              <input type="date" id="mktgTo" min="2026-05-10" max="2026-08-07" value="2026-08-07"
+                style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-family:inherit;font-size:0.68rem;outline:none;color-scheme:dark;">
+              <button onclick="applyMktgRange()" class="mktg-btn">Go</button>
+            </div>
+          </div>
+        </div>
+        <div id="mktgTable" style="max-height:190px;overflow-y:auto;"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <div style="display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-bottom:10px;">
+    <span style="font-size:0.62rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Viewing Snapshot</span>
+    <select id="sharedDateSelect" style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 12px;font-family:inherit;font-size:0.78rem;font-weight:600;cursor:pointer;outline:none;"></select>
+  </div>
+
+  <div class="card" style="margin-bottom:22px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div class="card-label" style="margin-bottom:0;">Lead Sources — New Lead &amp; Beyond &nbsp;·&nbsp; <span id="sourceTotalLabel">177 Opportunities</span><span class="info-icon">i<span class="tooltip-box">This is essentially all-time, not just currently-open deals: every Sales Pipeline opportunity ever won or lost, plus any currently open at New Lead stage or beyond. Use the month selector to compare how the MGL/SGL/Other mix evolves month over month, by opportunity created date, instead of the flat all-time total.</span></span></div>
+      <select id="sourceMonthSelect" style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:4px 12px;font-family:inherit;font-size:0.72rem;font-weight:600;cursor:pointer;outline:none;">
+        <option value="">All Time</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:3fr 2fr;gap:28px;align-items:stretch;margin-top:16px;">
+
+      <!-- Left: source bar chart — constrained width so bars cluster together -->
+      <div style="display:flex;align-items:center;justify-content:center;">
+        <div style="position:relative;width:300px;height:100%;">
+          <canvas id="chartSource"></canvas>
+          <div id="sourceNoData" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;text-align:center;font-size:0.7rem;color:var(--text-mute);padding:0 20px;">No source data for this period.</div>
+        </div>
+      </div>
+
+      <!-- Right: 3-column call quality table -->
+      <div>
+        <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-mute);margin-bottom:12px;">Call Quality &nbsp;·&nbsp; Discovery Call+</div>
+
+        <!-- Header row: labels + totals -->
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:end;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:2px;">
+          <span></span>
+          <div style="text-align:center;">
+            <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#C8FF01;margin-bottom:4px;">MGL</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#C8FF01;line-height:1;">70</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#5B8FFF;margin-bottom:4px;">SGL</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#5B8FFF;line-height:1;">19</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:0.56rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#FF9F45;margin-bottom:4px;">Other</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#FF9F45;line-height:1;">52</div>
+          </div>
+        </div>
+
+        <!-- Score rows -->
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:0.75rem;color:var(--text);">🟢 Great Fit</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">19</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">7</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--hero);text-align:center;">14</span>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:0.75rem;color:var(--text);">🟡 Potential</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">10</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">3</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">3</span>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);">
+          <span style="font-size:0.75rem;color:var(--text);">🔴 Poor Fit</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">3</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">0</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text);text-align:center;">0</span>
+        </div>
+        <div style="display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:14px;align-items:center;padding:10px 0;">
+          <span style="font-size:0.75rem;color:var(--text-mute);">⬜ Unscored</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">38</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">9</span>
+          <span style="font-size:0.95rem;font-weight:800;color:var(--text-mute);text-align:center;">35</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="margin-bottom:22px;">
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+        <div class="card-label" style="margin-bottom:0;">Pipeline Snapshot — Open Deals by Stage</div>
+        <span id="pipelineTotal" style="font-size:0.72rem;font-weight:600;color:var(--text-mute);"></span>
+      </div>
+
+      <!-- Segmented bar -->
+      <div id="pipelineBar" style="display:flex;border-radius:10px;overflow:hidden;height:52px;gap:2px;background:#0F0F14;margin-bottom:16px;"></div>
+
+      <!-- Legend -->
+      <div id="pipelineLegend" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px 0;margin-bottom:20px;"></div>
+
+      <div class="funnel-kpis" style="margin-top:4px;">
+        <div class="funnel-kpi">
+          <span class="funnel-kpi-label">Lead to Discovery<span class="info-icon">i<span class="tooltip-box">Since Jul 1, 2026 (W1). Numerator accumulates over time from Weekly Rocks data -- the running total of distinct opportunities that entered Discovery Call each week, including the current in-progress week. Denominator is total leads created since the same date. Unlike the other three funnel KPIs (which are all-time, based on current stage position), this one is flow-based and grows as more weeks are recorded.</span></span></span>
+          <span class="funnel-kpi-value">63%</span>
+          <span class="funnel-kpi-sub">89 of 141 leads since Jul 1</span>
+        </div>
+        <div class="funnel-kpi">
+          <span class="funnel-kpi-label">Discovery to Proposal</span>
+          <span class="funnel-kpi-value">72%</span>
+          <span class="funnel-kpi-sub">104 of 145 discoveries</span>
+        </div>
+        <div class="funnel-kpi">
+          <span class="funnel-kpi-label">Proposal to Signed</span>
+          <span class="funnel-kpi-value">69%</span>
+          <span class="funnel-kpi-sub">72 of 104 proposals</span>
+        </div>
+        <div class="funnel-kpi">
+          <span class="funnel-kpi-label">Lead to Won</span>
+          <span class="funnel-kpi-value">14%</span>
+          <span class="funnel-kpi-sub">25 won of 177 total</span>
+        </div>
+        <div class="funnel-kpi">
+          <span class="funnel-kpi-label">Won<span class="info-icon">i<span class="tooltip-box">Not GHL's won/lost status field -- this counts opportunities currently sitting in the Onboarding stage, which is how this pipeline defines a closed-won deal.</span></span></span>
+          <span class="funnel-kpi-value">25</span>
+          <span class="funnel-kpi-sub">currently in Onboarding</span>
+        </div>
+      </div>
+
+      <div style="margin-top:22px;padding-top:20px;border-top:1px solid var(--line);">
+        <div class="card-label" style="margin-bottom:4px;">Won Deals — Entered Onboarding by Month</div>
+        <div style="font-size:0.68rem;color:var(--text-mute);margin-bottom:14px;">Based on lastStageChangeAt · month-over-month vs. prior completed month</div>
+        <div style="display:grid;grid-template-columns:160px 60px 1fr;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);"><span style="font-size:0.8rem;color:var(--text);">May 2026</span><span style="font-size:1.1rem;font-weight:800;color:var(--hero);">3</span><span><span style="font-size:0.62rem;color:var(--text-mute);">first month on record</span></span></div><div style="display:grid;grid-template-columns:160px 60px 1fr;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);"><span style="font-size:0.8rem;color:var(--text);">June 2026</span><span style="font-size:1.1rem;font-weight:800;color:var(--hero);">5</span><span><span style="display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border-radius:6px;padding:2px 8px;font-size:0.68rem;font-weight:800;color:var(--hero);">↑&thinsp;67% <span style="color:var(--text-mute);font-weight:600;">MoM</span></span></span></div><div style="display:grid;grid-template-columns:160px 60px 1fr;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);"><span style="font-size:0.8rem;color:var(--text);">July 2026</span><span style="font-size:1.1rem;font-weight:800;color:var(--hero);">12</span><span><span style="display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border-radius:6px;padding:2px 8px;font-size:0.68rem;font-weight:800;color:var(--hero);">↑&thinsp;140% <span style="color:var(--text-mute);font-weight:600;">MoM</span></span></span></div><div style="display:grid;grid-template-columns:160px 60px 1fr;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);"><span style="font-size:0.8rem;color:var(--text);">August 2026 (in progress)</span><span style="font-size:1.1rem;font-weight:800;color:var(--hero);">5</span><span><span style="font-size:0.62rem;color:var(--text-mute);">month in progress — not compared yet</span></span></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="card" style="margin-top:22px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div class="card-label" style="margin-bottom:0;">Weekly Rocks<span class="info-icon">i<span class="tooltip-box">Distinct opportunities that entered each stage per week, based on daily snapshots since Jul 1, 2026 (W1). Not a running total -- each opportunity is only counted on the week it actually moved in. Owner filter uses each opportunity's owner as of the day it entered the stage.</span></span></div>
+      <div style="display:flex;gap:4px;">
+        <button onclick="setRockOwner('all',this)" class="mktg-btn smv-owner-btn mktg-btn-active">All</button>
+        <button onclick="setRockOwner('stormer',this)" class="mktg-btn smv-owner-btn">Stormer</button>
+        <button onclick="setRockOwner('alex',this)" class="mktg-btn smv-owner-btn">Alex</button>
+        <button onclick="setRockOwner('joncarlo',this)" class="mktg-btn smv-owner-btn">Joncarlo</button>
+      </div>
+    </div>
+    <div id="smvView-all" style="margin-top:14px;"><div class="smv-wrap"><table class="smv-table"><thead><tr><th class="smv-th-stage">Stage</th><th title="Jul 1–7">W1</th><th title="Jul 8–14">W2</th><th title="Jul 15–21">W3</th><th title="Jul 22–28">W4</th><th title="Jul 29–4">W5</th><th title="Aug 5–11">W6 *</th><th class="smv-th-total">Total</th></tr></thead><tbody><tr><td class="smv-stage-cell">Discovery Calls</td><td class="smv-val smv-val-pos">10</td><td class="smv-val smv-val-pos">13</td><td class="smv-val smv-val-pos">15</td><td class="smv-val smv-val-pos">7</td><td class="smv-val smv-val-pos">28</td><td class="smv-val smv-val-pos">16</td><td class="smv-val smv-total">73</td></tr>
+<tr><td class="smv-stage-cell">Strategy Calls</td><td class="smv-val smv-val-pos">3</td><td class="smv-val smv-val-pos">4</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">7</td><td class="smv-val smv-val-pos">4</td><td class="smv-val smv-val-pos">4</td><td class="smv-val smv-total">18</td></tr>
+<tr><td class="smv-stage-cell">Proposals Sent</td><td class="smv-val smv-val-pos">4</td><td class="smv-val smv-val-pos">9</td><td class="smv-val smv-val-pos">4</td><td class="smv-val smv-val-pos">6</td><td class="smv-val smv-val-pos">3</td><td class="smv-val smv-val-pos">2</td><td class="smv-val smv-total">26</td></tr>
+<tr><td class="smv-stage-cell">Agreements Signed</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">1</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-total">1</td></tr>
+</tbody></table></div><div class="smv-note">Distinct opportunities that entered each stage that week · Sales Pipeline · based on daily snapshots · W1 undercounts slightly: Jul 1 was our first snapshot, so opps already sitting in a stage that day can't be counted as entering it · * current week in progress, excluded from Total</div></div>
+    <div id="smvView-stormer" style="margin-top:14px;display:none;"><div class="smv-wrap"><table class="smv-table"><thead><tr><th class="smv-th-stage">Stage</th><th title="Jul 1–7">W1</th><th title="Jul 8–14">W2</th><th title="Jul 15–21">W3</th><th title="Jul 22–28">W4</th><th title="Jul 29–4">W5</th><th title="Aug 5–11">W6 *</th><th class="smv-th-total">Total</th></tr></thead><tbody><tr><td class="smv-stage-cell">Discovery Calls</td><td class="smv-val smv-val-pos">7</td><td class="smv-val smv-val-pos">5</td><td class="smv-val smv-val-pos">9</td><td class="smv-val smv-val-pos">4</td><td class="smv-val smv-val-pos">11</td><td class="smv-val smv-val-pos">5</td><td class="smv-val smv-total">36</td></tr>
+<tr><td class="smv-stage-cell">Strategy Calls</td><td class="smv-val smv-val-pos">1</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">6</td><td class="smv-val smv-val-pos">2</td><td class="smv-val smv-val-pos">1</td><td class="smv-val smv-total">9</td></tr>
+<tr><td class="smv-stage-cell">Proposals Sent</td><td class="smv-val smv-val-pos">2</td><td class="smv-val smv-val-pos">4</td><td class="smv-val smv-val-pos">3</td><td class="smv-val smv-val-pos">6</td><td class="smv-val smv-val-pos">3</td><td class="smv-val smv-val-pos">1</td><td class="smv-val smv-total">18</td></tr>
+<tr><td class="smv-stage-cell">Agreements Signed</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">1</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-total">1</td></tr>
+</tbody></table></div><div class="smv-note">Distinct opportunities that entered each stage that week · Sales Pipeline · based on daily snapshots · W1 undercounts slightly: Jul 1 was our first snapshot, so opps already sitting in a stage that day can't be counted as entering it · * current week in progress, excluded from Total</div></div>
+    <div id="smvView-alex" style="margin-top:14px;display:none;"><div class="smv-wrap"><table class="smv-table"><thead><tr><th class="smv-th-stage">Stage</th><th title="Jul 1–7">W1</th><th title="Jul 8–14">W2</th><th title="Jul 15–21">W3</th><th title="Jul 22–28">W4</th><th title="Jul 29–4">W5</th><th title="Aug 5–11">W6 *</th><th class="smv-th-total">Total</th></tr></thead><tbody><tr><td class="smv-stage-cell">Discovery Calls</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">2</td><td class="smv-val smv-val-pos">13</td><td class="smv-val smv-val-pos">4</td><td class="smv-val smv-total">15</td></tr>
+<tr><td class="smv-stage-cell">Strategy Calls</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">2</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-total">2</td></tr>
+<tr><td class="smv-stage-cell">Proposals Sent</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">1</td><td class="smv-val smv-total">—</td></tr>
+<tr><td class="smv-stage-cell">Agreements Signed</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-total">—</td></tr>
+</tbody></table></div><div class="smv-note">Distinct opportunities that entered each stage that week · Sales Pipeline · based on daily snapshots · W1 undercounts slightly: Jul 1 was our first snapshot, so opps already sitting in a stage that day can't be counted as entering it · * current week in progress, excluded from Total</div></div>
+    <div id="smvView-joncarlo" style="margin-top:14px;display:none;"><div class="smv-wrap"><table class="smv-table"><thead><tr><th class="smv-th-stage">Stage</th><th title="Jul 1–7">W1</th><th title="Jul 8–14">W2</th><th title="Jul 15–21">W3</th><th title="Jul 22–28">W4</th><th title="Jul 29–4">W5</th><th title="Aug 5–11">W6 *</th><th class="smv-th-total">Total</th></tr></thead><tbody><tr><td class="smv-stage-cell">Discovery Calls</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">1</td><td class="smv-val smv-val-pos">3</td><td class="smv-val smv-val-pos">6</td><td class="smv-val smv-total">4</td></tr>
+<tr><td class="smv-stage-cell">Strategy Calls</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">3</td><td class="smv-val smv-total">—</td></tr>
+<tr><td class="smv-stage-cell">Proposals Sent</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-total">—</td></tr>
+<tr><td class="smv-stage-cell">Agreements Signed</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-total">—</td></tr>
+</tbody></table></div><div class="smv-note">Distinct opportunities that entered each stage that week · Sales Pipeline · based on daily snapshots · W1 undercounts slightly: Jul 1 was our first snapshot, so opps already sitting in a stage that day can't be counted as entering it · * current week in progress, excluded from Total</div></div>
+  </section>
+
+  <section class="card" style="margin-top:22px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div class="card-label" style="margin-bottom:0;">Weekly Rocks — Appointments<span class="info-icon">i<span class="tooltip-box">Appointments scheduled per week, from GHL's own calendar events (a real log, not diffed from daily snapshots like the table above). Bucketed by the appointment's own date, using the same week grid. Split into Discovery Calls vs. Strategy Calls by the calendar's GHL calendar group (not its name -- some calendars share a name across groups). Owner filter uses the appointment's assigned user. Full detail, including future-booked appointments, is on the Raw Data page.</span></span></div>
+      <div style="display:flex;gap:4px;">
+        <button onclick="setApptOwner('all',this)" class="mktg-btn smv-owner-btn2 mktg-btn-active">All</button>
+        <button onclick="setApptOwner('stormer',this)" class="mktg-btn smv-owner-btn2">Stormer</button>
+        <button onclick="setApptOwner('alex',this)" class="mktg-btn smv-owner-btn2">Alex</button>
+        <button onclick="setApptOwner('joncarlo',this)" class="mktg-btn smv-owner-btn2">Joncarlo</button>
+      </div>
+    </div>
+    <div id="apwView-all" style="margin-top:14px;"><div class="smv-wrap"><table class="smv-table"><thead><tr><th class="smv-th-stage">Stage</th><th title="Jul 1–7">W1</th><th title="Jul 8–14">W2</th><th title="Jul 15–21">W3</th><th title="Jul 22–28">W4</th><th title="Jul 29–4">W5</th><th title="Aug 5–11">W6 *</th><th class="smv-th-total">Total</th></tr></thead><tbody><tr><td class="smv-stage-cell">Discovery Calls</td><td class="smv-val smv-val-pos">16</td><td class="smv-val smv-val-pos">20</td><td class="smv-val smv-val-pos">19</td><td class="smv-val smv-val-pos">11</td><td class="smv-val smv-val-pos">25</td><td class="smv-val smv-val-pos">25</td><td class="smv-val smv-total">91</td></tr>
+<tr><td class="smv-stage-cell">Strategy Calls</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">1</td><td class="smv-val smv-val-pos">4</td><td class="smv-val smv-total">1</td></tr>
+</tbody></table></div><div class="smv-note">Appointments scheduled that week (any calendar/status) · from GHL calendar events, not snapshot-diffed · split by calendar group: the "Strategy Call" group was created 2026-07-23, so everything before that date falls under Discovery Calls · * current week in progress, excluded from Total</div></div>
+    <div id="apwView-stormer" style="margin-top:14px;display:none;"><div class="smv-wrap"><table class="smv-table"><thead><tr><th class="smv-th-stage">Stage</th><th title="Jul 1–7">W1</th><th title="Jul 8–14">W2</th><th title="Jul 15–21">W3</th><th title="Jul 22–28">W4</th><th title="Jul 29–4">W5</th><th title="Aug 5–11">W6 *</th><th class="smv-th-total">Total</th></tr></thead><tbody><tr><td class="smv-stage-cell">Discovery Calls</td><td class="smv-val smv-val-pos">6</td><td class="smv-val smv-val-pos">6</td><td class="smv-val smv-val-pos">13</td><td class="smv-val smv-val-pos">5</td><td class="smv-val smv-val-pos">6</td><td class="smv-val smv-val-pos">7</td><td class="smv-val smv-total">36</td></tr>
+<tr><td class="smv-stage-cell">Strategy Calls</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-total">—</td></tr>
+</tbody></table></div><div class="smv-note">Appointments scheduled that week (any calendar/status) · from GHL calendar events, not snapshot-diffed · split by calendar group: the "Strategy Call" group was created 2026-07-23, so everything before that date falls under Discovery Calls · * current week in progress, excluded from Total</div></div>
+    <div id="apwView-alex" style="margin-top:14px;display:none;"><div class="smv-wrap"><table class="smv-table"><thead><tr><th class="smv-th-stage">Stage</th><th title="Jul 1–7">W1</th><th title="Jul 8–14">W2</th><th title="Jul 15–21">W3</th><th title="Jul 22–28">W4</th><th title="Jul 29–4">W5</th><th title="Aug 5–11">W6 *</th><th class="smv-th-total">Total</th></tr></thead><tbody><tr><td class="smv-stage-cell">Discovery Calls</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">3</td><td class="smv-val smv-val-pos">13</td><td class="smv-val smv-val-pos">9</td><td class="smv-val smv-total">16</td></tr>
+<tr><td class="smv-stage-cell">Strategy Calls</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-total">—</td></tr>
+</tbody></table></div><div class="smv-note">Appointments scheduled that week (any calendar/status) · from GHL calendar events, not snapshot-diffed · split by calendar group: the "Strategy Call" group was created 2026-07-23, so everything before that date falls under Discovery Calls · * current week in progress, excluded from Total</div></div>
+    <div id="apwView-joncarlo" style="margin-top:14px;display:none;"><div class="smv-wrap"><table class="smv-table"><thead><tr><th class="smv-th-stage">Stage</th><th title="Jul 1–7">W1</th><th title="Jul 8–14">W2</th><th title="Jul 15–21">W3</th><th title="Jul 22–28">W4</th><th title="Jul 29–4">W5</th><th title="Aug 5–11">W6 *</th><th class="smv-th-total">Total</th></tr></thead><tbody><tr><td class="smv-stage-cell">Discovery Calls</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">2</td><td class="smv-val smv-val-pos">5</td><td class="smv-val smv-val-pos">9</td><td class="smv-val smv-total">7</td></tr>
+<tr><td class="smv-stage-cell">Strategy Calls</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-zero">—</td><td class="smv-val smv-val-pos">1</td><td class="smv-val smv-val-pos">4</td><td class="smv-val smv-total">1</td></tr>
+</tbody></table></div><div class="smv-note">Appointments scheduled that week (any calendar/status) · from GHL calendar events, not snapshot-diffed · split by calendar group: the "Strategy Call" group was created 2026-07-23, so everything before that date falls under Discovery Calls · * current week in progress, excluded from Total</div></div>
+  </section>
+
+  <section class="card meta-section">
+    <div class="card-label">Meta Campaign Spending — Last 7 Days</div>
+    <div class="meta-top">
+      <div>
+        <div class="hero-number">$3,374</div>
+        <div class="hero-sub">Aug 2 – Aug 8 · AxisKey</div>
+      </div>
+      <div class="meta-tiles">
+        <div class="tile">
+          <div class="tile-label">Avg Daily Spend</div>
+          <div class="tile-value accent">$482</div>
+        </div>
+        <div class="tile">
+          <div class="tile-label">Today's Spend</div>
+          <div class="tile-value">$145</div>
+          <div class="tile-sub">partial day</div>
+        </div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="chartMetaSpend"></canvas>
+    </div>
+  </section>
+
+  <section class="card granola-section">
+    <div class="card-label">Call Intelligence — All Time &nbsp;·&nbsp; Updated Jul 21, 2026</div>
+    <div class="granola-grid">
+
+      <div class="g-card">
+        <div class="g-card-label">Fund Sizes Mentioned</div>
+        <div class="fund-row"><span>$50M</span><span class="fund-badge">×3</span></div>
+        <div class="fund-row"><span>$10M</span><span class="fund-badge">×2</span></div>
+        <div class="fund-row"><span>$60M</span><span class="fund-badge">×1</span></div>
+        <div class="fund-row"><span>$40M</span><span class="fund-badge">×1</span></div>
+        <div class="fund-row"><span>$33M</span><span class="fund-badge">×1</span></div>
+        <div class="fund-row"><span>$20M</span><span class="fund-badge">×1</span></div>
+        <div class="fund-row"><span>$12-15M</span><span class="fund-badge">×1</span></div>
+        <div class="fund-row"><span>$5M</span><span class="fund-badge">×1</span></div>
+      </div>
+
+      <div class="g-card">
+        <div class="g-card-label">Top Competitors Mentioned</div>
+        <div class="comp-row"><span>Norvian Capital Partners</span><span class="comp-count">×1</span></div>
+        <div class="comp-row"><span>Sidecar</span><span class="comp-count">×1</span></div>
+        <div class="comp-row"><span>AngelList</span><span class="comp-count">×1</span></div>
+      </div>
+
+      <div class="g-card">
+        <div class="g-card-label">Quote of the Week</div>
+        <div class="quote-text">"I have hired a few groups before, and honestly, I got taken two times at pretty heavy numbers… everybody wants these retainers, but nobody wants to really bring in the worry to get it done."</div>
+        <div class="quote-source">Brian de Armas · Jul 6 · On past fundraising groups</div>
+      </div>
+
+      <div class="g-card">
+        <div class="g-card-label">Questions Prospects Ask Most</div>
+        <div class="question-row"><span class="q-count">×7</span><span>Who will communicate with our investors?</span></div>
+        <div class="question-row"><span class="q-count">×4</span><span>How quickly can we start raising?</span></div>
+        <div class="question-row"><span class="q-count">×2</span><span>Why a 3-call sales process?</span></div>
+        <div class="question-row"><span class="q-count">×2</span><span>How do distributions work?</span></div>
+        <div class="question-row"><span class="q-count">×2</span><span>What are the guarantees / probability of success?</span></div>
+        <div class="question-row"><span class="q-count">×2</span><span>When do we switch from BD reps to an in-house IR team?</span></div>
+        <div class="question-row"><span class="q-count">×1</span><span>Why do you focus on accredited investors specifically?</span></div>
+        <div class="question-row"><span class="q-count">×1</span><span>What am I getting for my money?</span></div>
+        <div class="question-row"><span class="q-count">×1</span><span>Can we launch before our deals are under contract?</span></div>
+      </div>
+
+      <div class="g-card" style="grid-column: 1 / -1;">
+        <div class="g-card-label">Previous Highlighted Quotes</div>
+        <div class="comp-none">None archived yet.</div>
+      </div>
+
+    </div>
+  </section>
+
+  <div id="glossaryOverlay" onclick="if(event.target===this)this.classList.remove('open')">
+    <div class="glossary-modal">
+      <div class="glossary-modal-header">
+        <span class="glossary-modal-title">Dashboard Glossary</span>
+        <button class="glossary-close" onclick="document.getElementById('glossaryOverlay').classList.remove('open')">&times;</button>
+      </div>
+      <div class="glossary-sub">What every metric on this dashboard actually means</div>
+      <div class="glossary-term"><div class="glossary-term-label">This Week / Last Week</div><div class="glossary-term-def">New leads (opportunities created) in the Sales Pipeline, Monday-Sunday. WoW badge compares this week's count to last week's.</div></div>
+<div class="glossary-term"><div class="glossary-term-label">MGL CPL</div><div class="glossary-term-def">Meta ad spend divided by MGL-source leads for the selected period (7D/30D/90D toggle). The delta badge compares to the immediately preceding period of equal length; hidden for 90D since spend history only goes back 90 days. Lower is better.</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Monthly Volume (bar chart)</div><div class="glossary-term-def">Only the last 3 months (2 months ago, last month, current month) by lead created date, across all pipelines/statuses. Not all-time volume -- older months exist in the data but aren't shown here. The MGL badge next to it shows the current month's MGL count and % of that month's total leads (not a rolling window).</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Daily Performance table (Spend/Clicks/CPC/Leads/Conv%/CPL)</div><div class="glossary-term-def">Meta ad spend, link clicks, cost-per-click, MGL leads, lead conversion rate, and cost per MGL lead, one row per day. Excludes today (spend/clicks are incomplete until the day closes out). Use the date-range picker to view any custom window back to 90 days.</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Lead Sources — MGL / SGL / Other</div><div class="glossary-term-def">Essentially all-time within the Sales Pipeline: every opportunity ever won or lost, plus any currently open at New Lead stage or beyond. MGL = Marketing Generated Lead, SGL = Sales Generated Lead.</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Call Quality (Great Fit / Potential / Poor Fit / Unscored)</div><div class="glossary-term-def">Quality score set on the contact record, shown for opportunities at Discovery Call stage or beyond, broken out by source (MGL/SGL/Other).</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Pipeline Snapshot — Open Deals by Stage</div><div class="glossary-term-def">Current count of OPEN opportunities in each Sales Pipeline stage, as of the selected daily snapshot (use the Viewing Snapshot dropdown to look at a past date).</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Lead to Discovery</div><div class="glossary-term-def">Since Jul 1, 2026 (W1): total distinct opportunities that entered Discovery Call (accumulated from Weekly Rocks data across every week on record, including the current in-progress week) divided by total leads created since the same date. Flow-based and grows over time -- unlike the other three funnel KPIs below, which are all-time and based on current stage position.</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Discovery to Proposal / Proposal to Signed / Lead to Won</div><div class="glossary-term-def">All-time conversion rates within the Sales Pipeline: of all opportunities that ever reached the first stage in the pair (any status), what % also reached the second stage (or won, for Lead to Won).</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Won</div><div class="glossary-term-def">NOT GHL's won/lost status field -- this counts opportunities currently sitting in the Onboarding stage, which is how this pipeline defines a closed-won deal.</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Won Deals — Entered Onboarding by Month</div><div class="glossary-term-def">Based on lastStageChangeAt: which month each currently-Onboarding opportunity most recently moved into that stage. Month-over-month % compares to the prior completed month; the current month is marked in progress and excluded from that comparison.</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Weekly Rocks</div><div class="glossary-term-def">Distinct opportunities that ENTERED each of 4 key stages (Discovery Call, Strategy Call, Proposal Sent, Agreement Signed) per week, based on diffing daily snapshots since Jul 1, 2026 (W1). An opportunity is only counted on the week it actually moved in, not every week it happens to sit there. W1 slightly undercounts because Jul 1 was our first-ever snapshot, so opportunities already sitting in a stage that day can't be confirmed as having entered it that week. The current week is marked with * and excluded from the Total column.</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Weekly Rocks — Appointments</div><div class="glossary-term-def">Appointments scheduled per week (any calendar/status), from GHL's own calendar events -- a real log, not diffed from daily snapshots like the stage table above. Bucketed by the appointment's own date, using the same week grid. Owner filter uses the appointment's assigned user, not the linked opportunity's owner.</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Meta Campaign Spending (bottom section)</div><div class="glossary-term-def">Last 7 days of Meta ad spend, including today's partial/incomplete spend as its own tile -- unlike the Daily Performance table above, which excludes today.</div></div>
+<div class="glossary-term"><div class="glossary-term-label">Call Intelligence</div><div class="glossary-term-def">Cumulative, all-time data extracted from Granola call notes: fund sizes and competitors ever mentioned by prospects, and the most common discovery-call questions. Quote of the Week is replaced when a new standout quote comes in -- the outgoing quote is archived into Previous Highlighted Quotes rather than discarded. Everything else accumulates and never resets.</div></div>
+    </div>
+  </div>
+
+  <div id="monthlyOverlay" onclick="if(event.target===this)closeMonthlyModal()">
+    <div class="glossary-modal" style="max-width:820px;">
+      <div class="glossary-modal-header">
+        <span class="glossary-modal-title">Monthly Volume — Full History</span>
+        <button class="glossary-close" onclick="closeMonthlyModal()">&times;</button>
+      </div>
+      <div class="glossary-sub">New leads by month, since May 2026 (by lead created date)</div>
+      <div style="position:relative;height:380px;"><canvas id="chartMonthlyFull"></canvas></div>
+    </div>
+  </div>
+
+  <script>
+    // All values injected by build_dashboard.py — re-run the script to refresh.
+    const DAY7_LABELS     = ["Aug 2", "Aug 3", "Aug 4", "Aug 5", "Aug 6", "Aug 7", "Aug 8"];
+    const DAY7_DATA       = [6, 11, 5, 3, 7, 6, 2];
+    const MONTH_LABELS    = ["Jun", "Jul", "Aug"];
+    const MONTH_DATA      = [87, 98, 43];
+    const MONTHLY_FULL     = [{"label": "May", "count": 56}, {"label": "Jun", "count": 87}, {"label": "Jul", "count": 98}, {"label": "Aug", "count": 43}];
+    const META_LABELS     = ["8/2", "8/3", "8/4", "8/5", "8/6", "8/7", "8/8"];
+    const META_SPEND      = [646.16, 537.25, 583.05, 548.26, 466.15, 449.0, 144.57];
+    const SOURCE_LABELS      = ["MGL", "SGL", "Other - Referrals"];
+    const SOURCE_DATA        = [95, 20, 62];
+    const SOURCE_TOTAL       = 177;
+    const SOURCE_BY_MONTH    = {"2026-03": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [4, 0, 0], "total": 4}, "2026-04": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [0, 0, 4], "total": 4}, "2026-05": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [7, 4, 12], "total": 23}, "2026-06": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [22, 9, 8], "total": 39}, "2026-07": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [34, 5, 30], "total": 69}, "2026-08": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [28, 2, 8], "total": 38}};
+    const SOURCE_MONTHS      = ["2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08"];
+    const PIPELINE_HISTORY   = {"2026-06-30": {"date": "2026-06-30", "stages": [{"name": "New Lead", "count": 50}, {"name": "Discovery Call", "count": 22}, {"name": "Strategy Call", "count": 4}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 1}], "total_open": 103}, "2026-07-01": {"date": "2026-07-01", "stages": [{"name": "New Lead", "count": 50}, {"name": "Discovery Call", "count": 20}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Agreement Signed", "count": 1}], "total_open": 104}, "2026-07-02": {"date": "2026-07-02", "stages": [{"name": "New Lead", "count": 16}, {"name": "Discovery Call", "count": 21}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 16}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 15}], "total_open": 85, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [49, 13, 42], "total": 104}}, "2026-07-03": {"date": "2026-07-03", "stages": [{"name": "New Lead", "count": 17}, {"name": "Discovery Call", "count": 19}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 84, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [48, 13, 42], "total": 103}}, "2026-07-04": {"date": "2026-07-04", "stages": [{"name": "New Lead", "count": 21}, {"name": "Discovery Call", "count": 19}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 88, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [51, 13, 42], "total": 106}}, "2026-07-05": {"date": "2026-07-05", "stages": [{"name": "New Lead", "count": 22}, {"name": "Discovery Call", "count": 19}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 89, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [52, 13, 42], "total": 107}}, "2026-07-06": {"date": "2026-07-06", "stages": [{"name": "New Lead", "count": 21}, {"name": "Discovery Call", "count": 19}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 14}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 85, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [51, 14, 40], "total": 105}}, "2026-07-07": {"date": "2026-07-07", "stages": [{"name": "New Lead", "count": 17}, {"name": "Discovery Call", "count": 24}, {"name": "Strategy Call", "count": 9}, {"name": "Proposal Sent", "count": 15}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 89, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [52, 15, 42], "total": 109}}, "2026-07-08": {"date": "2026-07-08", "stages": [{"name": "New Lead", "count": 16}, {"name": "Discovery Call", "count": 25}, {"name": "Strategy Call", "count": 5}, {"name": "Proposal Sent", "count": 16}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 14}], "total_open": 86, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [52, 16, 39], "total": 107}}, "2026-07-09": {"date": "2026-07-09", "stages": [{"name": "New Lead", "count": 12}, {"name": "Discovery Call", "count": 14}, {"name": "Strategy Call", "count": 5}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 24}], "total_open": 82, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [51, 14, 39], "total": 104}}, "2026-07-10": {"date": "2026-07-10", "stages": [{"name": "New Lead", "count": 11}, {"name": "Discovery Call", "count": 15}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 19}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 24}], "total_open": 85, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [53, 14, 40], "total": 107}}, "2026-07-11": {"date": "2026-07-11", "stages": [{"name": "New Lead", "count": 14}, {"name": "Discovery Call", "count": 15}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 19}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 24}], "total_open": 88, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [54, 15, 41], "total": 110}}, "2026-07-12": {"date": "2026-07-12", "stages": [{"name": "New Lead", "count": 14}, {"name": "Discovery Call", "count": 15}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 19}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Reactivation Queue", "count": 24}], "total_open": 88, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [54, 15, 41], "total": 110}}, "2026-07-13": {"date": "2026-07-13", "stages": [{"name": "New Lead", "count": 13}, {"name": "Discovery Call", "count": 16}, {"name": "Strategy Call", "count": 4}, {"name": "Proposal Sent", "count": 20}, {"name": "Closing Call", "count": 8}, {"name": "Agreement Sent", "count": 2}, {"name": "Onboarding", "count": 1}, {"name": "Reactivation Queue", "count": 24}], "total_open": 88, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [56, 15, 39], "total": 110}}, "2026-07-14": {"date": "2026-07-14", "stages": [{"name": "New Lead", "count": 12}, {"name": "Discovery Call", "count": 19}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 9}, {"name": "Agreement Sent", "count": 2}, {"name": "Onboarding", "count": 1}, {"name": "Reactivation Queue", "count": 24}], "total_open": 90, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [54, 17, 41], "total": 112}}, "2026-07-15": {"date": "2026-07-15", "stages": [{"name": "New Lead", "count": 14}, {"name": "Discovery Call", "count": 21}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 7}, {"name": "Agreement Sent", "count": 2}, {"name": "Onboarding", "count": 1}, {"name": "Reactivation Queue", "count": 23}], "total_open": 91, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [57, 17, 41], "total": 115}}, "2026-07-16": {"date": "2026-07-16", "stages": [{"name": "New Lead", "count": 16}, {"name": "Discovery Call", "count": 23}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 7}, {"name": "Agreement Sent", "count": 4}, {"name": "Onboarding", "count": 1}, {"name": "Reactivation Queue", "count": 23}], "total_open": 97, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [60, 17, 44], "total": 121}}, "2026-07-17": {"date": "2026-07-17", "stages": [{"name": "New Lead", "count": 19}, {"name": "Discovery Call", "count": 21}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 20}, {"name": "Closing Call", "count": 7}, {"name": "Agreement Sent", "count": 4}, {"name": "Onboarding", "count": 1}, {"name": "Reactivation Queue", "count": 23}], "total_open": 101, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [63, 17, 45], "total": 125}}, "2026-07-18": {"date": "2026-07-18", "stages": [{"name": "New Lead", "count": 20}, {"name": "Discovery Call", "count": 21}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 20}, {"name": "Closing Call", "count": 7}, {"name": "Agreement Sent", "count": 4}, {"name": "Onboarding", "count": 1}, {"name": "Reactivation Queue", "count": 23}], "total_open": 102, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [64, 17, 45], "total": 126}}, "2026-07-19": {"date": "2026-07-19", "stages": [{"name": "New Lead", "count": 25}, {"name": "Discovery Call", "count": 21}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 20}, {"name": "Closing Call", "count": 7}, {"name": "Agreement Sent", "count": 4}, {"name": "Onboarding", "count": 1}, {"name": "Reactivation Queue", "count": 23}], "total_open": 107, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [69, 17, 45], "total": 131}}, "2026-07-20": {"date": "2026-07-20", "stages": [{"name": "New Lead", "count": 25}, {"name": "Discovery Call", "count": 24}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 19}, {"name": "Closing Call", "count": 7}, {"name": "Agreement Sent", "count": 4}, {"name": "Onboarding", "count": 1}, {"name": "Reactivation Queue", "count": 23}], "total_open": 109, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [71, 17, 46], "total": 134}}, "2026-07-21": {"date": "2026-07-21", "stages": [{"name": "New Lead", "count": 20}, {"name": "Discovery Call", "count": 28}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 19}, {"name": "Closing Call", "count": 7}, {"name": "Agreement Sent", "count": 3}, {"name": "Onboarding", "count": 1}, {"name": "Reactivation Queue", "count": 23}], "total_open": 107, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [68, 17, 48], "total": 133}}, "2026-07-22": {"date": "2026-07-22", "stages": [{"name": "New Lead", "count": 22}, {"name": "Discovery Call", "count": 28}, {"name": "Strategy Call", "count": 8}, {"name": "Proposal Sent", "count": 18}, {"name": "Closing Call", "count": 7}, {"name": "Agreement Sent", "count": 3}, {"name": "Onboarding", "count": 1}, {"name": "Reactivation Queue", "count": 23}], "total_open": 110, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [70, 17, 49], "total": 136}}, "2026-07-23": {"date": "2026-07-23", "stages": [{"name": "New Lead", "count": 24}, {"name": "Discovery Call", "count": 27}, {"name": "Strategy Call", "count": 6}, {"name": "Proposal Sent", "count": 18}, {"name": "Closing Call", "count": 5}, {"name": "Agreement Sent", "count": 3}, {"name": "Reactivation Queue", "count": 23}], "total_open": 106, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [71, 16, 47], "total": 134}}, "2026-07-24": {"date": "2026-07-24", "stages": [{"name": "New Lead", "count": 26}, {"name": "Discovery Call", "count": 26}, {"name": "Strategy Call", "count": 7}, {"name": "Proposal Sent", "count": 19}, {"name": "Closing Call", "count": 5}, {"name": "Agreement Sent", "count": 3}, {"name": "Reactivation Queue", "count": 24}], "total_open": 110, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [73, 16, 49], "total": 138}}, "2026-07-25": {"date": "2026-07-25", "stages": [{"name": "New Lead", "count": 27}, {"name": "Discovery Call", "count": 26}, {"name": "Strategy Call", "count": 7}, {"name": "Proposal Sent", "count": 19}, {"name": "Closing Call", "count": 5}, {"name": "Agreement Sent", "count": 3}, {"name": "Reactivation Queue", "count": 24}], "total_open": 111, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [74, 16, 49], "total": 139}}, "2026-07-26": {"date": "2026-07-26", "stages": [{"name": "New Lead", "count": 28}, {"name": "Discovery Call", "count": 27}, {"name": "Strategy Call", "count": 7}, {"name": "Proposal Sent", "count": 19}, {"name": "Closing Call", "count": 5}, {"name": "Agreement Sent", "count": 3}, {"name": "Reactivation Queue", "count": 24}], "total_open": 113, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [76, 16, 49], "total": 141}}, "2026-07-27": {"date": "2026-07-27", "stages": [{"name": "New Lead", "count": 27}, {"name": "Discovery Call", "count": 29}, {"name": "Strategy Call", "count": 8}, {"name": "Proposal Sent", "count": 19}, {"name": "Closing Call", "count": 5}, {"name": "Agreement Sent", "count": 3}, {"name": "Reactivation Queue", "count": 24}], "total_open": 115, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [76, 17, 50], "total": 143}}, "2026-07-28": {"date": "2026-07-28", "stages": [{"name": "New Lead", "count": 29}, {"name": "Discovery Call", "count": 28}, {"name": "Strategy Call", "count": 10}, {"name": "Proposal Sent", "count": 18}, {"name": "Closing Call", "count": 5}, {"name": "Agreement Sent", "count": 3}, {"name": "Onboarding", "count": 1}, {"name": "Reactivation Queue", "count": 24}], "total_open": 118, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [76, 18, 53], "total": 147}}, "2026-07-29": {"date": "2026-07-29", "stages": [{"name": "New Lead", "count": 28}, {"name": "Discovery Call", "count": 29}, {"name": "Strategy Call", "count": 8}, {"name": "Proposal Sent", "count": 16}, {"name": "Closing Call", "count": 6}, {"name": "Agreement Sent", "count": 6}, {"name": "Reactivation Queue", "count": 25}], "total_open": 118, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [76, 17, 55], "total": 148}}, "2026-07-30": {"date": "2026-07-30", "stages": [{"name": "New Lead", "count": 28}, {"name": "Discovery Call", "count": 30}, {"name": "Strategy Call", "count": 8}, {"name": "Proposal Sent", "count": 15}, {"name": "Closing Call", "count": 5}, {"name": "Agreement Sent", "count": 9}, {"name": "Reactivation Queue", "count": 26}], "total_open": 121, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [80, 17, 55], "total": 152}}, "2026-07-31": {"date": "2026-07-31", "stages": [{"name": "New Lead", "count": 30}, {"name": "Discovery Call", "count": 32}, {"name": "Strategy Call", "count": 7}, {"name": "Proposal Sent", "count": 18}, {"name": "Closing Call", "count": 5}, {"name": "Agreement Sent", "count": 6}, {"name": "Reactivation Queue", "count": 26}], "total_open": 124, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [83, 17, 57], "total": 157}}, "2026-08-01": {"date": "2026-08-01", "stages": [{"name": "New Lead", "count": 34}, {"name": "Discovery Call", "count": 35}, {"name": "Strategy Call", "count": 7}, {"name": "Proposal Sent", "count": 18}, {"name": "Closing Call", "count": 5}, {"name": "Agreement Sent", "count": 6}, {"name": "Reactivation Queue", "count": 26}], "total_open": 131, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [89, 17, 58], "total": 164}}, "2026-08-02": {"date": "2026-08-02", "stages": [{"name": "New Lead", "count": 35}, {"name": "Discovery Call", "count": 40}, {"name": "Strategy Call", "count": 7}, {"name": "Proposal Sent", "count": 18}, {"name": "Closing Call", "count": 5}, {"name": "Agreement Sent", "count": 6}, {"name": "Reactivation Queue", "count": 26}], "total_open": 137, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [94, 17, 59], "total": 170}}, "2026-08-03": {"date": "2026-08-03", "stages": [{"name": "New Lead", "count": 41}, {"name": "Discovery Call", "count": 40}, {"name": "Strategy Call", "count": 8}, {"name": "Proposal Sent", "count": 18}, {"name": "Closing Call", "count": 5}, {"name": "Agreement Sent", "count": 6}, {"name": "Reactivation Queue", "count": 26}], "total_open": 144, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [93, 17, 67], "total": 177}}, "2026-08-04": {"date": "2026-08-04", "stages": [{"name": "New Lead", "count": 37}, {"name": "Discovery Call", "count": 46}, {"name": "Strategy Call", "count": 8}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 5}, {"name": "Agreement Sent", "count": 6}, {"name": "Agreement Signed", "count": 1}, {"name": "Reactivation Queue", "count": 29}], "total_open": 149, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [98, 17, 67], "total": 182}}, "2026-08-05": {"date": "2026-08-05", "stages": [{"name": "New Lead", "count": 43}, {"name": "Discovery Call", "count": 37}, {"name": "Strategy Call", "count": 8}, {"name": "Proposal Sent", "count": 18}, {"name": "Closing Call", "count": 5}, {"name": "Agreement Sent", "count": 7}, {"name": "Reactivation Queue", "count": 31}], "total_open": 149, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [99, 17, 67], "total": 183}}, "2026-08-06": {"date": "2026-08-06", "stages": [{"name": "New Lead", "count": 45}, {"name": "Discovery Call", "count": 41}, {"name": "Strategy Call", "count": 8}, {"name": "Proposal Sent", "count": 18}, {"name": "Closing Call", "count": 5}, {"name": "Agreement Sent", "count": 7}, {"name": "Reactivation Queue", "count": 29}], "total_open": 153, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [103, 17, 67], "total": 187}}, "2026-08-07": {"date": "2026-08-07", "stages": [{"name": "New Lead", "count": 31}, {"name": "Discovery Call", "count": 27}, {"name": "Strategy Call", "count": 11}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 6}, {"name": "Agreement Sent", "count": 8}, {"name": "Reactivation Queue - no call booked", "count": 40}], "total_open": 140, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [92, 20, 62], "total": 174}}, "2026-08-08": {"date": "2026-08-08", "stages": [{"name": "New Lead", "count": 32}, {"name": "Discovery Call", "count": 29}, {"name": "Strategy Call", "count": 11}, {"name": "Proposal Sent", "count": 17}, {"name": "Closing Call", "count": 6}, {"name": "Agreement Sent", "count": 8}, {"name": "Reactivation Queue - no call booked", "count": 40}], "total_open": 143, "source": {"labels": ["MGL", "SGL", "Other - Referrals"], "data": [95, 20, 62], "total": 177}}};
+    const PIPELINE_DATES     = ["2026-08-08", "2026-08-07", "2026-08-06", "2026-08-05", "2026-08-04", "2026-08-03", "2026-08-02", "2026-08-01", "2026-07-31", "2026-07-30", "2026-07-29", "2026-07-28", "2026-07-27", "2026-07-26", "2026-07-25", "2026-07-24", "2026-07-23", "2026-07-22", "2026-07-21", "2026-07-20", "2026-07-19", "2026-07-18", "2026-07-17", "2026-07-16", "2026-07-15", "2026-07-14", "2026-07-13", "2026-07-12", "2026-07-11", "2026-07-10", "2026-07-09", "2026-07-08", "2026-07-07", "2026-07-06", "2026-07-05", "2026-07-04", "2026-07-03", "2026-07-02", "2026-07-01", "2026-06-30"];
+    const MKTG_DAILY         = [{"date": "2026-05-10", "label": "5/10", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0, "cpl": 0}, {"date": "2026-05-11", "label": "5/11", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0, "cpl": 0}, {"date": "2026-05-12", "label": "5/12", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0, "cpl": 0}, {"date": "2026-05-13", "label": "5/13", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0, "cpl": 0}, {"date": "2026-05-14", "label": "5/14", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0, "cpl": 0}, {"date": "2026-05-15", "label": "5/15", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0, "cpl": 0}, {"date": "2026-05-16", "label": "5/16", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0, "cpl": 0}, {"date": "2026-05-17", "label": "5/17", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0, "cpl": 0}, {"date": "2026-05-18", "label": "5/18", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0, "cpl": 0}, {"date": "2026-05-19", "label": "5/19", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0, "cpl": 0}, {"date": "2026-05-20", "label": "5/20", "spend": 0.0, "clicks": 0, "cpc": 0, "leads": 0, "conv_pct": 0, "cpl": 0}, {"date": "2026-05-21", "label": "5/21", "spend": 90.37, "clicks": 74, "cpc": 1.22, "leads": 0, "conv_pct": 0.0, "cpl": 0}, {"date": "2026-05-22", "label": "5/22", "spend": 162.05, "clicks": 155, "cpc": 1.05, "leads": 2, "conv_pct": 1.3, "cpl": 81.03}, {"date": "2026-05-23", "label": "5/23", "spend": 93.92, "clicks": 96, "cpc": 0.98, "leads": 0, "conv_pct": 0.0, "cpl": 0}, {"date": "2026-05-24", "label": "5/24", "spend": 149.33, "clicks": 168, "cpc": 0.89, "leads": 2, "conv_pct": 1.2, "cpl": 74.67}, {"date": "2026-05-25", "label": "5/25", "spend": 180.83, "clicks": 128, "cpc": 1.41, "leads": 1, "conv_pct": 0.8, "cpl": 180.83}, {"date": "2026-05-26", "label": "5/26", "spend": 131.39, "clicks": 190, "cpc": 0.69, "leads": 0, "conv_pct": 0.0, "cpl": 0}, {"date": "2026-05-27", "label": "5/27", "spend": 129.3, "clicks": 12, "cpc": 10.78, "leads": 0, "conv_pct": 0.0, "cpl": 0}, {"date": "2026-05-28", "label": "5/28", "spend": 131.89, "clicks": 40, "cpc": 3.3, "leads": 3, "conv_pct": 7.5, "cpl": 43.96}, {"date": "2026-05-29", "label": "5/29", "spend": 92.06, "clicks": 21, "cpc": 4.38, "leads": 2, "conv_pct": 9.5, "cpl": 46.03}, {"date": "2026-05-30", "label": "5/30", "spend": 57.5, "clicks": 9, "cpc": 6.39, "leads": 1, "conv_pct": 11.1, "cpl": 57.5}, {"date": "2026-05-31", "label": "5/31", "spend": 164.45, "clicks": 24, "cpc": 6.85, "leads": 1, "conv_pct": 4.2, "cpl": 164.45}, {"date": "2026-06-01", "label": "6/1", "spend": 131.83, "clicks": 11, "cpc": 11.98, "leads": 2, "conv_pct": 18.2, "cpl": 65.92}, {"date": "2026-06-02", "label": "6/2", "spend": 145.04, "clicks": 17, "cpc": 8.53, "leads": 1, "conv_pct": 5.9, "cpl": 145.04}, {"date": "2026-06-03", "label": "6/3", "spend": 126.73, "clicks": 14, "cpc": 9.05, "leads": 6, "conv_pct": 42.9, "cpl": 21.12}, {"date": "2026-06-04", "label": "6/4", "spend": 131.32, "clicks": 21, "cpc": 6.25, "leads": 4, "conv_pct": 19.0, "cpl": 32.83}, {"date": "2026-06-05", "label": "6/5", "spend": 117.29, "clicks": 16, "cpc": 7.33, "leads": 3, "conv_pct": 18.8, "cpl": 39.1}, {"date": "2026-06-06", "label": "6/6", "spend": 55.45, "clicks": 7, "cpc": 7.92, "leads": 0, "conv_pct": 0.0, "cpl": 0}, {"date": "2026-06-07", "label": "6/7", "spend": 154.02, "clicks": 33, "cpc": 4.67, "leads": 2, "conv_pct": 6.1, "cpl": 77.01}, {"date": "2026-06-08", "label": "6/8", "spend": 155.52, "clicks": 22, "cpc": 7.07, "leads": 3, "conv_pct": 13.6, "cpl": 51.84}, {"date": "2026-06-09", "label": "6/9", "spend": 153.1, "clicks": 26, "cpc": 5.89, "leads": 2, "conv_pct": 7.7, "cpl": 76.55}, {"date": "2026-06-10", "label": "6/10", "spend": 217.9, "clicks": 30, "cpc": 7.26, "leads": 1, "conv_pct": 3.3, "cpl": 217.9}, {"date": "2026-06-11", "label": "6/11", "spend": 196.22, "clicks": 29, "cpc": 6.77, "leads": 0, "conv_pct": 0.0, "cpl": 0}, {"date": "2026-06-12", "label": "6/12", "spend": 235.67, "clicks": 21, "cpc": 11.22, "leads": 1, "conv_pct": 4.8, "cpl": 235.67}, {"date": "2026-06-13", "label": "6/13", "spend": 140.51, "clicks": 21, "cpc": 6.69, "leads": 3, "conv_pct": 14.3, "cpl": 46.84}, {"date": "2026-06-14", "label": "6/14", "spend": 280.4, "clicks": 26, "cpc": 10.78, "leads": 3, "conv_pct": 11.5, "cpl": 93.47}, {"date": "2026-06-15", "label": "6/15", "spend": 284.12, "clicks": 39, "cpc": 7.29, "leads": 3, "conv_pct": 7.7, "cpl": 94.71}, {"date": "2026-06-16", "label": "6/16", "spend": 221.12, "clicks": 20, "cpc": 11.06, "leads": 1, "conv_pct": 5.0, "cpl": 221.12}, {"date": "2026-06-17", "label": "6/17", "spend": 213.19, "clicks": 31, "cpc": 6.88, "leads": 2, "conv_pct": 6.5, "cpl": 106.59}, {"date": "2026-06-18", "label": "6/18", "spend": 191.51, "clicks": 25, "cpc": 7.66, "leads": 2, "conv_pct": 8.0, "cpl": 95.75}, {"date": "2026-06-19", "label": "6/19", "spend": 203.77, "clicks": 22, "cpc": 9.26, "leads": 4, "conv_pct": 18.2, "cpl": 50.94}, {"date": "2026-06-20", "label": "6/20", "spend": 137.09, "clicks": 15, "cpc": 9.14, "leads": 1, "conv_pct": 6.7, "cpl": 137.09}, {"date": "2026-06-21", "label": "6/21", "spend": 283.51, "clicks": 21, "cpc": 13.5, "leads": 2, "conv_pct": 9.5, "cpl": 141.75}, {"date": "2026-06-22", "label": "6/22", "spend": 239.56, "clicks": 20, "cpc": 11.98, "leads": 1, "conv_pct": 5.0, "cpl": 239.56}, {"date": "2026-06-23", "label": "6/23", "spend": 218.73, "clicks": 27, "cpc": 8.1, "leads": 1, "conv_pct": 3.7, "cpl": 218.73}, {"date": "2026-06-24", "label": "6/24", "spend": 212.89, "clicks": 13, "cpc": 16.38, "leads": 1, "conv_pct": 7.7, "cpl": 212.89}, {"date": "2026-06-25", "label": "6/25", "spend": 198.35, "clicks": 27, "cpc": 7.35, "leads": 1, "conv_pct": 3.7, "cpl": 198.35}, {"date": "2026-06-26", "label": "6/26", "spend": 203.06, "clicks": 30, "cpc": 6.77, "leads": 1, "conv_pct": 3.3, "cpl": 203.06}, {"date": "2026-06-27", "label": "6/27", "spend": 147.14, "clicks": 40, "cpc": 3.68, "leads": 2, "conv_pct": 5.0, "cpl": 73.57}, {"date": "2026-06-28", "label": "6/28", "spend": 263.68, "clicks": 53, "cpc": 4.98, "leads": 0, "conv_pct": 0.0, "cpl": 0}, {"date": "2026-06-29", "label": "6/29", "spend": 229.84, "clicks": 34, "cpc": 6.76, "leads": 0, "conv_pct": 0.0, "cpl": 0}, {"date": "2026-06-30", "label": "6/30", "spend": 207.16, "clicks": 76, "cpc": 2.73, "leads": 1, "conv_pct": 1.3, "cpl": 207.16}, {"date": "2026-07-01", "label": "7/1", "spend": 212.37, "clicks": 40, "cpc": 5.31, "leads": 2, "conv_pct": 5.0, "cpl": 106.19}, {"date": "2026-07-02", "label": "7/2", "spend": 203.71, "clicks": 20, "cpc": 10.19, "leads": 0, "conv_pct": 0.0, "cpl": 0}, {"date": "2026-07-03", "label": "7/3", "spend": 208.83, "clicks": 37, "cpc": 5.64, "leads": 0, "conv_pct": 0.0, "cpl": 0}, {"date": "2026-07-04", "label": "7/4", "spend": 155.27, "clicks": 21, "cpc": 7.39, "leads": 2, "conv_pct": 9.5, "cpl": 77.64}, {"date": "2026-07-05", "label": "7/5", "spend": 275.91, "clicks": 14, "cpc": 19.71, "leads": 1, "conv_pct": 7.1, "cpl": 275.91}, {"date": "2026-07-06", "label": "7/6", "spend": 260.0, "clicks": 26, "cpc": 10.0, "leads": 2, "conv_pct": 7.7, "cpl": 130.0}, {"date": "2026-07-07", "label": "7/7", "spend": 233.49, "clicks": 35, "cpc": 6.67, "leads": 1, "conv_pct": 2.9, "cpl": 233.49}, {"date": "2026-07-08", "label": "7/8", "spend": 210.67, "clicks": 32, "cpc": 6.58, "leads": 2, "conv_pct": 6.2, "cpl": 105.33}, {"date": "2026-07-09", "label": "7/9", "spend": 218.36, "clicks": 20, "cpc": 10.92, "leads": 2, "conv_pct": 10.0, "cpl": 109.18}, {"date": "2026-07-10", "label": "7/10", "spend": 187.01, "clicks": 32, "cpc": 5.84, "leads": 2, "conv_pct": 6.2, "cpl": 93.5}, {"date": "2026-07-11", "label": "7/11", "spend": 116.84, "clicks": 22, "cpc": 5.31, "leads": 1, "conv_pct": 4.5, "cpl": 116.84}, {"date": "2026-07-12", "label": "7/12", "spend": 293.45, "clicks": 77, "cpc": 3.81, "leads": 1, "conv_pct": 1.3, "cpl": 293.45}, {"date": "2026-07-13", "label": "7/13", "spend": 245.39, "clicks": 37, "cpc": 6.63, "leads": 2, "conv_pct": 5.4, "cpl": 122.69}, {"date": "2026-07-14", "label": "7/14", "spend": 235.65, "clicks": 35, "cpc": 6.73, "leads": 3, "conv_pct": 8.6, "cpl": 78.55}, {"date": "2026-07-15", "label": "7/15", "spend": 230.92, "clicks": 48, "cpc": 4.81, "leads": 4, "conv_pct": 8.3, "cpl": 57.73}, {"date": "2026-07-16", "label": "7/16", "spend": 209.84, "clicks": 37, "cpc": 5.67, "leads": 1, "conv_pct": 2.7, "cpl": 209.84}, {"date": "2026-07-17", "label": "7/17", "spend": 165.92, "clicks": 29, "cpc": 5.72, "leads": 2, "conv_pct": 6.9, "cpl": 82.96}, {"date": "2026-07-18", "label": "7/18", "spend": 114.21, "clicks": 17, "cpc": 6.72, "leads": 1, "conv_pct": 5.9, "cpl": 114.21}, {"date": "2026-07-19", "label": "7/19", "spend": 316.39, "clicks": 44, "cpc": 7.19, "leads": 4, "conv_pct": 9.1, "cpl": 79.1}, {"date": "2026-07-20", "label": "7/20", "spend": 248.22, "clicks": 29, "cpc": 8.56, "leads": 3, "conv_pct": 10.3, "cpl": 82.74}, {"date": "2026-07-21", "label": "7/21", "spend": 219.2, "clicks": 42, "cpc": 5.22, "leads": 1, "conv_pct": 2.4, "cpl": 219.2}, {"date": "2026-07-22", "label": "7/22", "spend": 200.83, "clicks": 27, "cpc": 7.44, "leads": 0, "conv_pct": 0.0, "cpl": 0}, {"date": "2026-07-23", "label": "7/23", "spend": 212.28, "clicks": 29, "cpc": 7.32, "leads": 2, "conv_pct": 6.9, "cpl": 106.14}, {"date": "2026-07-24", "label": "7/24", "spend": 190.61, "clicks": 31, "cpc": 6.15, "leads": 3, "conv_pct": 9.7, "cpl": 63.54}, {"date": "2026-07-25", "label": "7/25", "spend": 113.48, "clicks": 16, "cpc": 7.09, "leads": 1, "conv_pct": 6.2, "cpl": 113.48}, {"date": "2026-07-26", "label": "7/26", "spend": 304.66, "clicks": 41, "cpc": 7.43, "leads": 1, "conv_pct": 2.4, "cpl": 304.66}, {"date": "2026-07-27", "label": "7/27", "spend": 229.61, "clicks": 15, "cpc": 15.31, "leads": 0, "conv_pct": 0.0, "cpl": 0}, {"date": "2026-07-28", "label": "7/28", "spend": 284.33, "clicks": 43, "cpc": 6.61, "leads": 2, "conv_pct": 4.7, "cpl": 142.16}, {"date": "2026-07-29", "label": "7/29", "spend": 495.93, "clicks": 45, "cpc": 11.02, "leads": 4, "conv_pct": 8.9, "cpl": 123.98}, {"date": "2026-07-30", "label": "7/30", "spend": 479.07, "clicks": 43, "cpc": 11.14, "leads": 4, "conv_pct": 9.3, "cpl": 119.77}, {"date": "2026-07-31", "label": "7/31", "spend": 516.32, "clicks": 67, "cpc": 7.71, "leads": 4, "conv_pct": 6.0, "cpl": 129.08}, {"date": "2026-08-01", "label": "8/1", "spend": 354.34, "clicks": 41, "cpc": 8.64, "leads": 3, "conv_pct": 7.3, "cpl": 118.11}, {"date": "2026-08-02", "label": "8/2", "spend": 646.16, "clicks": 58, "cpc": 11.14, "leads": 6, "conv_pct": 10.3, "cpl": 107.69}, {"date": "2026-08-03", "label": "8/3", "spend": 537.25, "clicks": 49, "cpc": 10.96, "leads": 5, "conv_pct": 10.2, "cpl": 107.45}, {"date": "2026-08-04", "label": "8/4", "spend": 583.05, "clicks": 74, "cpc": 7.88, "leads": 5, "conv_pct": 6.8, "cpl": 116.61}, {"date": "2026-08-05", "label": "8/5", "spend": 548.26, "clicks": 52, "cpc": 10.54, "leads": 3, "conv_pct": 5.8, "cpl": 182.75}, {"date": "2026-08-06", "label": "8/6", "spend": 466.15, "clicks": 56, "cpc": 8.32, "leads": 7, "conv_pct": 12.5, "cpl": 66.59}, {"date": "2026-08-07", "label": "8/7", "spend": 449.0, "clicks": 52, "cpc": 8.63, "leads": 2, "conv_pct": 3.8, "cpl": 224.5}];
+  </script>
+
+  <script>
+    // Shared defaults applied to every chart on the page
+    Chart.defaults.color       = "#9A9AA5";
+    Chart.defaults.font.family = '"Saira", "Eurostile", system-ui, sans-serif';
+    Chart.defaults.font.size   = 12;
+
+    // ── Marketing & Leads — daily metrics table ──────────────────────────
+    function renderMktgTable(days) {
+      renderMktgRows(MKTG_DAILY.slice(-days));
+    }
+    function applyMktgRange() {
+      document.querySelectorAll(".mktg-btn:not(.smv-owner-btn):not(.smv-owner-btn2):not(.cpl-period-btn)").forEach(b => b.classList.remove("mktg-btn-active"));
+      const from = document.getElementById("mktgFrom").value;
+      const to   = document.getElementById("mktgTo").value;
+      renderMktgRows(MKTG_DAILY.filter(r => r.date >= from && r.date <= to));
+    }
+    function renderMktgRows(rows) {
+      const totSpend  = rows.reduce((s, r) => s + r.spend,  0);
+      const totClicks = rows.reduce((s, r) => s + r.clicks, 0);
+      const totLeads  = rows.reduce((s, r) => s + r.leads,  0);
+      const totCpc    = totClicks ? totSpend / totClicks : 0;
+      const totConv   = totClicks ? (totLeads / totClicks * 100) : 0;
+      const totCpl    = totLeads  ? totSpend / totLeads  : 0;
+      const fS  = v => v >= 1000 ? `$${(v/1000).toFixed(1)}k` : `$${v.toFixed(0)}`;
+      const fC  = v => `$${v.toFixed(2)}`;
+      const th  = (t, a) => `<th style="text-align:${a||'right'};padding:3px 5px 5px ${a==='left'?'0':'5px'};color:var(--text-mute);font-size:0.65rem;font-weight:600;white-space:nowrap;">${t}</th>`;
+      const td  = (t, col, fw) => `<td style="padding:4px 5px;text-align:right;color:${col||'var(--text)'};font-weight:${fw||400};font-size:0.72rem;">${t}</td>`;
+      const td0 = (t) => `<td style="padding:4px 5px 4px 0;color:var(--text-mute);font-size:0.72rem;">${t}</td>`;
+      let body = "";
+      [...rows].reverse().forEach(r => {
+        body += `<tr style="border-bottom:1px solid #1A1A22;">
+          ${td0(r.label)}
+          ${td(fS(r.spend))}
+          ${td(r.clicks || "—", r.clicks ? undefined : "var(--text-mute)")}
+          ${td(r.cpc > 0 ? fC(r.cpc) : "—", r.cpc > 0 ? undefined : "var(--text-mute)")}
+          ${td(r.leads > 0 ? r.leads : "—", r.leads > 0 ? "var(--hero)" : "var(--text-mute)")}
+          ${td(r.conv_pct > 0 ? r.conv_pct + "%" : "—", r.conv_pct > 0 ? undefined : "var(--text-mute)")}
+          ${td(r.cpl > 0 ? fC(r.cpl) : "—", r.cpl > 0 ? "var(--hero)" : "var(--text-mute)")}
+        </tr>`;
+      });
+      const foot = `<tr style="border-top:1px solid var(--line);">
+        <td style="padding:5px 5px 3px 0;color:var(--text-mute);font-size:0.72rem;font-weight:700;">Total</td>
+        ${td(fS(totSpend), undefined, 700)}
+        ${td(totClicks || "—", totClicks ? undefined : "var(--text-mute)", 700)}
+        ${td(totClicks ? fC(totCpc) : "—", totClicks ? undefined : "var(--text-mute)", 700)}
+        ${td(totLeads > 0 ? totLeads : "—", totLeads > 0 ? "var(--hero)" : "var(--text-mute)", 700)}
+        ${td(totConv > 0 ? totConv.toFixed(1) + "%" : "—", totConv > 0 ? undefined : "var(--text-mute)", 700)}
+        ${td(totCpl > 0 ? fC(totCpl) : "—", totCpl > 0 ? "var(--hero)" : "var(--text-mute)", 700)}
+      </tr>`;
+      document.getElementById("mktgTable").innerHTML =
+        `<table style="width:100%;border-collapse:collapse;">
+          <thead><tr style="border-bottom:1px solid var(--line);">
+            ${th("Date","left")}${th("Spend")}${th("Clicks")}${th("CPC")}${th("Leads")}${th("Conv%")}${th("CPL")}
+          </tr></thead>
+          <tbody>${body}</tbody>
+          <tfoot>${foot}</tfoot>
+        </table>`;
+    }
+    function setMktgPeriod(days, btn) {
+      document.querySelectorAll(".mktg-btn:not(.smv-owner-btn):not(.smv-owner-btn2):not(.cpl-period-btn)").forEach(b => b.classList.remove("mktg-btn-active"));
+      btn.classList.add("mktg-btn-active");
+      renderMktgTable(days);
+    }
+    renderMktgTable(7);
+
+    // ── Marketing & Leads — MGL CPL hero (segmented 7D / 30D / 90D) ──────
+    function setCplPeriod(days, btn) {
+      document.querySelectorAll(".cpl-period-btn").forEach(b => b.classList.remove("mktg-btn-active"));
+      btn.classList.add("mktg-btn-active");
+      renderCplHero(days);
+    }
+    function renderCplHero(days) {
+      const cur  = MKTG_DAILY.slice(-days);
+      const prev = MKTG_DAILY.slice(0, MKTG_DAILY.length - days).slice(-days);
+      const sum  = (rows, k) => rows.reduce((s, r) => s + r[k], 0);
+      const curLeads = sum(cur, "leads");
+      const curCpl   = curLeads ? sum(cur, "spend") / curLeads : null;
+
+      document.getElementById("cplHeroValue").textContent = curCpl != null ? `$${curCpl.toFixed(0)}` : "—";
+
+      const fmtD = ds => new Date(ds + "T00:00:00").toLocaleDateString("en-US", {month: "short", day: "numeric"});
+      document.getElementById("cplHeroRange").textContent =
+        cur.length ? `${fmtD(cur[0].date)} – ${fmtD(cur[cur.length - 1].date)}` : "";
+
+      const deltaEl = document.getElementById("cplHeroDelta");
+      const prevLeads = prev.length === days ? sum(prev, "leads") : 0;
+      const prevCpl   = prevLeads ? sum(prev, "spend") / prevLeads : null;
+      if (curCpl != null && prevCpl) {
+        const delta = Math.round((curCpl - prevCpl) / prevCpl * 100);
+        const dir   = delta > 0 ? "↑" : (delta < 0 ? "↓" : "→");
+        const color = delta > 0 ? "#FF5C5C" : "var(--hero)";  // lower CPL = better
+        const valEl = document.getElementById("cplHeroDeltaVal");
+        valEl.textContent = `${dir} ${delta >= 0 ? "+" : ""}${delta}%`;
+        valEl.style.color = color;
+        deltaEl.style.display = "inline-flex";
+      } else {
+        deltaEl.style.display = "none";
+      }
+    }
+    renderCplHero(7);
+
+    // ── Weekly Rocks — owner filter ──────────────────────────────────────
+    function setRockOwner(which, btn) {
+      document.querySelectorAll(".smv-owner-btn").forEach(b => b.classList.remove("mktg-btn-active"));
+      btn.classList.add("mktg-btn-active");
+      ["all", "stormer", "alex", "joncarlo"].forEach(k => {
+        document.getElementById("smvView-" + k).style.display = (k === which) ? "" : "none";
+      });
+    }
+
+    // ── Weekly Rocks — Appointments — owner filter ────────────────────────
+    function setApptOwner(which, btn) {
+      document.querySelectorAll(".smv-owner-btn2").forEach(b => b.classList.remove("mktg-btn-active"));
+      btn.classList.add("mktg-btn-active");
+      ["all", "stormer", "alex", "joncarlo"].forEach(k => {
+        document.getElementById("apwView-" + k).style.display = (k === which) ? "" : "none";
+      });
+    }
+
+    // ── Monthly volume — with inline data labels ───────────────────────────
+    const monthlyDataLabels = {
+      id: "monthlyLabels",
+      afterDatasetsDraw(chart) {
+        const ctx = chart.ctx;
+        chart.data.datasets.forEach((ds, i) => {
+          chart.getDatasetMeta(i).data.forEach((bar, idx) => {
+            const v = ds.data[idx];
+            if (!v) return;
+            ctx.save();
+            ctx.fillStyle   = "#F5F5F7";
+            ctx.font        = '700 12px "Saira", system-ui, sans-serif';
+            ctx.textAlign   = "center";
+            ctx.textBaseline = "bottom";
+            ctx.fillText(v, bar.x, bar.y - 4);
+            ctx.restore();
+          });
+        });
+      }
+    };
+    new Chart(document.getElementById("chartMonthly"), {
+      type: "bar",
+      data: {
+        labels: MONTH_LABELS,
+        datasets: [{
+          data:               MONTH_DATA,
+          backgroundColor:    ["#C8FF01", "#5B8FFF", "rgba(200,255,1,0.30)"],
+          borderRadius:       5,
+          borderSkipped:      false,
+          barPercentage:      0.70,
+          categoryPercentage: 0.68,
+        }],
+      },
+      options: {
+        responsive:          true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 20 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            displayColors: false,
+            callbacks: { label: ctx => ` ${ctx.parsed.y} new leads` },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 11 } } },
+          y: { display: false, beginAtZero: true },
+        },
+      },
+      plugins: [monthlyDataLabels],
+    });
+
+    // ── Monthly volume — full-history popout (built lazily on first open) ──
+    let chartMonthlyFull = null;
+    function openMonthlyModal() {
+      document.getElementById("monthlyOverlay").classList.add("open");
+      if (!chartMonthlyFull) {
+        chartMonthlyFull = new Chart(document.getElementById("chartMonthlyFull"), {
+          type: "bar",
+          data: {
+            labels: MONTHLY_FULL.map(m => m.label),
+            datasets: [{
+              data:               MONTHLY_FULL.map(m => m.count),
+              backgroundColor:    MONTHLY_FULL.map((m, i) => i === MONTHLY_FULL.length - 1 ? "rgba(200,255,1,0.30)" : "#5B8FFF"),
+              borderRadius:       6,
+              borderSkipped:      false,
+              barPercentage:      0.70,
+              categoryPercentage: 0.68,
+            }],
+          },
+          options: {
+            responsive:          true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 24 } },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                displayColors: false,
+                callbacks: { label: ctx => ` ${ctx.parsed.y} new leads` },
+              },
+            },
+            scales: {
+              x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 12 } } },
+              y: { display: false, beginAtZero: true },
+            },
+          },
+          plugins: [monthlyDataLabels],
+        });
+      } else {
+        chartMonthlyFull.resize();
+      }
+    }
+    function closeMonthlyModal() {
+      document.getElementById("monthlyOverlay").classList.remove("open");
+    }
+
+    // ── Lead Source Breakdown (vertical bar) ──────────────────────────────
+    const sourceDataLabels = {
+      id: "sourceDataLabels",
+      afterDatasetsDraw(chart) {
+        const {ctx} = chart;
+        const data  = chart.data.datasets[0].data;
+        const total = data.reduce((a, b) => a + b, 0) || 1;
+        chart.getDatasetMeta(0).data.forEach((bar, i) => {
+          const v       = data[i];
+          const pct     = Math.round(v / total * 100);
+          const barH    = bar.base - bar.y;
+          const inside  = barH > 32;
+          ctx.save();
+          ctx.textAlign    = "center";
+          ctx.textBaseline = "bottom";
+          // Count — just above bar when pct is inside; shifted higher when both go above
+          ctx.font      = '700 12px "Saira", system-ui, sans-serif';
+          ctx.fillStyle = "#F5F5F7";
+          ctx.fillText(v, bar.x, inside ? bar.y - 4 : bar.y - 17);
+          // Percentage
+          if (inside) {
+            ctx.font         = `600 ${barH > 60 ? 11 : 10}px "Saira", system-ui, sans-serif`;
+            ctx.fillStyle    = barH > 60 ? "rgba(0,0,0,0.65)" : "rgba(255,255,255,0.82)";
+            ctx.textBaseline = "middle";
+            ctx.fillText(`${pct}%`, bar.x, bar.y + barH / 2);
+          } else {
+            // Short bar: pct sits just above bar top, below the count
+            ctx.font      = '600 10px "Saira", system-ui, sans-serif';
+            ctx.fillStyle = "#9A9AA5";
+            ctx.fillText(`${pct}%`, bar.x, bar.y - 3);
+          }
+          ctx.restore();
+        });
+      }
+    };
+    const sourceChart = new Chart(document.getElementById("chartSource"), {
+      type: "bar",
+      data: {
+        labels: SOURCE_LABELS,
+        datasets: [{
+          data:               SOURCE_DATA,
+          backgroundColor:    ["#C8FF01", "#5B8FFF", "#FF9F45"],
+          borderRadius:       8,
+          borderSkipped:      false,
+          barPercentage:      1.0,
+          categoryPercentage: 0.95,
+        }],
+      },
+      options: {
+        responsive:          true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 28 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            displayColors: false,
+            callbacks: {
+              label: ctx => {
+                const data  = ctx.chart.data.datasets[0].data;
+                const total = data.reduce((a, b) => a + b, 0) || 1;
+                const pct   = Math.round(ctx.parsed.y / total * 100);
+                return ` ${ctx.parsed.y} opportunities · ${pct}%`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 11 } } },
+          y: { display: false, beginAtZero: true },
+        },
+      },
+      plugins: [sourceDataLabels],
+    });
+
+    // ── Meta Campaign Spending (vertical bar) ─────────────────────────────
+    new Chart(document.getElementById("chartMetaSpend"), {
+      type: "bar",
+      data: {
+        labels: META_LABELS,
+        datasets: [{
+          data:            META_SPEND,
+          backgroundColor: META_SPEND.map((v, i) => i === META_SPEND.length - 1 ? "rgba(200,255,1,0.45)" : "#C8FF01"),
+          borderRadius:    6,
+          borderSkipped:   false,
+        }],
+      },
+      options: {
+        responsive:          true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            displayColors: false,
+            callbacks: {
+              label: ctx => ` $${ctx.parsed.y.toFixed(2)} spent`,
+            },
+          },
+        },
+        scales: {
+          x: { grid: { color: "#2E2E38" }, ticks: { color: "#9A9AA5" } },
+          y: {
+            grid:        { color: "#2E2E38" },
+            ticks:       { color: "#9A9AA5", callback: v => `$${v}` },
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+
+
+    // ── Pipeline segmented bar — date-selectable ─────────────────────────────
+    const PIPE_COLORS = ["#C8FF01","#5B8FFF","#FF9F45","#A78BFA","#34D399","#FB923C","#F472B6"];
+
+    function fmtPipeDate(s) {
+      return new Date(s + "T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+    }
+
+    const pipeSel = document.getElementById("sharedDateSelect");
+    PIPELINE_DATES.forEach(d => {
+      const opt = document.createElement("option");
+      opt.value = d; opt.textContent = fmtPipeDate(d);
+      pipeSel.appendChild(opt);
+    });
+
+    function renderPipeline(dateKey) {
+      const snap  = PIPELINE_HISTORY[dateKey];
+      const total = snap.total_open;
+
+      // Total label
+      document.getElementById("pipelineTotal").textContent = `${total} open deals`;
+
+      // Segmented bar
+      document.getElementById("pipelineBar").innerHTML = snap.stages.map((s, i) => {
+        const w   = (s.count / total * 100).toFixed(2);
+        const pct = Math.round(s.count / total * 100);
+        const col = PIPE_COLORS[i % PIPE_COLORS.length];
+        return `<div style="width:${w}%;background:${col};flex-shrink:0;position:relative;cursor:default;"
+                     title="${s.name}: ${s.count} deals (${pct}%)"></div>`;
+      }).join("");
+
+      // Legend
+      document.getElementById("pipelineLegend").innerHTML = snap.stages.map((s, i) => {
+        const pct = Math.round(s.count / total * 100);
+        const col = PIPE_COLORS[i % PIPE_COLORS.length];
+        return `<div style="display:flex;align-items:center;gap:5px;">
+          <span style="width:10px;height:10px;border-radius:3px;background:${col};flex-shrink:0;"></span>
+          <span style="font-size:0.74rem;color:var(--text-mute);white-space:nowrap;">${s.name}</span>
+          <span style="font-size:0.78rem;font-weight:700;color:var(--text);">·&thinsp;${s.count}</span>
+          <span style="font-size:0.66rem;color:var(--text-mute);">(${pct}%)</span>
+        </div>`;
+      }).join("");
+    }
+
+    function renderShared(dateKey) {
+      renderPipeline(dateKey);
+    }
+
+    renderShared(PIPELINE_DATES[0]);
+    pipeSel.addEventListener("change", () => renderShared(pipeSel.value));
+
+    // ── Lead Source bar — independent month selector (created-date based) ──
+    // Compares how the MGL/SGL/Other mix evolves by calendar month, separate
+    // from the "Viewing Snapshot" picker above (which is a point-in-time
+    // cumulative pipeline state, a different question from "how did leads
+    // sourced in a given month break down").
+    function fmtSourceMonth(m) {
+      const [y, mo] = m.split("-");
+      return new Date(y, mo - 1, 1).toLocaleDateString("en-US", {month:"long", year:"numeric"});
+    }
+
+    const sourceMonthSel = document.getElementById("sourceMonthSelect");
+    SOURCE_MONTHS.slice().reverse().forEach(m => {
+      const opt = document.createElement("option");
+      opt.value = m; opt.textContent = fmtSourceMonth(m);
+      sourceMonthSel.appendChild(opt);
+    });
+
+    function renderSourceByMonth(monthKey) {
+      const src = monthKey ? SOURCE_BY_MONTH[monthKey] : {labels: SOURCE_LABELS, data: SOURCE_DATA, total: SOURCE_TOTAL};
+      const noDataEl = document.getElementById("sourceNoData");
+
+      if (!src || src.total === 0) {
+        noDataEl.style.display = "flex";
+        sourceChart.data.datasets[0].data = [0, 0, 0];
+        sourceChart.update();
+        document.getElementById("sourceTotalLabel").textContent = "No data for this month";
+        return;
+      }
+
+      noDataEl.style.display = "none";
+      sourceChart.data.labels           = src.labels;
+      sourceChart.data.datasets[0].data = src.data;
+      sourceChart.update();
+      document.getElementById("sourceTotalLabel").textContent = `${src.total} Opportunities`;
+    }
+
+    renderSourceByMonth("");
+    sourceMonthSel.addEventListener("change", () => renderSourceByMonth(sourceMonthSel.value));
+
+  </script>
+</body>
+</html>
