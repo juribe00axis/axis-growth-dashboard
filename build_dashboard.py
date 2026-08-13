@@ -705,20 +705,14 @@ for _i, (_lbl, _cnt) in enumerate(zip(mgl_week_labels, mgl_week_data)):
     )
 
 
-# ─── 6e. Weekly Rocks — weekly stage-entry table ─────────────────────────────
-# For each of 4 key stages, count how many DISTINCT opportunities ENTERED that
-# stage during each week (i.e. their stage on some day that week differs from
-# their stage on the previous snapshotted day, or they're newly seen). Week 1
-# (W1) is Jul 1-7, 2026 -- the first week we have snapshot data for. Note: Jul 1
-# itself has no prior-day snapshot to diff against, so entries already sitting
-# in a stage as of Jul 1 can't be counted (unknowable whether they arrived that
-# day or earlier) -- W1 only reflects entries detected Jul 2 onward.
+# ─── 6e. Weekly Rocks — shared week grid (still used by Appointments below) ──
+# The homepage Weekly Rocks stage card itself no longer uses a week grid (see
+# 6e3) -- it reads field_movement_events directly with a date-range picker.
+# This week-index machinery is kept because the Appointments mini-table below
+# still shows a week-by-week grid (useful for comparisons) and needs the same
+# WEEK1_START/_week_index/move_display_weeks it always has.
 
-print("Computing weekly rocks...")
-
-STAGE_LABELS = ["Discovery Call", "Strategy Call", "Proposal Sent", "Agreement Signed"]
-MOVE_LABELS  = ["Discovery Calls", "Strategy Calls", "Proposals Sent", "Agreements Signed"]
-_stage_display = dict(zip(STAGE_LABELS, MOVE_LABELS))
+print("Computing week grid...")
 
 # The reps whose Weekly Rocks are tracked individually (owner ID -> display name).
 # Jennifer left the team (2026-07-24) and is no longer mapped -- her historical
@@ -734,67 +728,12 @@ WEEK1_START = datetime(2026, 7, 1, tzinfo=timezone.utc).date()
 def _week_index(date_obj):
     return (date_obj - WEEK1_START).days // 7 + 1
 
-# Lookup details for the raw movement-events table (opportunity/contact/source
-# by ID) — sourced from the current unfiltered opportunities pull, which
-# includes every status (open/won/lost), so names resolve even for opps that
-# have since closed out of the Sales Pipeline.
-opp_detail_map = {
-    opp["id"]: {
-        "name":    opp.get("name") or "(unnamed)",
-        "contact": (opp.get("contact") or {}).get("name") or "",
-        "source":  opp.get("source") or "",
-    }
-    for opp in all_opps if opp.get("id")
-}
-
-# Diff consecutive daily stage snapshots: an opp "enters" a stage on the day its
-# current stage differs from its previous day's stage (or it's newly created).
-_stage_snaps = sorted(_snap_dir.glob("stage-snap-*.json"))
-weekly_movement = defaultdict(lambda: {lbl: 0 for lbl in MOVE_LABELS})
-weekly_movement_by_owner = {
-    name: defaultdict(lambda: {lbl: 0 for lbl in MOVE_LABELS})
-    for name in ROCK_OWNERS.values()
-}
-# One row per opportunity stage-entry event — the raw data behind every count
-# in the Weekly Rocks table above, surfaced on the Raw Data page.
-movement_events = []
-
-for i in range(1, len(_stage_snaps)):
-    prev_data = json.loads(_stage_snaps[i - 1].read_text())
-    curr_data = json.loads(_stage_snaps[i].read_text())
-    _d = datetime.strptime(curr_data["date"], "%Y-%m-%d").date()
-    if _d < WEEK1_START:
-        continue
-    _wk = _week_index(_d)
-    for opp_id, curr_opp in curr_data["opps"].items():
-        curr_stage = curr_opp.get("stage")
-        if curr_stage not in STAGE_LABELS:
-            continue
-        prev_opp   = prev_data["opps"].get(opp_id)
-        prev_stage = prev_opp["stage"] if prev_opp else None
-        if prev_stage != curr_stage:
-            _label = _stage_display[curr_stage]
-            weekly_movement[_wk][_label] += 1
-            _owner_id   = curr_opp.get("owner")
-            _owner_name = ROCK_OWNERS.get(_owner_id)
-            if _owner_name:
-                weekly_movement_by_owner[_owner_name][_wk][_label] += 1
-            _detail = opp_detail_map.get(opp_id, {})
-            movement_events.append({
-                "date":       curr_data["date"],
-                "week":       f"W{_wk}",
-                "stage":      _label,
-                "prev_stage": prev_stage or "(new)",
-                "opp_name":   _detail.get("name", opp_id),
-                "contact":    _detail.get("contact", ""),
-                "source":     _detail.get("source", ""),
-                "owner":      user_map.get(_owner_id, "Unassigned") if _owner_id != "unassigned" else "Unassigned",
-            })
-
-movement_events.sort(key=lambda e: e["date"], reverse=True)
-
-move_display_weeks = sorted(weekly_movement.keys())
 _current_week_idx  = _week_index(today.date())
+# Every week from W1 through the current (in-progress) week -- previously this
+# was derived from which weeks had snapshot-diff movement data; now that the
+# homepage stage table no longer uses a week grid at all, Appointments (the
+# only remaining consumer) just gets the full range.
+move_display_weeks = list(range(1, _current_week_idx + 1))
 
 def _week_range_str(wk):
     _start = WEEK1_START + timedelta(days=(wk - 1) * 7)
@@ -806,19 +745,17 @@ move_display_labels = [
     for wk in move_display_weeks
 ]
 
-print(f"  {len(_stage_snaps)} snapshots · {len(weekly_movement)} week(s) computed")
+print(f"  {len(move_display_weeks)} week(s) through W{_current_week_idx}")
 print()
 
-# ─── 6e2. Field-based movement events (new, more accurate source) ───────────
-# GHL workflows ("Date Entered - <Stage>") now write the actual stage-entry
-# date directly onto each opportunity via 6 DATE custom fields -- fixed and
-# validated live 2026-07-27. Unlike the snapshot-diff approach above (which
-# infers movement by comparing day-over-day snapshots and can miss same-day
-# transitions or misdate historical entries), these fields hold the true
-# entry date GHL recorded at the moment the opportunity hit that stage, no
-# diffing required. Kept as a separate, parallel data source on the Raw Data
-# page for now so it can be validated against the snapshot method before
-# Weekly Rocks is switched over to read from it.
+# ─── 6e2. Field-based movement events — the source of truth for Weekly Rocks ─
+# GHL workflows ("Date Entered - <Stage>") write the actual stage-entry date
+# directly onto each opportunity via 6 DATE custom fields -- fixed and
+# validated live 2026-07-27. These fields hold the true entry date GHL
+# recorded at the moment the opportunity hit that stage: no day-over-day
+# snapshot diffing, no missed same-day transitions, no misdated historical
+# entries. This is the only movement data source now -- the old snapshot-diff
+# approach (stage-snap-*.json day-over-day comparison) has been retired.
 FIELD_DATE_STAGES = {
     "YOUfzDu5jq9T3EpsdtgL": "New Lead",
     "fb5FWif6GUyl4c3E60bR": "Discovery Call",
@@ -841,26 +778,42 @@ for opp in all_opps:
             continue
         _owner_id = opp.get("assignedTo")
         field_movement_events.append({
-            "date":     _fd.strftime("%Y-%m-%d"),
-            "week":     f"W{_week_index(_fd)}",
-            "stage":    _stage_name,
-            "opp_name": opp.get("name") or "(unnamed)",
-            "contact":  (opp.get("contact") or {}).get("name") or "",
-            "owner":    user_map.get(_owner_id, "Unassigned") if _owner_id else "Unassigned",
-            "source":   opp.get("source") or "",
+            "date":       _fd.strftime("%Y-%m-%d"),
+            "week":       f"W{_week_index(_fd)}",
+            "stage":      _stage_name,
+            "opp_name":   opp.get("name") or "(unnamed)",
+            "contact":    (opp.get("contact") or {}).get("name") or "",
+            "owner":      user_map.get(_owner_id, "Unassigned") if _owner_id else "Unassigned",
+            "rock_owner": ROCK_OWNERS.get(_owner_id, ""),  # Stormer/Alex/Joncarlo, or "" if untracked/unassigned
+            "source":     opp.get("source") or "",
         })
 
 field_movement_events.sort(key=lambda e: e["date"], reverse=True)
 print(f"  {len(field_movement_events)} field-based movement events (from opportunity date fields)")
 print()
 
+# ─── 6e3. Homepage Weekly Rocks — date-range filterable, no week grid ────────
+# The homepage card shows a simple Stage x Count table over an operator-chosen
+# date range (default: since Jul 1 to today), filterable by owner. All
+# filtering happens client-side in JS (see rocksRender() in CHARTS_SCRIPT) so
+# the range can change without a rebuild -- this just ships the raw events.
+ROCKS_STAGE_LABELS = ["New Lead", "Discovery Call", "Strategy Call", "Proposal Sent", "Agreement Signed"]
+
+rocks_events = [
+    {"date": e["date"], "stage": e["stage"], "owner": e["rock_owner"]}
+    for e in field_movement_events
+    if e["stage"] in ROCKS_STAGE_LABELS
+]
+print(f"  {len(rocks_events)} rock entries across {len(ROCKS_STAGE_LABELS)} tracked stages")
+print()
+
 # ── 6f. Lead → Discovery conversion (since Jul 1, W1) ────────────────────────
-# Numerator accumulates over time: sum of Weekly Rocks "Discovery Calls" entries
-# across every week on record (including the current in-progress week), so this
-# metric grows as more weekly snapshots are diffed. Denominator is total leads
-# (opportunities created) since the same Jul 1 start date -- a flow-based rate,
-# not the current-stage-position snapshot the other funnel KPIs use.
-total_discovery_since_jul1 = sum(wk_counts["Discovery Calls"] for wk_counts in weekly_movement.values())
+# Numerator is the running total of distinct opportunities that entered
+# Discovery Call, read straight from field_movement_events (6e2) -- no week
+# bucketing needed, just a count. Denominator is total leads (opportunities
+# created) since the same Jul 1 start date -- a flow-based rate, not the
+# current-stage-position snapshot the other funnel KPIs use.
+total_discovery_since_jul1 = sum(1 for e in field_movement_events if e["stage"] == "Discovery Call")
 total_leads_since_jul1 = sum(
     1 for opp in all_opps
     if opp.get("createdAt")
@@ -987,12 +940,11 @@ contact_name_by_id = {
     for opp in all_opps if opp.get("contactId") and (opp.get("contact") or {}).get("name")
 }
 
-# Weekly appointment counts for the Weekly Rocks "Appointments" mini-table
-# (same shape as weekly_movement -- wk -> {label: count} -- so it can reuse
-# the same rendering function), split into Discovery Calls / Strategy Calls
-# by the calendar's group (see calendar_type_map above). Capped to
-# move_display_weeks/current week, same as the stage-movement table above,
-# for a consistent set of columns; the full set including future-booked
+# Weekly appointment counts for the Weekly Rocks — Appointments mini-table
+# (wk -> {label: count} shape, consumed by _build_weekly_matrix), split into
+# Discovery Calls / Strategy Calls by the calendar's group (see
+# calendar_type_map above). Capped to move_display_weeks/current week for a
+# consistent set of columns; the full set including future-booked
 # appointments lives on the Raw Data page.
 APPT_TYPE_LABELS = ["Discovery Calls", "Strategy Calls"]
 weekly_appts = defaultdict(lambda: {lbl: 0 for lbl in APPT_TYPE_LABELS})
@@ -1935,7 +1887,7 @@ MIDDLE = f"""
 
       <div class="funnel-kpis" style="margin-top:4px;">
         <div class="funnel-kpi">
-          <span class="funnel-kpi-label">Lead to Discovery{_info_icon("Since Jul 1, 2026 (W1). Numerator accumulates over time from Weekly Rocks data -- the running total of distinct opportunities that entered Discovery Call each week, including the current in-progress week. Denominator is total leads created since the same date. Unlike the other three funnel KPIs (which are all-time, based on current stage position), this one is flow-based and grows as more weeks are recorded.")}</span>
+          <span class="funnel-kpi-label">Lead to Discovery{_info_icon("Since Jul 1, 2026. Numerator is the running total of distinct opportunities that entered Discovery Call, read directly from GHL's 'Date Entered' custom fields (not diffed from snapshots). Denominator is total leads created since the same date. Unlike the other three funnel KPIs (which are all-time, based on current stage position), this one is flow-based and grows over time.")}</span>
           <span class="funnel-kpi-value">{lead_to_disc_pct}%</span>
           <span class="funnel-kpi-sub">{total_discovery_since_jul1} of {total_leads_since_jul1} leads since Jul 1</span>
         </div>
@@ -2080,12 +2032,12 @@ GLOSSARY_TERMS = [
     ("Lead Sources — MGL / SGL / Other", "Essentially all-time within the Sales Pipeline: every opportunity ever won or lost, plus any currently open at New Lead stage or beyond. MGL = Marketing Generated Lead, SGL = Sales Generated Lead."),
     ("Call Quality (Great Fit / Potential / Poor Fit / Unscored)", "Quality score set on the contact record, shown for opportunities at Discovery Call stage or beyond, broken out by source (MGL/SGL/Other)."),
     ("Pipeline Snapshot — Open Deals by Stage", "Current count of OPEN opportunities in each Sales Pipeline stage, as of the selected daily snapshot (use the Viewing Snapshot dropdown to look at a past date)."),
-    ("Lead to Discovery", "Since Jul 1, 2026 (W1): total distinct opportunities that entered Discovery Call (accumulated from Weekly Rocks data across every week on record, including the current in-progress week) divided by total leads created since the same date. Flow-based and grows over time -- unlike the other three funnel KPIs below, which are all-time and based on current stage position."),
+    ("Lead to Discovery", "Since Jul 1, 2026: total distinct opportunities that entered Discovery Call (read directly from GHL's 'Date Entered' custom fields) divided by total leads created since the same date. Flow-based and grows over time -- unlike the other three funnel KPIs below, which are all-time and based on current stage position."),
     ("Discovery to Proposal / Proposal to Signed / Lead to Won", "All-time conversion rates within the Sales Pipeline: of all opportunities that ever reached the first stage in the pair (any status), what % also reached the second stage (or won, for Lead to Won)."),
     ("Won", "NOT GHL's won/lost status field -- this counts opportunities currently sitting in the Onboarding stage, which is how this pipeline defines a closed-won deal."),
     ("Won Deals — Entered Onboarding by Month", "Based on lastStageChangeAt: which month each currently-Onboarding opportunity most recently moved into that stage. Month-over-month % compares to the prior completed month; the current month is marked in progress and excluded from that comparison."),
-    ("Weekly Rocks", "Distinct opportunities that ENTERED each of 4 key stages (Discovery Call, Strategy Call, Proposal Sent, Agreement Signed) per week, based on diffing daily snapshots since Jul 1, 2026 (W1). An opportunity is only counted on the week it actually moved in, not every week it happens to sit there. W1 slightly undercounts because Jul 1 was our first-ever snapshot, so opportunities already sitting in a stage that day can't be confirmed as having entered it that week. The current week is marked with * and excluded from the Total column."),
-    ("Weekly Rocks — Appointments", "Appointments scheduled per week (any calendar/status), from GHL's own calendar events -- a real log, not diffed from daily snapshots like the stage table above. Bucketed by the appointment's own date, using the same week grid. Owner filter uses the appointment's assigned user, not the linked opportunity's owner."),
+    ("Weekly Rocks", "Distinct opportunities that ENTERED each of 5 key stages (New Lead, Discovery Call, Strategy Call, Proposal Sent, Agreement Signed) within the selected date range (defaults to since Jul 1, 2026), read directly from GHL's 'Date Entered' custom fields -- the true stage-entry date GHL recorded, not diffed from daily snapshots. Change the date range to compare any period. Owner filter uses each opportunity's current assigned owner."),
+    ("Weekly Rocks — Appointments", "Appointments scheduled per week (any calendar/status), from GHL's own calendar events -- a real log, not diffed from daily snapshots. Bucketed by the appointment's own date into a week grid (W1 = Jul 1, 2026), kept as weeks (rather than a date range like the stage table above) since that's what makes week-over-week comparisons easy. Owner filter uses the appointment's assigned user, not the linked opportunity's owner."),
     ("Meta Campaign Spending (bottom section)", "Last 7 days of Meta ad spend, including today's partial/incomplete spend as its own tile -- unlike the Daily Performance table above, which excludes today."),
     ("Call Intelligence", "Cumulative, all-time data extracted from Granola call notes: fund sizes and competitors ever mentioned by prospects, and the most common discovery-call questions. Quote of the Week is replaced when a new standout quote comes in -- the outgoing quote is archived into Previous Highlighted Quotes rather than discarded. Everything else accumulates and never resets."),
 ]
@@ -2164,30 +2116,40 @@ def _build_weekly_matrix(movement_dict, row_labels, note_text, empty_text):
     )
     return f'<div class="smv-wrap"><table class="smv-table">{thead}{tbody}</table></div>{note}'
 
-_SMV_NOTE = ('Distinct opportunities that entered each stage that week · Sales Pipeline · based on daily snapshots'
-             ' · W1 undercounts slightly: Jul 1 was our first snapshot, so opps already sitting in a stage that day can\'t be counted as entering it')
-_SMV_EMPTY = 'First snapshot captured today — movement data will appear on the next build.'
+_rocks_default_from = WEEK1_START.isoformat()
+_rocks_default_to   = today.date().isoformat()
 
-_smv_all      = _build_weekly_matrix(weekly_movement, MOVE_LABELS, _SMV_NOTE, _SMV_EMPTY)
-_smv_stormer  = _build_weekly_matrix(weekly_movement_by_owner["Stormer"], MOVE_LABELS, _SMV_NOTE, _SMV_EMPTY)
-_smv_alex     = _build_weekly_matrix(weekly_movement_by_owner["Alex"], MOVE_LABELS, _SMV_NOTE, _SMV_EMPTY)
-_smv_joncarlo = _build_weekly_matrix(weekly_movement_by_owner["Joncarlo"], MOVE_LABELS, _SMV_NOTE, _SMV_EMPTY)
+_rocks_rows_html = "".join(
+    f'<tr><td class="smv-stage-cell">{lbl}</td><td class="smv-val smv-total" id="rockCount-{i}">0</td></tr>'
+    for i, lbl in enumerate(ROCKS_STAGE_LABELS)
+)
 
 STAGE_MOVEMENT = f"""
   <section class="card" style="margin-top:22px;">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <div class="card-label" style="margin-bottom:0;">Weekly Rocks{_info_icon("Distinct opportunities that entered each stage per week, based on daily snapshots since Jul 1, 2026 (W1). Not a running total -- each opportunity is only counted on the week it actually moved in. Owner filter uses each opportunity's owner as of the day it entered the stage.")}</div>
-      <div style="display:flex;gap:4px;">
-        <button onclick="setRockOwner('all',this)" class="mktg-btn smv-owner-btn mktg-btn-active">All</button>
-        <button onclick="setRockOwner('stormer',this)" class="mktg-btn smv-owner-btn">Stormer</button>
-        <button onclick="setRockOwner('alex',this)" class="mktg-btn smv-owner-btn">Alex</button>
-        <button onclick="setRockOwner('joncarlo',this)" class="mktg-btn smv-owner-btn">Joncarlo</button>
+      <div class="card-label" style="margin-bottom:0;">Weekly Rocks{_info_icon("Distinct opportunities that entered each stage, read directly from GHL's 'Date Entered' custom fields (New Lead / Discovery Call / Strategy Call / Proposal Sent / Agreement Signed) -- the true stage-entry date GHL recorded, not diffed from daily snapshots. Counts reflect the selected date range (default: since Jul 1, 2026). Owner filter uses each opportunity's current assigned owner.")}</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div style="display:flex;gap:5px;align-items:center;">
+          <input type="date" id="rockFrom" value="{_rocks_default_from}" onchange="rocksRender()"
+            style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-family:inherit;font-size:0.68rem;outline:none;color-scheme:dark;">
+          <span style="font-size:0.62rem;color:var(--text-mute);">–</span>
+          <input type="date" id="rockTo" value="{_rocks_default_to}" onchange="rocksRender()"
+            style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-family:inherit;font-size:0.68rem;outline:none;color-scheme:dark;">
+        </div>
+        <div style="display:flex;gap:4px;">
+          <button onclick="setRockOwner('all',this)" class="mktg-btn smv-owner-btn mktg-btn-active">All</button>
+          <button onclick="setRockOwner('stormer',this)" class="mktg-btn smv-owner-btn">Stormer</button>
+          <button onclick="setRockOwner('alex',this)" class="mktg-btn smv-owner-btn">Alex</button>
+          <button onclick="setRockOwner('joncarlo',this)" class="mktg-btn smv-owner-btn">Joncarlo</button>
+        </div>
       </div>
     </div>
-    <div id="smvView-all" style="margin-top:14px;">{_smv_all}</div>
-    <div id="smvView-stormer" style="margin-top:14px;display:none;">{_smv_stormer}</div>
-    <div id="smvView-alex" style="margin-top:14px;display:none;">{_smv_alex}</div>
-    <div id="smvView-joncarlo" style="margin-top:14px;display:none;">{_smv_joncarlo}</div>
+    <div class="smv-wrap" style="margin-top:14px;">
+      <table class="smv-table">
+        <thead><tr><th class="smv-th-stage">Stage</th><th class="smv-th-total">Count</th></tr></thead>
+        <tbody>{_rocks_rows_html}</tbody>
+      </table>
+    </div>
   </section>
 """
 
@@ -2204,7 +2166,7 @@ _apw_joncarlo = _build_weekly_matrix(weekly_appts_by_owner["Joncarlo"], APPT_TYP
 APPT_WEEKLY_SECTION = f"""
   <section class="card" style="margin-top:22px;">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-      <div class="card-label" style="margin-bottom:0;">Weekly Rocks — Appointments{_info_icon("Appointments scheduled per week, from GHL's own calendar events (a real log, not diffed from daily snapshots like the table above). Bucketed by the appointment's own date, using the same week grid. Split into Discovery Calls vs. Strategy Calls by the calendar's GHL calendar group (not its name -- some calendars share a name across groups). Owner filter uses the appointment's assigned user. Full detail, including future-booked appointments, is on the Raw Data page.")}</div>
+      <div class="card-label" style="margin-bottom:0;">Weekly Rocks — Appointments{_info_icon("Appointments scheduled per week, from GHL's own calendar events (a real log, not diffed from daily snapshots). Bucketed by the appointment's own date into a week grid (W1 = Jul 1, 2026) -- kept as weeks rather than a date range so week-over-week comparisons stay easy. Split into Discovery Calls vs. Strategy Calls by the calendar's GHL calendar group (not its name -- some calendars share a name across groups). Owner filter uses the appointment's assigned user. Full detail, including future-booked appointments, is on the Raw Data page.")}</div>
       <div style="display:flex;gap:4px;">
         <button onclick="setApptOwner('all',this)" class="mktg-btn smv-owner-btn2 mktg-btn-active">All</button>
         <button onclick="setApptOwner('stormer',this)" class="mktg-btn smv-owner-btn2">Stormer</button>
@@ -2246,6 +2208,8 @@ DATA_SCRIPT = f"""
     const PIPELINE_HISTORY   = {json.dumps(pipeline_history)};
     const PIPELINE_DATES     = {json.dumps(pipeline_dates)};
     const MKTG_DAILY         = {json.dumps(mktg_daily)};
+    const ROCKS_EVENTS       = {json.dumps(rocks_events)};
+    const ROCKS_STAGE_LABELS = {json.dumps(ROCKS_STAGE_LABELS)};
   </script>
 """
 
@@ -2352,14 +2316,35 @@ CHARTS_SCRIPT = """
     }
     renderCplHero(7);
 
-    // ── Weekly Rocks — owner filter ──────────────────────────────────────
+    // ── Weekly Rocks — date range + owner filter (field-based, no week grid) ──
+    let rockOwnerFilter = "all";
+    const ROCK_OWNER_NAMES = { stormer: "Stormer", alex: "Alex", joncarlo: "Joncarlo" };
+
     function setRockOwner(which, btn) {
+      rockOwnerFilter = which;
       document.querySelectorAll(".smv-owner-btn").forEach(b => b.classList.remove("mktg-btn-active"));
       btn.classList.add("mktg-btn-active");
-      ["all", "stormer", "alex", "joncarlo"].forEach(k => {
-        document.getElementById("smvView-" + k).style.display = (k === which) ? "" : "none";
+      rocksRender();
+    }
+
+    function rocksRender() {
+      const from = document.getElementById("rockFrom").value;
+      const to   = document.getElementById("rockTo").value;
+      const wantOwner = ROCK_OWNER_NAMES[rockOwnerFilter] || null;
+
+      const counts = {};
+      ROCKS_STAGE_LABELS.forEach(s => counts[s] = 0);
+      ROCKS_EVENTS.forEach(e => {
+        if (from && e.date < from) return;
+        if (to   && e.date > to)   return;
+        if (wantOwner && e.owner !== wantOwner) return;
+        if (counts[e.stage] !== undefined) counts[e.stage]++;
+      });
+      ROCKS_STAGE_LABELS.forEach((s, i) => {
+        document.getElementById("rockCount-" + i).textContent = counts[s];
       });
     }
+    rocksRender();
 
     // ── Weekly Rocks — Appointments — owner filter ────────────────────────
     function setApptOwner(which, btn) {
@@ -2670,15 +2655,13 @@ CHARTS_SCRIPT = """
 </html>
 """
 
-# ─── 7j. RAW DATA PAGE — Weekly Rocks movements + Appointments log ──────────
+# ─── 7j. RAW DATA PAGE — Field Movements + Appointments log ─────────────────
 # Separate static page (axis-growth-data.html), linked from the main header,
-# with two tabs. "Movements" is the detail behind every Weekly Rocks count:
-# each row is one opportunity entering one stage on one day. "Appointments"
-# is GHL's own calendar-events log, filtered to Jul 1, W1 onward (unlike
-# Weekly Rocks, appointments are a real GHL record — no snapshot-diffing).
-
-_rd_owners = sorted({e["owner"] for e in movement_events})
-_rd_weeks  = sorted({e["week"] for e in movement_events}, key=lambda w: int(w[1:]), reverse=True)
+# with two tabs. "Field Movements" is the detail behind every Weekly Rocks
+# count: each row is one opportunity entering one stage, read from GHL's
+# "Date Entered" custom fields. "Appointments" is GHL's own calendar-events
+# log, filtered to Jul 1, W1 onward -- both are real GHL records, no
+# snapshot-diffing involved.
 
 _ap_owners    = sorted({e["owner"] for e in appointment_events})
 _ap_calendars = sorted({e["calendar"] for e in appointment_events})
@@ -2785,50 +2768,11 @@ RAW_DATA_HEADER = f"""
 
 RAW_DATA_BODY = f"""
   <div class="rd-tabs">
-    <button class="rd-tab rd-tab-active" id="tabBtn-movements" onclick="switchTab('movements')">Weekly Rocks Movements</button>
-    <button class="rd-tab" id="tabBtn-appointments" onclick="switchTab('appointments')">Appointments</button>
-    <button class="rd-tab" id="tabBtn-fieldmoves" onclick="switchTab('fieldmoves')">Field Movements <span style="opacity:0.6;">(new)</span></button>
+    <button class="rd-tab rd-tab-active" id="tabBtn-appointments" onclick="switchTab('appointments')">Appointments</button>
+    <button class="rd-tab" id="tabBtn-fieldmoves" onclick="switchTab('fieldmoves')">Field Movements</button>
   </div>
 
-  <section class="card" id="tab-movements">
-    <div class="rd-toolbar">
-      <input id="rdSearch" class="rd-input" type="text" placeholder="Search opportunity, contact, or owner…" oninput="rdRender()">
-      <select id="rdOwner" class="rd-select" onchange="rdRender()">
-        <option value="">All Owners</option>
-        {_rd_options(_rd_owners)}
-      </select>
-      <select id="rdStage" class="rd-select" onchange="rdRender()">
-        <option value="">All Stages</option>
-        {_rd_options(MOVE_LABELS)}
-      </select>
-      <select id="rdWeek" class="rd-select" onchange="rdRender()">
-        <option value="">All Weeks</option>
-        {_rd_options(_rd_weeks)}
-      </select>
-      <span id="rdCount" class="rd-count"></span>
-      <button class="btn" onclick="downloadMovementsCSV()">&#8595; CSV</button>
-    </div>
-    <div class="rd-wrap">
-      <table class="rd-table">
-        <thead>
-          <tr>
-            <th onclick="rdSort('date')">Date<span class="rd-sort-arrow" id="rdArrow-date"></span></th>
-            <th onclick="rdSort('week')">Week<span class="rd-sort-arrow" id="rdArrow-week"></span></th>
-            <th onclick="rdSort('stage')">Stage Entered<span class="rd-sort-arrow" id="rdArrow-stage"></span></th>
-            <th onclick="rdSort('prev_stage')">From<span class="rd-sort-arrow" id="rdArrow-prev_stage"></span></th>
-            <th onclick="rdSort('opp_name')">Opportunity<span class="rd-sort-arrow" id="rdArrow-opp_name"></span></th>
-            <th onclick="rdSort('contact')">Contact<span class="rd-sort-arrow" id="rdArrow-contact"></span></th>
-            <th onclick="rdSort('owner')">Owner<span class="rd-sort-arrow" id="rdArrow-owner"></span></th>
-            <th onclick="rdSort('source')">Source<span class="rd-sort-arrow" id="rdArrow-source"></span></th>
-          </tr>
-        </thead>
-        <tbody id="rdBody"></tbody>
-      </table>
-      <div id="rdEmpty" class="rd-empty" style="display:none;">No movements match these filters.</div>
-    </div>
-  </section>
-
-  <section class="card" id="tab-appointments" style="display:none;">
+  <section class="card" id="tab-appointments">
     <div class="rd-toolbar">
       <input id="apSearch" class="rd-input" type="text" placeholder="Search contact, owner, or calendar…" oninput="apRender()">
       <select id="apOwner" class="rd-select" onchange="apRender()">
@@ -2877,7 +2821,7 @@ RAW_DATA_BODY = f"""
 
   <section class="card" id="tab-fieldmoves" style="display:none;">
     <div style="font-size:0.72rem;color:var(--text-mute);margin-bottom:14px;">
-      Read directly off each opportunity's own "Date Entered" custom fields (New Lead / Discovery Call / Strategy Call / Proposal Sent / Agreement Sent / Agreement Signed) -- populated by GHL workflows fixed and validated live on 2026-07-27. This is the true stage-entry date GHL recorded, no day-over-day snapshot diffing involved. Still building up history since the workflow fix; being tracked here in parallel with the snapshot-based Weekly Rocks Movements tab for validation before Weekly Rocks switches over to this source.
+      Read directly off each opportunity's own "Date Entered" custom fields (New Lead / Discovery Call / Strategy Call / Proposal Sent / Agreement Sent / Agreement Signed) -- populated by GHL workflows fixed and validated live on 2026-07-27. This is the true stage-entry date GHL recorded, no day-over-day snapshot diffing involved. This is the source behind the homepage Weekly Rocks card.
     </div>
     <div class="rd-toolbar">
       <input id="fmSearch" class="rd-input" type="text" placeholder="Search opportunity, contact, or owner…" oninput="fmRender()">
@@ -2920,7 +2864,6 @@ RAW_DATA_BODY = f"""
 # logic script below so the JS's own { } characters don't need doubling.
 RAW_DATA_SCRIPT = f"""
   <script>
-    const MOVEMENT_EVENTS       = {json.dumps(movement_events)};
     const APPOINTMENT_EVENTS    = {json.dumps(appointment_events)};
     const FIELD_MOVEMENT_EVENTS = {json.dumps(field_movement_events)};
   </script>
@@ -2929,7 +2872,7 @@ RAW_DATA_SCRIPT = f"""
 RAW_DATA_LOGIC_SCRIPT = """
   <script>
     function switchTab(tab) {
-      ["movements", "appointments", "fieldmoves"].forEach(t => {
+      ["appointments", "fieldmoves"].forEach(t => {
         document.getElementById("tab-" + t).style.display = (t === tab) ? "" : "none";
         document.getElementById("tabBtn-" + t).classList.toggle("rd-tab-active", t === tab);
       });
@@ -2947,67 +2890,6 @@ RAW_DATA_LOGIC_SCRIPT = """
       a.download = filename;
       a.click();
       URL.revokeObjectURL(url);
-    }
-
-    // ── Weekly Rocks movements ────────────────────────────────────────────
-    let rdSortKey = "date";
-    let rdSortDir = -1; // -1 desc, 1 asc
-    let rdVisible = MOVEMENT_EVENTS;
-
-    function rdSort(key) {
-      if (rdSortKey === key) { rdSortDir *= -1; } else { rdSortKey = key; rdSortDir = 1; }
-      rdRender();
-    }
-
-    function rdRender() {
-      const q     = document.getElementById("rdSearch").value.trim().toLowerCase();
-      const owner = document.getElementById("rdOwner").value;
-      const stage = document.getElementById("rdStage").value;
-      const week  = document.getElementById("rdWeek").value;
-
-      let rows = MOVEMENT_EVENTS.filter(e => {
-        if (owner && e.owner !== owner) return false;
-        if (stage && e.stage !== stage) return false;
-        if (week  && e.week  !== week)  return false;
-        if (q && !(e.opp_name.toLowerCase().includes(q) || e.contact.toLowerCase().includes(q) || e.owner.toLowerCase().includes(q))) return false;
-        return true;
-      });
-
-      rows.sort((a, b) => {
-        const av = a[rdSortKey], bv = b[rdSortKey];
-        if (av < bv) return -1 * rdSortDir;
-        if (av > bv) return  1 * rdSortDir;
-        return 0;
-      });
-      rdVisible = rows;
-
-      document.querySelectorAll("#tab-movements .rd-sort-arrow").forEach(el => el.textContent = "");
-      document.getElementById("rdArrow-" + rdSortKey).textContent = rdSortDir === 1 ? "▲" : "▼";
-
-      document.getElementById("rdCount").textContent = rows.length + " movement" + (rows.length === 1 ? "" : "s");
-      document.getElementById("rdEmpty").style.display = rows.length ? "none" : "block";
-
-      document.getElementById("rdBody").innerHTML = rows.map(e => `
-        <tr>
-          <td>${e.date}</td>
-          <td class="rd-mute">${e.week}</td>
-          <td>${e.stage}</td>
-          <td class="rd-mute">${e.prev_stage}</td>
-          <td>${e.opp_name}</td>
-          <td class="rd-mute">${e.contact}</td>
-          <td>${e.owner}</td>
-          <td class="rd-mute">${e.source}</td>
-        </tr>
-      `).join("");
-    }
-
-    function downloadMovementsCSV() {
-      csvDownload(
-        rdVisible,
-        ["date","week","stage","prev_stage","opp_name","contact","owner","source"],
-        ["Date","Week","Stage Entered","From","Opportunity","Contact","Owner","Source"],
-        "axis-weekly-rocks-movements.csv"
-      );
     }
 
     // ── Appointments log ──────────────────────────────────────────────────
@@ -3136,7 +3018,6 @@ RAW_DATA_LOGIC_SCRIPT = """
       );
     }
 
-    rdRender();
     apRender();
     fmRender();
   </script>
@@ -3147,7 +3028,7 @@ RAW_DATA_LOGIC_SCRIPT = """
 raw_data_html = RAW_DATA_HEAD + RAW_DATA_HEADER + RAW_DATA_BODY + RAW_DATA_SCRIPT + RAW_DATA_LOGIC_SCRIPT
 raw_data_path = Path(__file__).parent / "axis-growth-data.html"
 raw_data_path.write_text(raw_data_html, encoding="utf-8")
-print(f"Raw data page written → {raw_data_path} ({len(movement_events)} movements, {len(appointment_events)} appointments)")
+print(f"Raw data page written → {raw_data_path} ({len(field_movement_events)} field movements, {len(appointment_events)} appointments)")
 
 
 # ─── 8. ASSEMBLE AND WRITE ───────────────────────────────────────────────────
