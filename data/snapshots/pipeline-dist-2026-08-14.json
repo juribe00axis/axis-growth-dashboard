@@ -3,19 +3,19 @@
   "stages": [
     {
       "name": "New Lead",
-      "count": 45
+      "count": 42
     },
     {
       "name": "Discovery Call",
-      "count": 35
+      "count": 42
     },
     {
       "name": "Strategy Call",
-      "count": 10
+      "count": 9
     },
     {
       "name": "Proposal Sent",
-      "count": 19
+      "count": 20
     },
     {
       "name": "Closing Call",
@@ -26,11 +26,15 @@
       "count": 8
     },
     {
+      "name": "Agreement Signed",
+      "count": 2
+    },
+    {
       "name": "Reactivation Queue - no call booked",
       "count": 47
     }
   ],
-  "total_open": 170,
+  "total_open": 176,
   "source": {
     "labels": [
       "MGL",
@@ -38,10 +42,10 @@
       "Other - Referrals"
     ],
     "data": [
-      108,
+      113,
       27,
-      69
+      71
     ],
-    "total": 204
+    "total": 211
   }
 }
