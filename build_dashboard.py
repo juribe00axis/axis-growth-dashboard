@@ -595,6 +595,35 @@ for _mk in _won_month_keys:
     if not _is_current:
         _prev_count = _cnt
 
+# ── Won bento (added 2026-08-18) — reuses the SAME Onboarding-stage "Won"
+# definition as the Sales Pipeline Funnel card above, for one consistent
+# "Won" number across the whole dashboard rather than introducing a third
+# one. won_deals_events is the per-deal detail behind that count, for the
+# Raw Data page's new "All Time Won" tab.
+won_deals_events = []
+for opp in onboarding_opps:
+    _ts = opp.get("lastStageChangeAt") or opp.get("createdAt")
+    if not _ts:
+        continue
+    _dt = datetime.fromisoformat(_ts.replace("Z", "+00:00"))
+    _owner_id = opp.get("assignedTo")
+    won_deals_events.append({
+        "date":    _dt.strftime("%Y-%m-%d"),
+        "month":   _dt.strftime("%Y-%m"),
+        "opp_name": opp.get("name") or "(unnamed)",
+        "contact":  (opp.get("contact") or {}).get("name") or "",
+        "value":    float(opp.get("monetaryValue") or 0),
+        "owner":    user_map.get(_owner_id, "Unassigned") if _owner_id else "Unassigned",
+        "source":   opp.get("source") or "",
+    })
+won_deals_events.sort(key=lambda e: e["date"], reverse=True)
+
+# blended_cost_per_signing is computed later (6g2), once meta_alltime_spend
+# is fetched -- it needs won_onboarding_total, which is already available here.
+
+won_month_chart_labels = [datetime.strptime(mk, "%Y-%m").strftime("%b") for mk in _won_month_keys]
+won_month_chart_data   = [_won_by_month[mk] for mk in _won_month_keys]
+
 mgl_open_sales_cids = {
     opp["contactId"] for opp in mgl_opps
     if opp.get("pipelineId") == SALES_ID
@@ -767,6 +796,7 @@ FIELD_DATE_STAGES = {
 FIELD_STAGE_LABELS = list(FIELD_DATE_STAGES.values())
 
 field_movement_events = []
+_future_dated_skipped = 0
 for opp in all_opps:
     for cf in (opp.get("customFields") or []):
         _stage_name = FIELD_DATE_STAGES.get(cf.get("id"))
@@ -775,6 +805,14 @@ for opp in all_opps:
             continue
         _fd = datetime.fromtimestamp(_ms / 1000, tz=timezone.utc).date()
         if _fd < WEEK1_START:
+            continue
+        # Date-Entered fields record when a stage was ACTUALLY hit, so a value
+        # after today is always a data-entry mistake (e.g. wrong year picked),
+        # not a real future stage-entry -- exclude it rather than let it spawn
+        # a bogus future month in Funnel Conversion / Weekly Rocks. Confirmed
+        # 2026-08-18 after finding a 2027-08-12 entry that was clearly wrong.
+        if _fd > today.date():
+            _future_dated_skipped += 1
             continue
         _owner_id = opp.get("assignedTo")
         field_movement_events.append({
@@ -790,6 +828,8 @@ for opp in all_opps:
 
 field_movement_events.sort(key=lambda e: e["date"], reverse=True)
 print(f"  {len(field_movement_events)} field-based movement events (from opportunity date fields)")
+if _future_dated_skipped:
+    print(f"  ⚠ {_future_dated_skipped} skipped for a Date-Entered value after today (likely data-entry error) -- check these in GHL")
 print()
 
 # ─── 6e3. Homepage Weekly Rocks — date-range filterable, no week grid ────────
@@ -806,6 +846,131 @@ rocks_events = [
 ]
 print(f"  {len(rocks_events)} rock entries across {len(ROCKS_STAGE_LABELS)} tracked stages")
 print()
+
+# ─── 6e4. Funnel Conversion — monthly stage-entry counts, ecommerce-style ────
+# Like a "logins vs. purchases" web funnel: each stage is tallied
+# independently for the month its own Date-Entered field falls in -- an
+# Agreement Signed event counts in whatever month it was SIGNED, whether or
+# not that same opp has a New Lead date on file. No per-opportunity join to
+# New Lead is made or required, unlike an earlier version of this section --
+# confirmed 2026-08-18 that a join undercounts badly, since most opps that
+# reach late stages (e.g. 11 of 14 all-time Agreement Signed) have no New
+# Lead date at all: it's normal for that field to be blank since it's only
+# been recorded since Jul 27, so many in-flight or pre-existing deals never
+# picked one up. Percent = that stage's count divided by New Lead's count in
+# the SAME month, same spirit as ROCKS_STAGE_LABELS/rocks_events (6e3) just
+# bucketed monthly with a % column added.
+#
+# Floor is Jul 27, 2026 -- when the Date-Entered custom fields were validated
+# live (see 6e2) -- not WEEK1_START (Jul 1), which Rocks/Appointments use for
+# an unrelated reason. In practice no field data exists before Jul 27 anyway.
+#
+# Caveat baked into the note text below: because deals take real time to
+# move stage to stage, a month's later-stage count is mostly filled by leads
+# that entered in EARLIER months, not that month's own New Leads -- so this
+# is a same-period activity ratio, not a true this-cohort-converted rate.
+# That's expected and mirrors the earlier weekly-rocks-vs-cohort mismatch
+# the operator flagged (9 Aug signings counted here vs. 2 under the retired
+# cohort-join version).
+FUNNEL_FLOOR = datetime(2026, 7, 27, tzinfo=timezone.utc).date()
+
+funnel_monthly = defaultdict(lambda: defaultdict(int))
+for _e in field_movement_events:
+    if _e["stage"] not in ROCKS_STAGE_LABELS:
+        continue
+    if _e["date"] < FUNNEL_FLOOR.isoformat():
+        continue
+    _month_key = _e["date"][:7]
+    funnel_monthly[_month_key][_e["stage"]] += 1
+
+funnel_months = sorted(funnel_monthly.keys())
+print(f"  {len(funnel_months)} month(s) of stage-entry data since {FUNNEL_FLOOR}")
+print()
+
+# Transposed layout -- months run left-to-right across the top, stages run
+# top-to-bottom down the left, so counts shrink going down a column the way
+# an actual funnel reads. All Time column = every month's counts summed.
+# Shared by both carousel pages below (6e4 step-over-step, 6e4b vs. New
+# Lead) -- built once so both tables stay in sync off the same columns.
+_funnel_all_time_counts = defaultdict(int)
+for _month in funnel_months:
+    for _stage, _count in funnel_monthly[_month].items():
+        _funnel_all_time_counts[_stage] += _count
+
+FUNNEL_COLUMNS = [(m, funnel_monthly[m], False) for m in funnel_months] + [("All Time", _funnel_all_time_counts, True)]
+
+def _funnel_table_html(get_denominator, note_html):
+    """Renders one carousel page. get_denominator(col_counts, stage_index)
+    returns the count each row's % is divided by -- the only thing that
+    differs between the two pages."""
+    if not funnel_months:
+        return '<div class="smv-note" style="text-align:center;padding:32px 0;">No data yet.</div>'
+
+    col_ths = ""
+    for month, _counts, is_total in FUNNEL_COLUMNS:
+        if is_total:
+            col_ths += '<th class="smv-th-total">All Time</th>'
+            continue
+        _label = datetime.strptime(month, "%Y-%m").strftime("%b %Y")
+        if month == _current_month_key:
+            _label += ' <span style="color:var(--hero);font-weight:800;">·in progress</span>'
+        col_ths += f"<th>{_label}</th>"
+    thead = f'<thead><tr><th class="smv-th-stage">Stage</th>{col_ths}</tr></thead>'
+
+    tbody_rows = ""
+    for i, stage in enumerate(ROCKS_STAGE_LABELS):
+        cells = ""
+        for _month, col_counts, is_total in FUNNEL_COLUMNS:
+            _val_cls = "smv-val smv-total" if is_total else "smv-val smv-val-pos"
+            count = col_counts.get(stage, 0)
+            if i == 0:
+                cells += f'<td class="{_val_cls}">{count}</td>' if count else f'<td class="smv-val smv-val-zero">—</td>'
+                continue
+            denom = get_denominator(col_counts, i)
+            if count > 0 and denom > 0:
+                pct = round(count / denom * 100)
+                cells += f'<td class="{_val_cls}">{count} <span style="color:var(--text-mute);font-weight:600;">({pct}%)</span></td>'
+            elif count > 0:
+                cells += f'<td class="{_val_cls}">{count}</td>'
+            else:
+                cells += '<td class="smv-val smv-val-zero">—</td>'
+        tbody_rows += f'<tr><td class="smv-stage-cell">{stage}</td>{cells}</tr>\n'
+
+    return f'<div class="smv-wrap"><table class="smv-table">{thead}<tbody>{tbody_rows}</tbody></table></div>{note_html}'
+
+def _funnel_matrix_html():
+    # Page 1 -- step-over-step: each stage's % is of the stage directly
+    # above it (Strategy Call % is of Discovery Call, etc.), not New Lead.
+    note = (
+        '<div class="smv-note">Each stage counted independently for the month its own Date-Entered field falls in -- '
+        "not tied to whether that same opp has a New Lead date on file · % on each row is that stage's count divided "
+        "by the stage directly above it, in the same month column (step-over-step conversion), not always over New Lead · "
+        "because deals take time to move stage to stage, a month's later-stage count mostly reflects leads that entered "
+        "in earlier months, not that month's own New Leads -- read this as period activity, not a per-lead conversion rate · "
+        "All Time = every month's counts summed, same step-over-step math</div>"
+    )
+    return _funnel_table_html(lambda col_counts, i: col_counts.get(ROCKS_STAGE_LABELS[i - 1], 0), note)
+
+def _funnel_vs_new_lead_html():
+    # Page 2 -- "Funnel vs New Lead" (added 2026-08-18): same table shape,
+    # but every row's % is of that SAME column's New Lead count instead of
+    # the row above it -- how likely a New Lead is to end up in each stage.
+    # Still an independent-tally ratio per period, not a per-opp cohort
+    # join (no New-Lead-date requirement per opp, so it doesn't inherit the
+    # missing-New-Lead-date gap found 2026-08-18) -- it'll read noisy on
+    # small months and get steadier as more data accumulates day by day.
+    note = (
+        '<div class="smv-note">Same table as the first page, but every row\'s % is of that SAME column\'s New Lead '
+        "count, not the row above it -- how likely a New Lead is to end up reaching each stage · still counted "
+        "independently per period (not a per-opportunity join), so it reads noisy on light months and gets steadier "
+        "as more data accumulates · All Time = every month's counts summed, same vs.-New-Lead math</div>"
+    )
+    return _funnel_table_html(lambda col_counts, i: col_counts.get("New Lead", 0), note)
+
+# FUNNEL_CONVERSION_SECTION itself (the f-string using _info_icon) is built
+# further down, alongside STAGE_MOVEMENT, since _info_icon isn't defined yet
+# at this point in the file -- _funnel_matrix_html() above has everything it
+# needs already and is called from there.
 
 # ── 6f. Lead → Discovery conversion (since Jul 1, W1) ────────────────────────
 # Numerator is the running total of distinct opportunities that entered
@@ -900,6 +1065,26 @@ meta_avg_str   = f"${meta_avg:,.0f}"
 meta_today_str = f"${meta_today_v:,.0f}"
 
 print(f"  90-day fetch | last-7: {meta_total_str} total | CPL last week: {cpl_lw_str}")
+print()
+
+# ── 6g2. All-time Meta spend (Won bento's blended cost/signing) ──────────────
+# Single aggregated row covering the account's whole history (date_preset=
+# "maximum"), not the 90-day window above -- needed so "blended cost per
+# signing" divides all-time spend by all-time won count on the same basis.
+_meta_alltime_resp = meta_get(f"/v21.0/{META_ACCT}/insights", {
+    "fields": "spend",
+    "date_preset": "maximum",
+})
+if "error" in _meta_alltime_resp:
+    print(f"  Meta all-time spend fetch error: {_meta_alltime_resp['error'].get('message')} — blended cost/signing will show as unavailable")
+    meta_alltime_spend = 0
+else:
+    _meta_alltime_rows = _meta_alltime_resp.get("data", [])
+    meta_alltime_spend = float(_meta_alltime_rows[0]["spend"]) if _meta_alltime_rows else 0
+
+blended_cost_per_signing = (meta_alltime_spend / won_onboarding_total) if won_onboarding_total else 0
+blended_cost_str = f"${blended_cost_per_signing:,.0f}" if won_onboarding_total else "—"
+print(f"  All-time spend: ${meta_alltime_spend:,.0f} | Blended cost/signing: {blended_cost_str} ({won_onboarding_total} won)")
 print()
 
 
@@ -1087,6 +1272,25 @@ HEAD = """<!DOCTYPE html>
       text-transform: uppercase;
     }
 
+    /* Section groups -- big vertical category rail sitting outside the card
+       boxes, one per group of related cards (added 2026-08-18 so categories
+       read clearly at a glance instead of relying on each card's own small
+       card-label). */
+    .section-group { display: flex; gap: 20px; align-items: stretch; }
+    .section-group + .section-group { margin-top: 40px; }
+    .section-rail { flex: 0 0 auto; width: 34px; display: flex; align-items: center; justify-content: center; }
+    .section-rail span {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--hero);
+      white-space: nowrap;
+    }
+    .section-group-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+
     /* Cards */
     .card {
       background: var(--surface);
@@ -1166,6 +1370,16 @@ HEAD = """<!DOCTYPE html>
     .funnel-bar-wrap { display: block; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; }
     .funnel-bar { display: block; height: 100%; background: rgba(200,255,1,0.45); border-radius: 3px; }
     .funnel-count { font-size: 0.95rem; font-weight: 800; color: var(--text); text-align: right; }
+
+    /* Won bento -- merged into the Won Deals by Month card, whole section
+       links to kpi_whiteboard.html */
+    .bento-link { display: block; text-decoration: none; color: inherit; }
+    .bento-link .bento-wrap { transition: box-shadow 0.15s ease; border-radius: 14px; }
+    .bento-link:hover .bento-wrap { box-shadow: 0 0 0 1.5px var(--hero); }
+    .bento-grid-3 { display: grid; grid-template-columns: 1.3fr 1fr 0.9fr; gap: 16px; align-items: stretch; }
+    .bento-panel { background: var(--surface-2); border-radius: 12px; padding: 14px 20px; }
+    .bento-tiles-col { display: flex; flex-direction: column; gap: 14px; }
+    .bento-tile { background: var(--surface-2); border-radius: 12px; padding: 14px 20px; display: flex; flex-direction: column; justify-content: center; flex: 1; }
     .funnel-won-sep { height: 1px; background: var(--line); margin: 4px 0; }
     .funnel-row.won-row .funnel-stage { color: var(--hero); }
     .funnel-row.won-row .funnel-bar   { background: var(--hero); }
@@ -1913,11 +2127,35 @@ MIDDLE = f"""
         </div>
       </div>
 
-      <div style="margin-top:22px;padding-top:20px;border-top:1px solid var(--line);">
-        <div class="card-label" style="margin-bottom:4px;">Won Deals — Entered Onboarding by Month</div>
-        <div style="font-size:0.68rem;color:var(--text-mute);margin-bottom:14px;">Based on lastStageChangeAt · month-over-month vs. prior completed month</div>
-        {_won_month_rows if _won_month_rows else '<div class="comp-none">None recorded yet.</div>'}
-      </div>
+      <a href="kpi_whiteboard.html" class="bento-link" title="Open the full Spend Efficiency Whiteboard">
+        <div class="bento-wrap" style="margin-top:22px;padding-top:20px;border-top:1px solid var(--line);">
+          <div class="card-label" style="margin-bottom:4px;">Won Deals — Entered Onboarding by Month{_info_icon("Same 'Won' definition as the KPI chip above -- opportunities currently sitting in the Onboarding stage, not GHL's own won/lost status field. All Time Won, Blended Cost/Signing, and Signings by Month are live from the GHL + Meta APIs. Click anywhere in this section to open the full Spend Efficiency Whiteboard for month-by-month detail, projections, and per-deal notes.")}</div>
+          <div style="font-size:0.68rem;color:var(--text-mute);margin-bottom:14px;">Based on lastStageChangeAt · month-over-month vs. prior completed month</div>
+          <div class="bento-grid-3">
+            <div class="bento-panel">
+              {_won_month_rows if _won_month_rows else '<div class="comp-none">None recorded yet.</div>'}
+            </div>
+            <div class="bento-panel">
+              <span class="funnel-kpi-label">Signings by Month</span>
+              <div class="chart-wrap" style="height:150px;margin-top:8px;">
+                <canvas id="chartWonMonthly"></canvas>
+              </div>
+            </div>
+            <div class="bento-tiles-col">
+              <div class="bento-tile">
+                <span class="funnel-kpi-label">All Time Won</span>
+                <span class="funnel-kpi-value">{won_onboarding_total}</span>
+                <span class="funnel-kpi-sub">currently in Onboarding</span>
+              </div>
+              <div class="bento-tile">
+                <span class="funnel-kpi-label">Blended Cost / Signing</span>
+                <span class="funnel-kpi-value">{blended_cost_str}</span>
+                <span class="funnel-kpi-sub">all-time Meta spend ÷ all-time won</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </a>
     </div>
   </div>
 """
@@ -2153,6 +2391,23 @@ STAGE_MOVEMENT = f"""
   </section>
 """
 
+FUNNEL_CONVERSION_SECTION = f"""
+  <section class="card" style="margin-top:22px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div class="card-label" style="margin-bottom:0;"><span id="funnelTitleText">Funnel Conversion</span>{_info_icon("Each stage counted independently by the month its own 'Date Entered' field falls in -- like an ecommerce funnel comparing total logins vs. total purchases in a period, not tracking the same individual through every step. An opp counts toward Agreement Signed in whatever month it was signed, whether or not it has a New Lead date on file (most won deals don't -- that field's only been recorded since 2026-07-27, so many in-flight/pre-existing deals never got one). Two carousel pages, shown by the pill below the title: 'Funnel Conversion' -- % on each row is that stage's count divided by the stage directly above it (step-over-step conversion). 'Funnel vs New Lead' -- every row instead divided by that same period's New Lead count, i.e. how likely a New Lead is to reach each stage. Neither is a per-opportunity cohort join, so both read noisy on light months and get steadier as more data accumulates.")}</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="funnelPagePrev()" class="mktg-btn smv-owner-btn" style="padding:2px 9px;line-height:1;" aria-label="Previous">‹</button>
+        <button onclick="funnelPageNext()" class="mktg-btn smv-owner-btn" style="padding:2px 9px;line-height:1;" aria-label="Next">›</button>
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <span id="funnelModeBadge" style="display:inline-flex;align-items:center;gap:7px;padding:5px 14px;border-radius:20px;background:var(--hero);color:#101014;border:1.5px solid var(--hero);font-size:0.66rem;font-weight:800;letter-spacing:0.07em;text-transform:uppercase;">● Viewing: vs Previous Stage</span>
+    </div>
+    <div id="funnelPage-0" style="margin-top:14px;">{_funnel_matrix_html()}</div>
+    <div id="funnelPage-1" style="margin-top:14px;display:none;">{_funnel_vs_new_lead_html()}</div>
+  </section>
+"""
+
 # ── 7i2. Appointments mini-table — same weekly grid, one row, owner filter ──
 _APW_NOTE = ('Appointments scheduled that week (any calendar/status) · from GHL calendar events, not snapshot-diffed'
              ' · split by calendar group: the "Strategy Call" group was created 2026-07-23, so everything before that date falls under Discovery Calls')
@@ -2210,6 +2465,8 @@ DATA_SCRIPT = f"""
     const MKTG_DAILY         = {json.dumps(mktg_daily)};
     const ROCKS_EVENTS       = {json.dumps(rocks_events)};
     const ROCKS_STAGE_LABELS = {json.dumps(ROCKS_STAGE_LABELS)};
+    const WON_MONTH_LABELS   = {json.dumps(won_month_chart_labels)};
+    const WON_MONTH_DATA     = {json.dumps(won_month_chart_data)};
   </script>
 """
 
@@ -2346,6 +2603,28 @@ CHARTS_SCRIPT = """
     }
     rocksRender();
 
+    // ── Funnel Conversion — 2-page carousel ────────────────────────────────
+    // Title text and the mode badge both swap on page change (2026-08-18:
+    // previously only a small indicator text changed, which the operator
+    // found too easy to miss) -- filled lime pill = vs Previous Stage,
+    // outlined lime pill = vs New Lead, so the two modes are visually
+    // unmistakable even at a glance, not just by reading text.
+    let funnelPageIdx = 0;
+    const FUNNEL_TITLES = ["Funnel Conversion", "Funnel vs New Lead"];
+    const FUNNEL_BADGE_TEXT = ["● Viewing: vs Previous Stage", "● Viewing: vs New Lead"];
+    function funnelShowPage(idx) {
+      funnelPageIdx = idx;
+      document.getElementById("funnelPage-0").style.display = idx === 0 ? "" : "none";
+      document.getElementById("funnelPage-1").style.display = idx === 1 ? "" : "none";
+      document.getElementById("funnelTitleText").textContent = FUNNEL_TITLES[idx];
+      const badge = document.getElementById("funnelModeBadge");
+      badge.textContent = FUNNEL_BADGE_TEXT[idx];
+      badge.style.background = idx === 0 ? "var(--hero)" : "transparent";
+      badge.style.color = idx === 0 ? "#101014" : "var(--hero)";
+    }
+    function funnelPagePrev() { funnelShowPage(funnelPageIdx === 0 ? 1 : 0); }
+    function funnelPageNext() { funnelShowPage(funnelPageIdx === 1 ? 0 : 1); }
+
     // ── Weekly Rocks — Appointments — owner filter ────────────────────────
     function setApptOwner(which, btn) {
       document.querySelectorAll(".smv-owner-btn2").forEach(b => b.classList.remove("mktg-btn-active"));
@@ -2406,6 +2685,36 @@ CHARTS_SCRIPT = """
       },
       plugins: [monthlyDataLabels],
     });
+
+    // ── Won bento — Signings by Month ───────────────────────────────────────
+    if (WON_MONTH_LABELS.length) {
+      new Chart(document.getElementById("chartWonMonthly"), {
+        type: "bar",
+        data: {
+          labels: WON_MONTH_LABELS,
+          datasets: [{
+            data:               WON_MONTH_DATA,
+            backgroundColor:    WON_MONTH_DATA.map((_, i) => i === WON_MONTH_DATA.length - 1 ? "rgba(200,255,1,0.30)" : "#C8FF01"),
+            borderRadius:       4,
+            borderSkipped:      false,
+            barPercentage:      0.65,
+            categoryPercentage: 0.68,
+          }],
+        },
+        options: {
+          responsive:          true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { displayColors: false, callbacks: { label: ctx => ` ${ctx.parsed.y} signed` } },
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 10 } } },
+            y: { display: false, beginAtZero: true },
+          },
+        },
+      });
+    }
 
     // ── Monthly volume — full-history popout (built lazily on first open) ──
     let chartMonthlyFull = null;
@@ -2672,6 +2981,9 @@ _ap_weeks     = sorted({e["week"] for e in appointment_events}, key=lambda w: in
 _fm_owners = sorted({e["owner"] for e in field_movement_events})
 _fm_weeks  = sorted({e["week"] for e in field_movement_events}, key=lambda w: int(w[1:]), reverse=True)
 
+_won_owners  = sorted({e["owner"] for e in won_deals_events})
+_won_sources = sorted({e["source"] for e in won_deals_events if e["source"]})
+
 def _rd_options(values):
     return "".join(f'<option value="{v}">{v}</option>' for v in values)
 
@@ -2756,7 +3068,7 @@ RAW_DATA_HEADER = f"""
       <img src="assets/logo.svg" alt="Axis Growth" class="header-logo">
       <div>
         <div class="header-title">Axis Growth</div>
-        <div class="header-sub">Raw Data · Movements &amp; Appointments</div>
+        <div class="header-sub">Raw Data · Movements, Appointments &amp; Won</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:16px;">
@@ -2770,6 +3082,7 @@ RAW_DATA_BODY = f"""
   <div class="rd-tabs">
     <button class="rd-tab rd-tab-active" id="tabBtn-appointments" onclick="switchTab('appointments')">Appointments</button>
     <button class="rd-tab" id="tabBtn-fieldmoves" onclick="switchTab('fieldmoves')">Field Movements</button>
+    <button class="rd-tab" id="tabBtn-won" onclick="switchTab('won')">All Time Won</button>
   </div>
 
   <section class="card" id="tab-appointments">
@@ -2858,6 +3171,41 @@ RAW_DATA_BODY = f"""
       <div id="fmEmpty" class="rd-empty" style="display:none;">No field-based movements match these filters.</div>
     </div>
   </section>
+
+  <section class="card" id="tab-won" style="display:none;">
+    <div style="font-size:0.72rem;color:var(--text-mute);margin-bottom:14px;">
+      Every opportunity currently sitting in the Sales Pipeline's Onboarding stage -- this pipeline's definition of a closed-won deal (not GHL's own won/lost status field; see the Won bento's info icon on the main dashboard). Date is when the opportunity entered that stage (lastStageChangeAt).
+    </div>
+    <div class="rd-toolbar">
+      <input id="wonSearch" class="rd-input" type="text" placeholder="Search opportunity, contact, or owner…" oninput="wonRender()">
+      <select id="wonOwner" class="rd-select" onchange="wonRender()">
+        <option value="">All Owners</option>
+        {_rd_options(_won_owners)}
+      </select>
+      <select id="wonSource" class="rd-select" onchange="wonRender()">
+        <option value="">All Sources</option>
+        {_rd_options(_won_sources)}
+      </select>
+      <span id="wonCount" class="rd-count"></span>
+      <button class="btn" onclick="downloadWonCSV()">&#8595; CSV</button>
+    </div>
+    <div class="rd-wrap">
+      <table class="rd-table">
+        <thead>
+          <tr>
+            <th onclick="wonSort('date')">Date Won<span class="rd-sort-arrow" id="wonArrow-date"></span></th>
+            <th onclick="wonSort('opp_name')">Opportunity<span class="rd-sort-arrow" id="wonArrow-opp_name"></span></th>
+            <th onclick="wonSort('contact')">Contact<span class="rd-sort-arrow" id="wonArrow-contact"></span></th>
+            <th onclick="wonSort('value')">Value<span class="rd-sort-arrow" id="wonArrow-value"></span></th>
+            <th onclick="wonSort('owner')">Owner<span class="rd-sort-arrow" id="wonArrow-owner"></span></th>
+            <th onclick="wonSort('source')">Source<span class="rd-sort-arrow" id="wonArrow-source"></span></th>
+          </tr>
+        </thead>
+        <tbody id="wonBody"></tbody>
+      </table>
+      <div id="wonEmpty" class="rd-empty" style="display:none;">No won deals match these filters.</div>
+    </div>
+  </section>
 """
 
 # Data injection (f-string — just the JSON arrays) — kept separate from the
@@ -2866,13 +3214,14 @@ RAW_DATA_SCRIPT = f"""
   <script>
     const APPOINTMENT_EVENTS    = {json.dumps(appointment_events)};
     const FIELD_MOVEMENT_EVENTS = {json.dumps(field_movement_events)};
+    const WON_DEALS_EVENTS      = {json.dumps(won_deals_events)};
   </script>
 """
 
 RAW_DATA_LOGIC_SCRIPT = """
   <script>
     function switchTab(tab) {
-      ["appointments", "fieldmoves"].forEach(t => {
+      ["appointments", "fieldmoves", "won"].forEach(t => {
         document.getElementById("tab-" + t).style.display = (t === tab) ? "" : "none";
         document.getElementById("tabBtn-" + t).classList.toggle("rd-tab-active", t === tab);
       });
@@ -3018,8 +3367,66 @@ RAW_DATA_LOGIC_SCRIPT = """
       );
     }
 
+    // ── All Time Won (opportunities in the Onboarding stage) ───────────────
+    let wonSortKey = "date";
+    let wonSortDir = -1;
+    let wonVisible = WON_DEALS_EVENTS;
+
+    function wonSort(key) {
+      if (wonSortKey === key) { wonSortDir *= -1; } else { wonSortKey = key; wonSortDir = 1; }
+      wonRender();
+    }
+
+    function wonRender() {
+      const q      = document.getElementById("wonSearch").value.trim().toLowerCase();
+      const owner  = document.getElementById("wonOwner").value;
+      const source = document.getElementById("wonSource").value;
+
+      let rows = WON_DEALS_EVENTS.filter(e => {
+        if (owner  && e.owner !== owner) return false;
+        if (source && e.source !== source) return false;
+        if (q && !(e.opp_name.toLowerCase().includes(q) || e.contact.toLowerCase().includes(q) || e.owner.toLowerCase().includes(q))) return false;
+        return true;
+      });
+
+      rows.sort((a, b) => {
+        const av = a[wonSortKey], bv = b[wonSortKey];
+        if (av < bv) return -1 * wonSortDir;
+        if (av > bv) return  1 * wonSortDir;
+        return 0;
+      });
+      wonVisible = rows;
+
+      document.querySelectorAll("#tab-won .rd-sort-arrow").forEach(el => el.textContent = "");
+      document.getElementById("wonArrow-" + wonSortKey).textContent = wonSortDir === 1 ? "▲" : "▼";
+
+      document.getElementById("wonCount").textContent = rows.length + " won deal" + (rows.length === 1 ? "" : "s");
+      document.getElementById("wonEmpty").style.display = rows.length ? "none" : "block";
+
+      document.getElementById("wonBody").innerHTML = rows.map(e => `
+        <tr>
+          <td>${e.date}</td>
+          <td>${e.opp_name}</td>
+          <td class="rd-mute">${e.contact}</td>
+          <td>${e.value ? "$" + e.value.toLocaleString("en-US", {maximumFractionDigits: 0}) : "—"}</td>
+          <td>${e.owner}</td>
+          <td class="rd-mute">${e.source}</td>
+        </tr>
+      `).join("");
+    }
+
+    function downloadWonCSV() {
+      csvDownload(
+        wonVisible,
+        ["date","opp_name","contact","value","owner","source"],
+        ["Date Won","Opportunity","Contact","Value","Owner","Source"],
+        "axis-all-time-won.csv"
+      );
+    }
+
     apRender();
     fmRender();
+    wonRender();
   </script>
 </body>
 </html>
@@ -3028,14 +3435,32 @@ RAW_DATA_LOGIC_SCRIPT = """
 raw_data_html = RAW_DATA_HEAD + RAW_DATA_HEADER + RAW_DATA_BODY + RAW_DATA_SCRIPT + RAW_DATA_LOGIC_SCRIPT
 raw_data_path = Path(__file__).parent / "axis-growth-data.html"
 raw_data_path.write_text(raw_data_html, encoding="utf-8")
-print(f"Raw data page written → {raw_data_path} ({len(field_movement_events)} field movements, {len(appointment_events)} appointments)")
+print(f"Raw data page written → {raw_data_path} ({len(field_movement_events)} field movements, {len(appointment_events)} appointments, {len(won_deals_events)} won deals)")
 
 
 # ─── 8. ASSEMBLE AND WRITE ───────────────────────────────────────────────────
 # Join all sections into one string and write axis-growth.html.
 # Running this script again will overwrite the file with fresh data.
 
-html     = HEAD + HEADER + HERO + SHARED_DATE_HEADER + MGL_CHART + MIDDLE + STAGE_MOVEMENT + APPT_WEEKLY_SECTION + META_SECTION + GRANOLA_SECTION + GLOSSARY_MODAL + MONTHLY_MODAL + DATA_SCRIPT + CHARTS_SCRIPT
+def _section_group(label, *parts):
+    """Wraps one or more existing HTML blocks with a big vertical category
+    rail to their left -- purely a presentation wrapper, doesn't touch the
+    blocks themselves. Page order is unchanged from before this existed;
+    groups just make the existing order's categories explicit."""
+    return f"""
+  <div class="section-group">
+    <div class="section-rail"><span>{label}</span></div>
+    <div class="section-group-body">{"".join(parts)}</div>
+  </div>
+"""
+
+GROUP_MARKETING = _section_group("Marketing &amp; Leads", HERO, SHARED_DATE_HEADER, MGL_CHART)
+GROUP_PIPELINE  = _section_group("Sales Pipeline", MIDDLE)
+GROUP_ACTIVITY  = _section_group("Sales Activity", STAGE_MOVEMENT, FUNNEL_CONVERSION_SECTION, APPT_WEEKLY_SECTION)
+GROUP_ADSPEND   = _section_group("Ad Spend", META_SECTION)
+GROUP_INTEL     = _section_group("Call Intelligence", GRANOLA_SECTION)
+
+html     = HEAD + HEADER + GROUP_MARKETING + GROUP_PIPELINE + GROUP_ACTIVITY + GROUP_ADSPEND + GROUP_INTEL + GLOSSARY_MODAL + MONTHLY_MODAL + DATA_SCRIPT + CHARTS_SCRIPT
 out_path = Path(__file__).parent / "axis-growth.html"
 out_path.write_text(html, encoding="utf-8")
 
