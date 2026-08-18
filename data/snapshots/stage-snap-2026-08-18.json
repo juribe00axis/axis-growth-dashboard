@@ -13,10 +13,6 @@
       "stage": "New Lead",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
-    "AY60rZrr0ABzlY9IUhnq": {
-      "stage": "Agreement Sent",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
     "D2cvGOMQ36arq3hnZmEu": {
       "stage": "Discovery Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
@@ -58,10 +54,6 @@
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "JxyR906XVWPUzEuCrS5M": {
-      "stage": "New Lead",
-      "owner": "kNU1jv4vrjjoehHNhlne"
-    },
-    "R17cXeS37FvRVPO9TmnE": {
       "stage": "New Lead",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
@@ -153,10 +145,6 @@
       "stage": "Proposal Sent",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
-    "PsHUb91rVnfVWljGeZWP": {
-      "stage": "Discovery Call",
-      "owner": "NftaswY26aPKq64te7Hn"
-    },
     "pEKDqxJyaQFQTW1i965R": {
       "stage": "Discovery Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
@@ -186,7 +174,7 @@
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "bNoocMMeLG6zmgaF8aN2": {
-      "stage": "Discovery Call",
+      "stage": "Strategy Call",
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "OvzMnyYn5j0JlFCgN0eg": {
@@ -265,6 +253,10 @@
       "stage": "New Lead",
       "owner": "NftaswY26aPKq64te7Hn"
     },
+    "dSATFQ4vkWWsGPTCdEIH": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
     "H2HbXaGMrKTqwlUgIi58": {
       "stage": "New Lead",
       "owner": "NftaswY26aPKq64te7Hn"
@@ -340,10 +332,6 @@
     "GKaRzrgDceacRWGS9u0q": {
       "stage": "Proposal Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
-    "vE5QQWX3MAK6RAaPA50z": {
-      "stage": "Discovery Call",
-      "owner": "NftaswY26aPKq64te7Hn"
     },
     "y86zdrS9ZaosmyyhMH8h": {
       "stage": "New Lead",
@@ -473,10 +461,6 @@
       "stage": "Reactivation Queue - no call booked",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
-    "k2noOpK4zJPnseEyJtVB": {
-      "stage": "Discovery Call",
-      "owner": "NftaswY26aPKq64te7Hn"
-    },
     "O9hVHl3dEBrzEO52Sget": {
       "stage": "Reactivation Queue - no call booked",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
@@ -524,10 +508,6 @@
     "aWqBWXXN9kWFUfF2FZDL": {
       "stage": "Proposal Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
-    "3KrShOPdNdxQI5BGYj7A": {
-      "stage": "Discovery Call",
-      "owner": "NftaswY26aPKq64te7Hn"
     },
     "h0chnGkIDY3sHWEdmxyV": {
       "stage": "Reactivation Queue - no call booked",
@@ -690,7 +670,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "7EMJlYUaPzwYXliSSBWU": {
-      "stage": "Discovery Call",
+      "stage": "New Lead",
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "exZvlblT4BjYPEfjRACn": {
