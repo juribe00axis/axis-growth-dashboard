@@ -131,6 +131,11 @@
     font-weight: 700;
   }
   .tile-value.hero-color { color: var(--hero); }
+  .tile-sub {
+    font-size: 0.68rem;
+    color: var(--text-mute);
+    margin-top: 4px;
+  }
 
   /* Funnel visual */
   .funnel-wrap {
@@ -551,7 +556,16 @@
     <div class="tile"><div class="tile-label">Total leads</div><div class="tile-value" id="totLeads">—</div></div>
     <div class="tile"><div class="tile-label">Total signings</div><div class="tile-value hero-color" id="totSignings">—</div></div>
     <div class="tile"><div class="tile-label">Blended CPL (all 3 mo)</div><div class="tile-value" id="totCPL">—</div></div>
-    <div class="tile"><div class="tile-label">Blended cost / signing</div><div class="tile-value" id="totCPS">—</div></div>
+    <div class="tile">
+      <div class="tile-label">Blended cost / signing</div>
+      <div class="tile-value" id="totCPS">—</div>
+      <div class="tile-sub" id="totCPSFormula">—</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Blended cost / signing (MGL)</div>
+      <div class="tile-value" id="totCPSMgl">—</div>
+      <div class="tile-sub" id="totCPSMglFormula">—</div>
+    </div>
   </div>
 </section>
 
@@ -579,6 +593,13 @@
       <div class="segmented" id="sourceMonthToggle" style="margin-bottom: 10px;"></div>
       <svg id="chartSourceBreakdown" viewBox="0 0 240 200" width="100%"></svg>
       <div class="legend legend-source" id="sourceLegend"></div>
+    </div>
+  </div>
+  <div class="chart-row" style="margin-top: 16px;">
+    <div class="chart-card" style="grid-column: 1 / -1;">
+      <div class="chart-card-title">Cost / Signing</div>
+      <div class="segmented" id="cpsToggle" style="margin-bottom: 10px;"></div>
+      <svg id="chartCPS" viewBox="0 0 720 180" width="100%"></svg>
     </div>
   </div>
 </section>
@@ -991,7 +1012,25 @@ const DATA = {
   July: { spend: 7588.77, leads: 102 },
 };
 const MONTHS = ["May", "June", "July"];
-const MONTH_KEY = { "2026-05": "May", "2026-06": "June", "2026-07": "July" };
+// "2026-08" is mapped here so the Cost/Signing chart's own month list (below)
+// can classify August deals -- MONTHS itself stays May-July on purpose, since
+// DATA has no August spend/leads figure and this page's other charts/KPI
+// table are still hand-curated on that 3-month basis.
+const MONTH_KEY = { "2026-05": "May", "2026-06": "June", "2026-07": "July", "2026-08": "August" };
+
+// All-time figures (unlike the May-July-scoped DATA/MONTHS above) -- pulled
+// live from the main dashboard 2026-08-18: won count (all-time, Onboarding-
+// stage opportunities) and MGL-source won count. Spend is NOT the ad
+// account's full history (that goes back to Oct 2024, long before AxisKey's
+// sales effort started, which badly inflates these) -- it's Meta spend since
+// Apr 1, 2026, a month before May's first signing. Hand-refreshed like
+// everything else on this page, so it'll drift until next update.
+const ALLTIME_SPEND = 23644.64, ALLTIME_WON = 29, ALLTIME_MGL_WON = 6;
+const ALLTIME = {
+  spend: ALLTIME_SPEND, won: ALLTIME_WON, mglWon: ALLTIME_MGL_WON,
+  cps:    ALLTIME_SPEND / ALLTIME_WON,
+  cpsMgl: ALLTIME_SPEND / ALLTIME_MGL_WON,
+};
 
 function fmtMoney(n) {
   return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
@@ -1001,31 +1040,49 @@ function fmtMoney2(n) {
 }
 
 // ── Won deals — Agreement Signed is editable and defaults to Date Won ─────
+// Refreshed 2026-08-18 from the live dashboard's Raw Data > All Time Won tab
+// (opportunities currently sitting in the Onboarding stage -- same live
+// source as everywhere else on the main dashboard). date_won here is now
+// GHL's lastStageChangeAt (when the deal entered Onboarding), replacing the
+// old hand-entered "Date Won" basis -- so a few deals' month classification
+// shifted versus the previous version of this file (e.g. Ascent Capital
+// Partners moved from June to July). agreement_signed/capital_raiser_intent
+// (manual fields with no live GHL equivalent used here) were carried over
+// from the prior version of this array where a matching id existed. Chris
+// Stevenson and Steve Leara are no longer in the live snapshot (they've since
+// moved past Onboarding) but are kept here so they aren't lost from history.
 const WON = [
-  { id: "RKdnREBdnzVYC6F5W9JC", date_won: "2026-04-21", name: "Doug Beasley", value: 6565, owner: "Stormer", source: "MGL", agreement_signed: null, capital_raiser_intent: null },
-  { id: "VLbLJc49elKZmWmWuJVw", date_won: "2026-05-11", name: "Croxdale", value: 6000, owner: "Stormer", source: "SGL", agreement_signed: null, capital_raiser_intent: null },
+  { id: "YS9mcv2LlbSZPHJ08rTM", date_won: "2026-05-11", name: "Marvyn Budd", value: 5000, owner: "Stormer Santana", source: "Referral - Dennis Murphy", agreement_signed: null, capital_raiser_intent: null },
   { id: "HJCQ2vAJdlz9gdgSteao", date_won: "2026-05-11", name: "Chris Stevenson", value: 5000, owner: "Jennifer", source: "Referral - Mike Verdun", agreement_signed: null, capital_raiser_intent: null },
-  { id: "YS9mcv2LlbSZPHJ08rTM", date_won: "2026-05-11", name: "Marvyn Budd", value: 5000, owner: "Jennifer", source: "Referral - Dennis Murphy", agreement_signed: null, capital_raiser_intent: null },
-  { id: "EYFAwsR8Oq2FhT49nh6N", date_won: "2026-06-04", name: "Careverse Ai", value: 4500, owner: "Stormer", source: "MGL", agreement_signed: null, capital_raiser_intent: null },
-  { id: "2GEa0Bxt6DjnHHnBRojD", date_won: "2026-06-08", name: "Lowery Company", value: 6000, owner: "Stormer", source: "MGL", agreement_signed: null, capital_raiser_intent: null },
-  { id: "pTND16qIVM3mkGIW4wOk", date_won: "2026-06-10", name: "Wellness District", value: 1250, owner: "Stormer", source: "SGL", agreement_signed: null, capital_raiser_intent: null },
-  { id: "n9ZnfYhFUn0EugB35VHB", date_won: "2026-06-17", name: "James Pope", value: 5000, owner: "Jennifer", source: "Referral - Mike Verdun", agreement_signed: null, capital_raiser_intent: null },
+  { id: "VLbLJc49elKZmWmWuJVw", date_won: "2026-05-15", name: "Croxdale", value: 6000, owner: "Stormer Santana", source: "SGL", agreement_signed: null, capital_raiser_intent: null },
+  { id: "RKdnREBdnzVYC6F5W9JC", date_won: "2026-05-21", name: "Doug Beasley", value: 6565, owner: "Stormer Santana", source: "MGL", agreement_signed: null, capital_raiser_intent: null },
+  { id: "n9ZnfYhFUn0EugB35VHB", date_won: "2026-06-02", name: "James Pope", value: 5000, owner: "Stormer Santana", source: "Referral - Mike Verdun", agreement_signed: null, capital_raiser_intent: null },
+  { id: "pTND16qIVM3mkGIW4wOk", date_won: "2026-06-08", name: "Wellness District", value: 1250, owner: "Stormer Santana", source: "SGL", agreement_signed: null, capital_raiser_intent: null },
+  { id: "EYFAwsR8Oq2FhT49nh6N", date_won: "2026-06-10", name: "Careverse Ai", value: 4500, owner: "Stormer Santana", source: "MGL", agreement_signed: null, capital_raiser_intent: null },
+  { id: "2GEa0Bxt6DjnHHnBRojD", date_won: "2026-06-10", name: "Lowery Company", value: 6000, owner: "Stormer Santana", source: "MGL", agreement_signed: null, capital_raiser_intent: null },
   { id: "Q8MVo2epaem13tMc1WTU", date_won: "2026-06-17", name: "Steve Leara", value: 5000, owner: "Jennifer", source: "Referral - Ragan Young", agreement_signed: null, capital_raiser_intent: null },
-  { id: "NkTQc2R1ncjsWbegoNQR", date_won: "2026-06-18", name: "Jet World Championship", value: 0, owner: "Stormer", source: "Referral - Roy", agreement_signed: null, capital_raiser_intent: null },
-  { id: "YcOGlbw6O5lESe9AIsOs", date_won: "2026-06-25", name: "Ascent Capital Partners", value: 0, owner: "Stormer", source: "client", agreement_signed: null, capital_raiser_intent: null },
-  { id: "gfWnkv7v3nnVvSLaYlbH", date_won: "2026-07-02", name: "Altitude Capital Partners GP LLC", value: 5400, owner: "Stormer", source: "Referral - Kirt", agreement_signed: null, capital_raiser_intent: "Broker Dealer" },
-  { id: "zhH9NbSez7WGLOjkfCCY", date_won: "2026-07-09", name: "Doug Beasley - BD", value: 0, owner: "Stormer", source: "client", agreement_signed: null, capital_raiser_intent: "Broker Dealer" },
-  { id: "zYAbC9cELbUYk1b9lBGb", date_won: "2026-07-15", name: "Bob Weissman", value: 0, owner: "Stormer", source: "Referral", agreement_signed: null, capital_raiser_intent: "Broker Dealer" },
-  { id: "d4YbtFMqmCjOb5ZFM6yL", date_won: "2026-07-15", name: "Sierra Vale Capital", value: 2000, owner: "Stormer", source: "Referral - Diego", agreement_signed: null, capital_raiser_intent: null },
-  { id: "LAq3RBwfvJ07CDjLA03Z", date_won: "2026-07-20", name: "Amazing Hospitality Group", value: 6495, owner: "Stormer", source: "Referral - Kirt", agreement_signed: null, capital_raiser_intent: "Issuer Team" },
-  { id: "bP0hWoW5hV2ae6mLVLZp", date_won: "2026-07-21", name: "Skygate Growth Strategies", value: 6000, owner: "Stormer", source: "client", agreement_signed: null, capital_raiser_intent: "Broker Dealer" },
-  { id: "7VvPSdUyrFl9caGcISZM", date_won: "2026-07-23", name: "RAS Technologies", value: 5000, owner: "Jennifer", source: "SGL", agreement_signed: null, capital_raiser_intent: "Broker Dealer" },
-  { id: "lAG77KU7lPgP8493GJQC", date_won: "2026-07-28", name: "Fincera Series 1", value: 500, owner: "Stormer", source: "David Allen", agreement_signed: "2026-07-28", capital_raiser_intent: "Issuer Team" },
-  { id: "LuJiEk7swQFH39k10XEz", date_won: "2026-07-28", name: "Orlando Surf Park Fund I, LP", value: 0, owner: "Stormer", source: "Referral", agreement_signed: "2026-07-28", capital_raiser_intent: "Broker Dealer" },
-  { id: "Rc2HLIgjqoNJwDvUlZ0i", date_won: "2026-07-29", name: "IPC - Reg D", value: 0, owner: "Stormer", source: "client", agreement_signed: "2026-07-28", capital_raiser_intent: null },
-  { id: "kQVDEhI1zN4hKJyOfNWW", date_won: "2026-07-30", name: "Teaching Mens Fashion", value: 6000, owner: "Stormer", source: "SGL", agreement_signed: "2026-07-30", capital_raiser_intent: "Broker Dealer" },
-  { id: "m46wiNn9Uvht1sqxVGhL", date_won: "2026-07-31", name: "Clever Capital Fund", value: 0, owner: "Stormer", source: "client", agreement_signed: "2026-07-31", capital_raiser_intent: "Broker Dealer" },
-  { id: "RM0racM0bT8M4dY5I2LU", date_won: "2026-07-31", name: "Baymahni", value: 6147, owner: "Stormer", source: "Referral", agreement_signed: "2026-07-31", capital_raiser_intent: null },
+  { id: "NkTQc2R1ncjsWbegoNQR", date_won: "2026-06-18", name: "Jet World Championship", value: 0, owner: "Stormer Santana", source: "Referral - Roy", agreement_signed: null, capital_raiser_intent: null },
+  { id: "YcOGlbw6O5lESe9AIsOs", date_won: "2026-07-01", name: "Ascent Capital Partners", value: 0, owner: "Stormer Santana", source: "client", agreement_signed: null, capital_raiser_intent: null },
+  { id: "zhH9NbSez7WGLOjkfCCY", date_won: "2026-07-09", name: "Doug Beasley - BD", value: 0, owner: "Stormer Santana", source: "client", agreement_signed: null, capital_raiser_intent: "Broker Dealer" },
+  { id: "7VvPSdUyrFl9caGcISZM", date_won: "2026-07-13", name: "RAS Technologies", value: 5000, owner: "Stormer Santana", source: "SGL", agreement_signed: null, capital_raiser_intent: "Broker Dealer" },
+  { id: "zYAbC9cELbUYk1b9lBGb", date_won: "2026-07-15", name: "Bob Weissman", value: 0, owner: "Stormer Santana", source: "Referral", agreement_signed: null, capital_raiser_intent: "Broker Dealer" },
+  { id: "d4YbtFMqmCjOb5ZFM6yL", date_won: "2026-07-16", name: "Sierra Vale Capital", value: 2000, owner: "Stormer Santana", source: "Referral - Diego", agreement_signed: null, capital_raiser_intent: null },
+  { id: "gfWnkv7v3nnVvSLaYlbH", date_won: "2026-07-17", name: "Altitude Capital Partners GP LLC", value: 5400, owner: "Stormer Santana", source: "Referral - Kirt", agreement_signed: null, capital_raiser_intent: "Broker Dealer" },
+  { id: "bP0hWoW5hV2ae6mLVLZp", date_won: "2026-07-21", name: "Skygate Growth Strategies", value: 6000, owner: "Stormer Santana", source: "client", agreement_signed: null, capital_raiser_intent: "Broker Dealer" },
+  { id: "LAq3RBwfvJ07CDjLA03Z", date_won: "2026-07-23", name: "Amazing Hospitality Group", value: 6495, owner: "Stormer Santana", source: "Referral - Kirt", agreement_signed: null, capital_raiser_intent: "Issuer Team" },
+  { id: "Rc2HLIgjqoNJwDvUlZ0i", date_won: "2026-07-28", name: "IPC - Reg D", value: 0, owner: "Stormer Santana", source: "", agreement_signed: "2026-07-28", capital_raiser_intent: null },
+  { id: "lAG77KU7lPgP8493GJQC", date_won: "2026-07-29", name: "Fincera Series 1", value: 500, owner: "Stormer Santana", source: "David Allen", agreement_signed: "2026-07-28", capital_raiser_intent: "Issuer Team" },
+  { id: "LuJiEk7swQFH39k10XEz", date_won: "2026-07-30", name: "Orlando Surf Park Fund I, LP", value: 0, owner: "Stormer Santana", source: "", agreement_signed: "2026-07-28", capital_raiser_intent: "Broker Dealer" },
+  { id: "m46wiNn9Uvht1sqxVGhL", date_won: "2026-07-31", name: "Clever Capital Fund", value: 0, owner: "Stormer Santana", source: "", agreement_signed: "2026-07-31", capital_raiser_intent: "Broker Dealer" },
+  { id: "RM0racM0bT8M4dY5I2LU", date_won: "2026-08-02", name: "Baymahni", value: 6147, owner: "Stormer Santana", source: "", agreement_signed: "2026-07-31", capital_raiser_intent: null },
+  { id: "xv2Ir8uAnKPZ2gMi87dW", date_won: "2026-08-05", name: "Hydrogel", value: 2500, owner: "Stormer Santana", source: "MGL", agreement_signed: null, capital_raiser_intent: null },
+  { id: "kQVDEhI1zN4hKJyOfNWW", date_won: "2026-08-06", name: "Teaching Mens Fashion", value: 6000, owner: "Stormer Santana", source: "Referral - Joe", agreement_signed: "2026-07-30", capital_raiser_intent: "Broker Dealer" },
+  { id: "zbmJ39Yascx3WlUOeFkR", date_won: "2026-08-07", name: "GBMC - Growth I", value: 4000, owner: "Stormer Santana", source: "", agreement_signed: null, capital_raiser_intent: null },
+  { id: "zU6BlKIc78KP9ZIp4LLi", date_won: "2026-08-07", name: "StorageBlue", value: 6000, owner: "Stormer Santana", source: "Rob Saracco", agreement_signed: null, capital_raiser_intent: null },
+  { id: "22g4Ta7mINpk8z8ZfWFt", date_won: "2026-08-12", name: "ATS Systems, Inc", value: 5640, owner: "Stormer Santana", source: "MGL", agreement_signed: null, capital_raiser_intent: null },
+  { id: "hxHOoBEDITuwmeZEv1rg", date_won: "2026-08-14", name: "Signature Capital - Accounting", value: 0, owner: "Stormer Santana", source: "", agreement_signed: null, capital_raiser_intent: null },
+  { id: "znLRCruhsdeDXzNwqBWu", date_won: "2026-08-17", name: "Avid Realty/Shapiro Capital - Reg A", value: 6000, owner: "Stormer Santana", source: "", agreement_signed: null, capital_raiser_intent: null },
+  { id: "PGioTPEnRPtokkjCe5aS", date_won: "2026-08-17", name: "Avid Realty/Shapiro Capital - Reg D", value: 6000, owner: "Stormer Santana", source: "MGL", agreement_signed: null, capital_raiser_intent: null },
 ];
 
 // Edits persist locally (this browser only — not written back to GHL).
@@ -1044,11 +1101,12 @@ WON.forEach(w => { if (savedOverrides[w.id]) w.agreement_signed = savedOverrides
 // Agreement Signed, when set, supersedes Date Won for month classification.
 function effectiveDate(w) { return w.agreement_signed || w.date_won; }
 
-function computeSigningsByMonth() {
-  const counts = { May: 0, June: 0, July: 0 };
+function computeSigningsByMonth(months = MONTHS) {
+  const counts = {};
+  months.forEach(m => { counts[m] = 0; });
   WON.forEach(w => {
     const m = MONTH_KEY[effectiveDate(w).slice(0, 7)];
-    if (m) counts[m] += 1;
+    if (m !== undefined && counts.hasOwnProperty(m)) counts[m] += 1;
   });
   return counts;
 }
@@ -1108,7 +1166,12 @@ function renderOverview() {
   document.getElementById("totLeads").textContent = totals.leads.toLocaleString();
   document.getElementById("totSignings").textContent = totals.signings.toLocaleString();
   document.getElementById("totCPL").textContent = fmtMoney2(totals.cpl);
-  document.getElementById("totCPS").textContent = totals.signings > 0 ? fmtMoney(totals.cps) : "—";
+  document.getElementById("totCPS").textContent = fmtMoney(ALLTIME.cps);
+  document.getElementById("totCPSFormula").textContent =
+    `${fmtMoney2(ALLTIME.spend)} spend since Apr 2026 ÷ ${ALLTIME.won} won`;
+  document.getElementById("totCPSMgl").textContent = fmtMoney(ALLTIME.cpsMgl);
+  document.getElementById("totCPSMglFormula").textContent =
+    `${fmtMoney2(ALLTIME.spend)} spend since Apr 2026 ÷ ${ALLTIME.mglWon} MGL won`;
 
   const tbody = document.getElementById("kpiTableBody");
   tbody.innerHTML = "";
@@ -1136,6 +1199,7 @@ function renderOverview() {
   drawBarChart("chartLeads", "leads", v => v.toLocaleString(), "Leads");
   drawBarChart("chartSignings", "signings", v => v.toLocaleString(), "Signings");
   drawSourceChart();
+  drawCPSChart();
 
   MONTHS.forEach((m, i) => {
     const val = derived[m].signings;
@@ -1183,12 +1247,12 @@ function sourceChannel(source) {
   return "Other";
 }
 
-function computeSourceByMonth() {
+function computeSourceByMonth(months = MONTHS) {
   const result = {};
-  MONTHS.forEach(m => { result[m] = {}; });
+  months.forEach(m => { result[m] = {}; });
   WON.forEach(w => {
     const m = MONTH_KEY[effectiveDate(w).slice(0, 7)];
-    if (!m) return;
+    if (!m || !result.hasOwnProperty(m)) return;
     const ch = sourceChannel(w.source);
     result[m][ch] = (result[m][ch] || 0) + 1;
   });
@@ -1457,6 +1521,105 @@ function drawBarChart(svgId, key, formatter, tooltipLabel) {
     hit.addEventListener("pointermove", (e) => {
       showTooltip(e.clientX, e.clientY, [[tooltipLabel, formatter(val)], ["Month", m]]);
     });
+    svg.appendChild(hit);
+  });
+}
+
+// ── Cost / Signing timeline — Overall vs. MGL ──────────────────────────────
+// Independent of MONTHS/DATA/derived above -- this chart runs through August
+// (the rest of the page's charts/KPI table stop at July, see the MONTH_KEY
+// comment). Spend for May-July reuses DATA; August's $8,970.40 is a fresh
+// live pull (Meta, Aug 1-18, month-to-date -- partial, will grow as the month
+// closes out). "Blended" like the tiles on the main dashboard: total monthly
+// spend ÷ signings, not MGL-attributed spend. A month with 0 signings for a
+// series is skipped (cost/signing is undefined at zero, not zero) rather
+// than plotted as 0 -- e.g. May has no MGL wins yet, so the MGL line only
+// starts at June. Toggled rather than shown together -- Overall (~hundreds)
+// and MGL (~thousands) sit on wildly different scales, so sharing one axis
+// flattened the Overall line. Each selection gets its own y-axis, scaled to
+// its own max only.
+const CPS_MONTHS = [...MONTHS, "August"];
+const CPS_SPEND = { May: DATA.May.spend, June: DATA.June.spend, July: DATA.July.spend, August: 8970.40 };
+const CPS_SERIES = {
+  Overall: { key: "cps",    color: "var(--hero)",     signingsKey: "signings",    signingsLabel: "Signings" },
+  MGL:     { key: "cpsMgl", color: "var(--series-3)", signingsKey: "mglSignings", signingsLabel: "MGL signings" },
+};
+let cpsSelection = "Overall";
+let cpsDerived = {};
+
+function recomputeCPSDerived() {
+  const signingsByMonth = computeSigningsByMonth(CPS_MONTHS);
+  const sourceByMonth = computeSourceByMonth(CPS_MONTHS);
+  cpsDerived = {};
+  CPS_MONTHS.forEach(m => {
+    const signings = signingsByMonth[m] || 0;
+    const mglSignings = (sourceByMonth[m] || {}).MGL || 0;
+    const spend = CPS_SPEND[m];
+    cpsDerived[m] = {
+      signings, mglSignings,
+      cps:    signings > 0    ? spend / signings    : 0,
+      cpsMgl: mglSignings > 0 ? spend / mglSignings : 0,
+    };
+  });
+}
+
+const cpsToggle = document.getElementById("cpsToggle");
+Object.keys(CPS_SERIES).forEach(key => {
+  const btn = document.createElement("button");
+  btn.textContent = key;
+  if (key === cpsSelection) btn.classList.add("active");
+  btn.addEventListener("click", () => {
+    cpsSelection = key;
+    [...cpsToggle.children].forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    drawCPSChart();
+  });
+  cpsToggle.appendChild(btn);
+});
+
+function drawCPSChart() {
+  recomputeCPSDerived();
+  const svg = document.getElementById("chartCPS");
+  svg.innerHTML = "";
+  const { key, color, signingsKey, signingsLabel } = CPS_SERIES[cpsSelection];
+  const W = 720, H = 180, padT = 18, padB = 30, padL = 60, padR = 20;
+  const x = i => padL + (i / (CPS_MONTHS.length - 1)) * (W - padL - padR);
+  const yMax = Math.max(...CPS_MONTHS.map(m => cpsDerived[m][key]), 1) * 1.15;
+  const y = v => H - padB - (v / yMax) * (H - padT - padB);
+
+  const ticks = 4;
+  for (let i = 0; i <= ticks; i++) {
+    const val = (yMax / ticks) * i;
+    const ty = y(val);
+    svg.appendChild(el("line", { x1: padL, x2: W - padR, y1: ty, y2: ty, class: "gridline" }));
+    const t = el("text", { x: padL - 8, y: ty + 4, "text-anchor": "end", class: "bar-month" });
+    t.textContent = fmtMoney(val);
+    svg.appendChild(t);
+  }
+
+  CPS_MONTHS.forEach((m, i) => {
+    const t = el("text", { x: x(i), y: H - 8, "text-anchor": "middle", class: "bar-month" });
+    t.textContent = m === "August" ? "Aug*" : m.slice(0, 3);
+    svg.appendChild(t);
+  });
+
+  const pts = CPS_MONTHS.map((m, i) => ({ m, i, val: cpsDerived[m][key] })).filter(p => p.val > 0);
+  if (pts.length >= 2) {
+    const d = pts.map((p, idx) => `${idx === 0 ? "M" : "L"}${x(p.i)},${y(p.val)}`).join(" ");
+    svg.appendChild(el("path", { d, fill: "none", stroke: color, "stroke-width": 2, "stroke-linecap": "round" }));
+  }
+  pts.forEach(p => {
+    const cx = x(p.i), cy = y(p.val);
+    svg.appendChild(el("circle", { cx, cy, r: 6, fill: "var(--surface)" }));
+    svg.appendChild(el("circle", { cx, cy, r: 4, fill: color }));
+    const hit = el("circle", { cx, cy, r: 14, fill: "transparent", style: "cursor:pointer" });
+    hit.addEventListener("pointermove", (e) => {
+      showTooltip(e.clientX, e.clientY, [
+        [p.m === "August" ? "August (month to date)" : p.m, fmtMoney(p.val)],
+        [signingsLabel, cpsDerived[p.m][signingsKey]],
+      ]);
+    });
+    hit.addEventListener("pointerleave", hideTooltip);
     svg.appendChild(hit);
   });
 }

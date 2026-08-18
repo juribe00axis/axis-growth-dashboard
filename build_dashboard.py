@@ -608,6 +608,7 @@ for opp in onboarding_opps:
     _dt = datetime.fromisoformat(_ts.replace("Z", "+00:00"))
     _owner_id = opp.get("assignedTo")
     won_deals_events.append({
+        "id":      opp.get("id"),
         "date":    _dt.strftime("%Y-%m-%d"),
         "month":   _dt.strftime("%Y-%m"),
         "opp_name": opp.get("name") or "(unnamed)",
@@ -618,7 +619,7 @@ for opp in onboarding_opps:
     })
 won_deals_events.sort(key=lambda e: e["date"], reverse=True)
 
-# blended_cost_per_signing is computed later (6g2), once meta_alltime_spend
+# blended_cost_per_signing is computed later (6g2), once meta_campaign_spend
 # is fetched -- it needs won_onboarding_total, which is already available here.
 
 won_month_chart_labels = [datetime.strptime(mk, "%Y-%m").strftime("%b") for mk in _won_month_keys]
@@ -1067,24 +1068,42 @@ meta_today_str = f"${meta_today_v:,.0f}"
 print(f"  90-day fetch | last-7: {meta_total_str} total | CPL last week: {cpl_lw_str}")
 print()
 
-# ── 6g2. All-time Meta spend (Won bento's blended cost/signing) ──────────────
-# Single aggregated row covering the account's whole history (date_preset=
-# "maximum"), not the 90-day window above -- needed so "blended cost per
-# signing" divides all-time spend by all-time won count on the same basis.
-_meta_alltime_resp = meta_get(f"/v21.0/{META_ACCT}/insights", {
+# ── 6g2. Meta spend since real sales efforts began (Won bento's blended
+# cost/signing) ───────────────────────────────────────────────────────────
+# The ad account's history goes back to Oct 2024, long before AxisKey's sales
+# effort started -- date_preset="maximum" was pulling in ~1.5 years of spend
+# that never had a chance to convert, badly inflating "blended cost per
+# signing". Floored at Apr 1, 2026 instead: a month before May's first
+# signing (incl. the first MGL one), giving spend a fair head start on the
+# leads that became those wins.
+META_SPEND_FLOOR = "2026-04-01"
+_meta_campaign_resp = meta_get(f"/v21.0/{META_ACCT}/insights", {
     "fields": "spend",
-    "date_preset": "maximum",
+    "time_range": json.dumps({"since": META_SPEND_FLOOR, "until": today.strftime("%Y-%m-%d")}),
 })
-if "error" in _meta_alltime_resp:
-    print(f"  Meta all-time spend fetch error: {_meta_alltime_resp['error'].get('message')} — blended cost/signing will show as unavailable")
-    meta_alltime_spend = 0
+if "error" in _meta_campaign_resp:
+    print(f"  Meta campaign spend fetch error: {_meta_campaign_resp['error'].get('message')} — blended cost/signing will show as unavailable")
+    meta_campaign_spend = 0
 else:
-    _meta_alltime_rows = _meta_alltime_resp.get("data", [])
-    meta_alltime_spend = float(_meta_alltime_rows[0]["spend"]) if _meta_alltime_rows else 0
+    _meta_campaign_rows = _meta_campaign_resp.get("data", [])
+    meta_campaign_spend = float(_meta_campaign_rows[0]["spend"]) if _meta_campaign_rows else 0
 
-blended_cost_per_signing = (meta_alltime_spend / won_onboarding_total) if won_onboarding_total else 0
+blended_cost_per_signing = (meta_campaign_spend / won_onboarding_total) if won_onboarding_total else 0
 blended_cost_str = f"${blended_cost_per_signing:,.0f}" if won_onboarding_total else "—"
-print(f"  All-time spend: ${meta_alltime_spend:,.0f} | Blended cost/signing: {blended_cost_str} ({won_onboarding_total} won)")
+print(f"  Spend since {META_SPEND_FLOOR}: ${meta_campaign_spend:,.0f} | Blended cost/signing: {blended_cost_str} ({won_onboarding_total} won)")
+
+# Same spend-since-April figure, but divided by MGL-source won deals only --
+# still "blended" (uses total spend, not MGL-attributed spend), just a
+# narrower denominator. Reuses onboarding_opps (6f) and MGL_SOURCES (6d).
+mgl_won_total = sum(1 for opp in onboarding_opps if (opp.get("source") or "") in MGL_SOURCES)
+blended_cost_per_signing_mgl = (meta_campaign_spend / mgl_won_total) if mgl_won_total else 0
+blended_cost_mgl_str = f"${blended_cost_per_signing_mgl:,.0f}" if mgl_won_total else "—"
+_mgl_won_this_month = sum(
+    1 for opp in onboarding_opps
+    if (opp.get("source") or "") in MGL_SOURCES
+    and (opp.get("lastStageChangeAt") or opp.get("createdAt") or "")[:7] == today.strftime("%Y-%m")
+)
+print(f"  MGL blended cost/signing: {blended_cost_mgl_str} ({mgl_won_total} MGL won all-time, {_mgl_won_this_month} this month)")
 print()
 
 
@@ -2129,7 +2148,7 @@ MIDDLE = f"""
 
       <a href="kpi_whiteboard.html" class="bento-link" title="Open the full Spend Efficiency Whiteboard">
         <div class="bento-wrap" style="margin-top:22px;padding-top:20px;border-top:1px solid var(--line);">
-          <div class="card-label" style="margin-bottom:4px;">Won Deals — Entered Onboarding by Month{_info_icon("Same 'Won' definition as the KPI chip above -- opportunities currently sitting in the Onboarding stage, not GHL's own won/lost status field. All Time Won, Blended Cost/Signing, and Signings by Month are live from the GHL + Meta APIs. Click anywhere in this section to open the full Spend Efficiency Whiteboard for month-by-month detail, projections, and per-deal notes.")}</div>
+          <div class="card-label" style="margin-bottom:4px;">Won Deals — Entered Onboarding by Month{_info_icon("Same 'Won' definition as the KPI chip above -- opportunities currently sitting in the Onboarding stage, not GHL's own won/lost status field. All Time Won, Blended Cost/Signing, and Blended Cost/Signing (MGL) are live from the GHL + Meta APIs. Click anywhere in this section to open the full Spend Efficiency Whiteboard for month-by-month detail, projections, and per-deal notes.")}</div>
           <div style="font-size:0.68rem;color:var(--text-mute);margin-bottom:14px;">Based on lastStageChangeAt · month-over-month vs. prior completed month</div>
           <div class="bento-grid-3">
             <div class="bento-panel">
@@ -2148,9 +2167,14 @@ MIDDLE = f"""
                 <span class="funnel-kpi-sub">currently in Onboarding</span>
               </div>
               <div class="bento-tile">
-                <span class="funnel-kpi-label">Blended Cost / Signing</span>
+                <span class="funnel-kpi-label">Blended Cost / Signing{_info_icon("Meta spend since Apr 1, 2026 (a month before May's first signing, giving spend a fair head start on the leads that became those wins) -- not the ad account's full history, which goes back to Oct 2024, long before AxisKey's sales effort started and would badly inflate this number.")}</span>
                 <span class="funnel-kpi-value">{blended_cost_str}</span>
-                <span class="funnel-kpi-sub">all-time Meta spend ÷ all-time won</span>
+                <span class="funnel-kpi-sub">${meta_campaign_spend:,.0f} spend (since Apr 2026) ÷ {won_onboarding_total} won</span>
+              </div>
+              <div class="bento-tile">
+                <span class="funnel-kpi-label">Blended Cost / Signing (MGL){_info_icon("Same Meta spend since Apr 1, 2026 as Blended Cost/Signing, divided by MGL-source won deals only instead of all won deals -- still 'blended' since it uses total ad spend, not MGL-attributed spend.")}</span>
+                <span class="funnel-kpi-value">{blended_cost_mgl_str}</span>
+                <span class="funnel-kpi-sub">${meta_campaign_spend:,.0f} spend (since Apr 2026) ÷ {mgl_won_total} MGL won</span>
               </div>
             </div>
           </div>
@@ -2273,7 +2297,7 @@ GLOSSARY_TERMS = [
     ("Lead to Discovery", "Since Jul 1, 2026: total distinct opportunities that entered Discovery Call (read directly from GHL's 'Date Entered' custom fields) divided by total leads created since the same date. Flow-based and grows over time -- unlike the other three funnel KPIs below, which are all-time and based on current stage position."),
     ("Discovery to Proposal / Proposal to Signed / Lead to Won", "All-time conversion rates within the Sales Pipeline: of all opportunities that ever reached the first stage in the pair (any status), what % also reached the second stage (or won, for Lead to Won)."),
     ("Won", "NOT GHL's won/lost status field -- this counts opportunities currently sitting in the Onboarding stage, which is how this pipeline defines a closed-won deal."),
-    ("Won Deals — Entered Onboarding by Month", "Based on lastStageChangeAt: which month each currently-Onboarding opportunity most recently moved into that stage. Month-over-month % compares to the prior completed month; the current month is marked in progress and excluded from that comparison."),
+    ("Won Deals — Entered Onboarding by Month", "Based on lastStageChangeAt: which month each currently-Onboarding opportunity most recently moved into that stage. Month-over-month % compares to the prior completed month; the current month is marked in progress and excluded from that comparison. Blended Cost/Signing divides Meta spend since Apr 1, 2026 (not the ad account's full history, which predates AxisKey's sales effort) by all-time won; Blended Cost/Signing (MGL) divides the same spend by MGL-source won deals only."),
     ("Weekly Rocks", "Distinct opportunities that ENTERED each of 5 key stages (New Lead, Discovery Call, Strategy Call, Proposal Sent, Agreement Signed) within the selected date range (defaults to since Jul 1, 2026), read directly from GHL's 'Date Entered' custom fields -- the true stage-entry date GHL recorded, not diffed from daily snapshots. Change the date range to compare any period. Owner filter uses each opportunity's current assigned owner."),
     ("Weekly Rocks — Appointments", "Appointments scheduled per week (any calendar/status), from GHL's own calendar events -- a real log, not diffed from daily snapshots. Bucketed by the appointment's own date into a week grid (W1 = Jul 1, 2026), kept as weeks (rather than a date range like the stage table above) since that's what makes week-over-week comparisons easy. Owner filter uses the appointment's assigned user, not the linked opportunity's owner."),
     ("Meta Campaign Spending (bottom section)", "Last 7 days of Meta ad spend, including today's partial/incomplete spend as its own tile -- unlike the Daily Performance table above, which excludes today."),
