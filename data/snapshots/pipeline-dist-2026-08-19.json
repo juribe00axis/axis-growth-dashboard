@@ -1,0 +1,47 @@
+{
+  "date": "2026-08-19",
+  "stages": [
+    {
+      "name": "New Lead",
+      "count": 53
+    },
+    {
+      "name": "Discovery Call",
+      "count": 30
+    },
+    {
+      "name": "Strategy Call",
+      "count": 11
+    },
+    {
+      "name": "Proposal Sent",
+      "count": 21
+    },
+    {
+      "name": "Closing Call",
+      "count": 7
+    },
+    {
+      "name": "Agreement Sent",
+      "count": 9
+    },
+    {
+      "name": "Reactivation Queue - no call booked",
+      "count": 47
+    }
+  ],
+  "total_open": 178,
+  "source": {
+    "labels": [
+      "MGL",
+      "SGL",
+      "Other - Referrals"
+    ],
+    "data": [
+      121,
+      24,
+      70
+    ],
+    "total": 215
+  }
+}
