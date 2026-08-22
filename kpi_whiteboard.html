@@ -1,0 +1,1942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXISKEY — Spend Efficiency Whiteboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #101014;
+    --surface:   #1C1C24;
+    --surface-2: #262630;
+    --hero:      #C8FF01;
+    --text:      #F5F5F7;
+    --text-mute: #9A9AA5;
+    --won:       #C8FF01;
+    --lost:      #FF5C5C;
+    --line:      #2E2E38;
+    --series-1:  #3987e5;  /* SGL */
+    --series-2:  #d95926;  /* Referral */
+    --series-3:  #199e70;  /* MGL */
+    --series-4:  #c98500;  /* Client */
+    --series-other: #6B6B76;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Saira", "Eurostile", system-ui, sans-serif;
+    padding: 32px 40px 80px;
+  }
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 20px;
+  }
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: 0.02em;
+  }
+  .subtitle {
+    color: var(--text-mute);
+    font-size: 0.82rem;
+    max-width: 640px;
+    line-height: 1.5;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--surface-2);
+    color: var(--text-mute);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+  section {
+    margin-bottom: 36px;
+  }
+  .section-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+    margin: 0 0 14px;
+  }
+
+  /* Hero figure */
+  .hero-card {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 24px 28px;
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .hero-value {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--hero);
+    line-height: 1;
+  }
+  .hero-label {
+    font-size: 0.78rem;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .hero-note {
+    color: var(--text-mute);
+    font-size: 0.78rem;
+    flex-basis: 100%;
+  }
+
+  /* Stat tile grid */
+  .tile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+  }
+  .tile {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 16px 18px;
+  }
+  .tile-label {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-mute);
+    margin-bottom: 6px;
+  }
+  .tile-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .tile-value.hero-color { color: var(--hero); }
+  .tile-sub {
+    font-size: 0.68rem;
+    color: var(--text-mute);
+    margin-top: 4px;
+  }
+
+  /* Funnel visual */
+  .funnel-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 12px 0 4px;
+  }
+  .funnel-bar {
+    background: var(--hero);
+    color: #101014;
+    border-radius: 10px;
+    padding: 16px 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    box-sizing: border-box;
+  }
+  .funnel-stage-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .funnel-stage-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .funnel-conv {
+    color: var(--text-mute);
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .funnel-conv .funnel-conv-pct { color: var(--text); font-size: 0.9rem; }
+
+  /* Small-multiple bar charts */
+  .chart-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .chart-card {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 18px 20px 12px;
+  }
+  .chart-card-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  svg text { font-family: "Saira", system-ui, sans-serif; }
+  .bar-value {
+    fill: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .bar-month {
+    fill: var(--text-mute);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .gridline { stroke: var(--line); stroke-width: 1; }
+  .bar-rect { fill: var(--hero); cursor: pointer; }
+  .bar-rect:hover, .bar-rect.hover { fill: #dbff4d; }
+  .bar-hit { fill: transparent; cursor: pointer; }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  th, td {
+    padding: 12px 16px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.84rem;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    color: var(--text-mute);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+  th:first-child, td:first-child { text-align: left; }
+  tr:last-child td { border-bottom: none; }
+  td.hero-color { color: var(--hero); font-weight: 700; }
+
+  /* Simulator */
+  .sim-card {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 24px 26px;
+  }
+  .sim-controls {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 22px;
+  }
+  .control-group { min-width: 220px; flex: 1; }
+  .control-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-mute);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .segmented {
+    display: flex;
+    background: var(--surface-2);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 3px;
+  }
+  .segmented button {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-mute);
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 7px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .segmented button.active {
+    background: var(--hero);
+    color: #101014;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--hero);
+    height: 4px;
+  }
+  .slider-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--hero);
+    margin-bottom: 8px;
+  }
+  .sim-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .sim-tile {
+    background: var(--surface-2);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .sim-tile .tile-value { color: var(--hero); }
+  .caveat {
+    color: var(--text-mute);
+    font-size: 0.72rem;
+    line-height: 1.5;
+    margin-top: 14px;
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+
+  /* Line chart */
+  .legend {
+    display: flex;
+    gap: 18px;
+    font-size: 0.72rem;
+    color: var(--text-mute);
+    margin-bottom: 8px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch-line { width: 14px; height: 2px; background: var(--hero); display: inline-block; }
+  .legend-swatch-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-mute); display: inline-block; }
+  .legend-swatch-rect { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .legend-source { margin-bottom: 10px; flex-wrap: wrap; }
+  .seg-hit:hover + .seg-mark, .seg-mark.seg-hover { filter: brightness(1.18); }
+
+  #tooltip {
+    position: fixed;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.76rem;
+    pointer-events: none;
+    display: none;
+    z-index: 10;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  #tooltip .tt-value { font-weight: 700; color: var(--text); font-size: 0.86rem; }
+  #tooltip .tt-label { color: var(--text-mute); }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+  .tab-btn {
+    background: var(--surface);
+    color: var(--text-mute);
+    border: 1px solid var(--line);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .tab-btn.active {
+    background: var(--hero);
+    color: #101014;
+    border-color: var(--hero);
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  td.mute { color: var(--text-mute); }
+  td.empty-field { color: var(--text-mute); font-style: italic; }
+  tr.bd-row td { background: rgba(57, 135, 229, 0.16); }
+  tr.bd-row td:first-child { border-left: 3px solid var(--series-1); }
+
+  input.date-input {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    color-scheme: dark;
+    width: 145px;
+  }
+  input.date-input.input-defaulted {
+    color: var(--text-mute);
+    font-style: italic;
+  }
+  input.value-input {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: inherit;
+    font-size: 0.84rem;
+    font-variant-numeric: tabular-nums;
+    width: 110px;
+    text-align: right;
+  }
+  input.value-input:focus { border-style: solid; border-color: var(--hero); outline: none; }
+
+  /* SDR Capacity tab */
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 18px 20px;
+  }
+  .field label {
+    display: block;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-mute);
+    margin-bottom: 6px;
+  }
+  .field-row { display: flex; gap: 6px; align-items: center; }
+  .field input[type="number"] {
+    width: 100%;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 7px 9px;
+    font-size: 0.92rem;
+    font-family: inherit;
+  }
+  .field input[type="number"]:focus { outline: 1px solid var(--hero); border-color: var(--hero); }
+  .preset-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text-mute);
+    font-family: inherit;
+    font-size: 0.66rem;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .preset-btn.active { border-color: var(--hero); color: var(--hero); }
+  tr.total-row td { font-weight: 700; color: var(--text); }
+  tr.total-row { background: var(--surface-2); }
+  td.role-label { color: var(--text-mute); font-size: 0.8rem; }
+  .hero-box {
+    background: linear-gradient(160deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--hero);
+    border-radius: 18px;
+    padding: 22px 26px;
+  }
+  .hero-box-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--hero);
+    margin-bottom: 14px;
+  }
+  .hero-box-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 18px;
+  }
+  .sdr-hero-num {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+  }
+  .hero-box-label {
+    font-size: 0.72rem;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 6px;
+  }
+  .hero-assumption {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    color: var(--text-mute);
+    font-size: 0.78rem;
+  }
+  .hero-assumption .mono { color: var(--hero); font-weight: 700; }
+  .steps {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 16px 20px;
+    font-size: 0.82rem;
+    line-height: 1.9;
+    color: var(--text-mute);
+  }
+  .steps .step-line { white-space: nowrap; overflow-x: auto; }
+  .steps .step-val { color: var(--text); font-weight: 600; }
+  .steps .step-result { color: var(--hero); font-weight: 700; }
+
+  /* Print / Save-as-PDF: only whichever tab is active prints (tab-panel
+     display rules above already handle that); this drops the tab buttons.
+     One giant custom page (generously tall) instead of Letter/A4 -- so the
+     whole tab prints as a single continuous page with no breaks at all.
+     This also sidesteps the flex/grid clipping bug from before (Chromium's
+     print engine treats flex/grid containers like .funnel-wrap/.chart-row
+     as one atomic block and clips whatever doesn't fit when a page boundary
+     cuts through them) -- with only one page, no boundary ever cuts through
+     anything. Trade-off: if content is shorter than the reserved height
+     you'll get blank space at the bottom; if it's ever taller, the excess
+     spills onto a genuine second page and the clipping risk returns there. */
+  @media print {
+    @page { size: 340mm 1300mm; margin: 12mm; }
+    .tabs { display: none; }
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <div>
+    <h1>AXISKEY — Spend Efficiency Whiteboard</h1>
+    <div class="subtitle">
+      Meta Ads spend vs. GHL leads &amp; signings, live from the same GHL + Meta
+      data as the main dashboard -- this page is generated by the same script,
+      on the same twice-daily refresh. See Overview for month-by-month detail,
+      the simulator for spend projections, and All-Time Won for the full deal
+      list. The July Sales Report tab is a frozen historical recap and stays
+      as originally written.
+    </div>
+  </div>
+  <span class="badge">Generated August 22, 2026 at 20:29 UTC</span>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="tab-overview">Overview</button>
+  <button class="tab-btn" data-tab="tab-won" id="wonTabBtn">All-Time Won</button>
+  <button class="tab-btn" data-tab="tab-sdr">SDR Capacity</button>
+  <button class="tab-btn" data-tab="tab-july">July Sales Report</button>
+</div>
+<div id="tab-overview" class="tab-panel active">
+
+<section>
+  <div class="hero-card">
+    <div>
+      <div class="hero-value" id="heroCPL">—</div>
+      <div class="hero-label" id="heroCPLLabel">Blended cost per lead</div>
+    </div>
+    <div class="hero-note" id="heroNote"></div>
+  </div>
+
+  <div class="tile-grid">
+    <div class="tile"><div class="tile-label">Total spend</div><div class="tile-value" id="totSpend">—</div></div>
+    <div class="tile"><div class="tile-label">Total leads</div><div class="tile-value" id="totLeads">—</div></div>
+    <div class="tile"><div class="tile-label">Total signings</div><div class="tile-value hero-color" id="totSignings">—</div></div>
+    <div class="tile"><div class="tile-label">Blended CPL (all months)</div><div class="tile-value" id="totCPL">—</div></div>
+    <div class="tile">
+      <div class="tile-label">Blended cost / signing</div>
+      <div class="tile-value" id="totCPS">—</div>
+      <div class="tile-sub" id="totCPSFormula">—</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Blended cost / signing (MGL)</div>
+      <div class="tile-value" id="totCPSMgl">—</div>
+      <div class="tile-sub" id="totCPSMglFormula">—</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Monthly breakdown</div>
+  <div class="subtitle" style="margin-bottom: 14px;">
+    Signings are classified by Agreement Signed date where it's been set on the
+    All-Time Won tab, otherwise by Date Won.
+  </div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-card-title">Meta Spend</div>
+      <svg id="chartSpend" viewBox="0 0 240 160" width="100%"></svg>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">GHL Leads Entered</div>
+      <svg id="chartLeads" viewBox="0 0 240 160" width="100%"></svg>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Signings</div>
+      <svg id="chartSignings" viewBox="0 0 240 160" width="100%"></svg>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Signings by Source</div>
+      <div class="segmented" id="sourceMonthToggle" style="margin-bottom: 10px;"></div>
+      <svg id="chartSourceBreakdown" viewBox="0 0 240 200" width="100%"></svg>
+      <div class="legend legend-source" id="sourceLegend"></div>
+    </div>
+  </div>
+  <div class="chart-row" style="margin-top: 16px;">
+    <div class="chart-card" style="grid-column: 1 / -1;">
+      <div class="chart-card-title">Cost / Signing</div>
+      <div class="segmented" id="cpsToggle" style="margin-bottom: 10px;"></div>
+      <svg id="chartCPS" viewBox="0 0 720 180" width="100%"></svg>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Monthly KPI table</div>
+  <table>
+    <thead>
+      <tr><th>Month</th><th>Spend</th><th>Leads</th><th>Signings</th><th>CPL</th><th>Cost / Signing</th></tr>
+    </thead>
+    <tbody id="kpiTableBody"></tbody>
+  </table>
+</section>
+
+<section>
+  <div class="section-title">Spend → Leads simulator</div>
+  <div class="sim-card">
+    <div class="sim-controls">
+      <div class="control-group">
+        <span class="control-label">CPL / conversion basis</span>
+        <div class="segmented" id="basisToggle"></div>
+      </div>
+      <div class="control-group" style="flex: 2;">
+        <span class="control-label">Monthly ad spend</span>
+        <div class="slider-value" id="spendValue">$0</div>
+        <input type="range" id="spendSlider" min="0" max="15000" step="50" value="6000">
+      </div>
+    </div>
+
+    <div class="sim-results">
+      <div class="sim-tile"><div class="tile-label">Predicted leads</div><div class="tile-value" id="predLeads">—</div></div>
+      <div class="sim-tile"><div class="tile-label">Predicted signings</div><div class="tile-value" id="predSignings">—</div></div>
+      <div class="sim-tile"><div class="tile-label">Predicted cost / signing</div><div class="tile-value" id="predCPS">—</div></div>
+      <div class="sim-tile"><div class="tile-label">CPL used</div><div class="tile-value" id="predCPLUsed">—</div></div>
+    </div>
+
+    <div class="legend">
+      <span class="legend-item"><span class="legend-swatch-line"></span> Projected (selected basis)</span>
+      <span class="legend-item"><span class="legend-swatch-dot"></span> Actual month</span>
+    </div>
+    <svg id="chartSim" viewBox="0 0 800 260" width="100%"></svg>
+
+    <div class="caveat">
+      This is a straight-line projection (leads = spend ÷ CPL; signings = leads × that
+      month's conversion rate) — it assumes the selected month's cost-per-lead holds at
+      other spend levels. It won't hold forever: May's CPL ($24.70 at ~$1.4K spend) was
+      far cheaper than June/July's (~$65–74 at ~$5.7–7.6K spend), so cost-per-lead has
+      already risen once as spend scaled up. Treat this as a rough directional tool, not
+      a guarantee — actual diminishing returns likely kick in at some point past current spend.
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div id="tab-won" class="tab-panel">
+<section>
+  <div class="section-title">All-time won opportunities (AXISKEY, all pipelines)</div>
+  <div class="subtitle" style="margin-bottom: 14px;">
+    "Date Won" is <code>lastStageChangeAt</code> -- when the opportunity entered
+    the Onboarding stage, same basis as the Won bento on the main dashboard.
+    "Agreement Signed" and "Capital Raiser Intent" are live GHL custom fields
+    on the opportunity record, read directly -- no longer editable here; edit
+    them on the opportunity in GHL and they'll appear on the next refresh.
+    "Source" is GHL's standard opportunity source field.
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Date Won</th>
+        <th style="text-align:left;">Deal</th>
+        <th>Value</th>
+        <th style="text-align:left;">Owner</th>
+        <th style="text-align:left;">Source</th>
+        <th>Agreement Signed</th>
+        <th style="text-align:left;">Capital Raiser Intent</th>
+      </tr>
+    </thead>
+    <tbody id="wonTableBody"></tbody>
+  </table>
+  <div class="caveat">
+    GHL's own "Agreement Signed Date" custom field was created 2026-07-23 and
+    was never backfilled on deals won before then -- those show Date Won
+    instead (muted styling) until the field is set in GHL. "Capital Raiser
+    Intent" is populated only where that field was filled in on the
+    opportunity in GHL. "Source" is the deal's own source field as recorded
+    in GHL (including any specific referrer name like "Referral - Diego");
+    blanks reflect missing data on the record, not an extraction issue here.
+    "Won" only includes opportunities *currently* sitting in the Onboarding
+    stage -- a deal that later moves further along the pipeline drops off
+    this list, same as everywhere else on the dashboard that uses this
+    definition.
+  </div>
+</section>
+</div>
+<div id="tab-sdr" class="tab-panel">
+<section>
+  <div class="section-title">SDR Capacity &amp; Lead Target Calculator</div>
+  <div class="subtitle" style="margin-bottom: 16px;">
+    How many marketing contacts you need per month to fully saturate current calling
+    capacity, given a contact→discovery-call conversion rate. Independent of the rest
+    of this page — its own inputs, not tied to GHL/Meta data.
+  </div>
+
+  <div class="segmented" id="scenarioToggle" style="max-width: 420px; margin-bottom: 20px;"></div>
+
+  <div class="section-title">Inputs</div>
+  <div class="input-grid" style="margin-bottom: 24px;">
+    <div class="field">
+      <label for="numSDRs">Number of SDRs</label>
+      <input type="number" id="numSDRs" value="2" min="0" step="1">
+    </div>
+    <div class="field">
+      <label for="callsPerSDR">Calls / SDR / day</label>
+      <input type="number" id="callsPerSDR" value="3" min="0" step="0.5">
+    </div>
+    <div class="field">
+      <label for="numManagers">Sales Managers taking calls</label>
+      <input type="number" id="numManagers" value="1" min="0" step="1">
+    </div>
+    <div class="field">
+      <label for="managerPct">Manager capacity (% of SDR rate)</label>
+      <input type="number" id="managerPct" value="50" min="0" max="500" step="5">
+    </div>
+    <div class="field">
+      <label for="workingDays">Working days / week</label>
+      <input type="number" id="workingDays" value="5" min="1" max="7" step="1">
+    </div>
+    <div class="field">
+      <label for="weeksPerMonth">Weeks / month</label>
+      <div class="field-row">
+        <input type="number" id="weeksPerMonth" value="4.33" min="1" step="0.01">
+        <button type="button" class="preset-btn" id="preset4">4</button>
+        <button type="button" class="preset-btn active" id="preset433">4.33</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="conversionRate">Contact → discovery call rate (%)</label>
+      <input type="number" id="conversionRate" value="50" min="1" max="100" step="1">
+    </div>
+  </div>
+
+  <div class="section-title">Calling capacity breakdown</div>
+  <table style="margin-bottom: 24px;">
+    <thead>
+      <tr><th>Role</th><th>/ day</th><th>/ week</th><th>/ month</th></tr>
+    </thead>
+    <tbody id="capacityBody"></tbody>
+  </table>
+
+  <div class="hero-box" style="margin-bottom: 24px;">
+    <div class="hero-box-title">Leads to Generate</div>
+    <div class="hero-box-row">
+      <div>
+        <div class="sdr-hero-num mono" id="targetMonth">—</div>
+        <div class="hero-box-label">contacts / month</div>
+      </div>
+      <div>
+        <div class="sdr-hero-num mono" id="targetWeek">—</div>
+        <div class="hero-box-label">contacts / week</div>
+      </div>
+      <div>
+        <div class="sdr-hero-num mono" id="targetDay">—</div>
+        <div class="hero-box-label">contacts / working day</div>
+      </div>
+    </div>
+    <div class="hero-assumption">
+      Assumes a <span class="mono" id="assumedRate">—</span> contact → discovery-call conversion rate.
+      Change it above to see how the target moves.
+    </div>
+  </div>
+
+  <div class="section-title">Calculation steps</div>
+  <div class="steps" id="stepsBody"></div>
+</section>
+</div>
+<div id="tab-july" class="tab-panel">
+<div style="font-size: 2rem; font-weight: 800; letter-spacing: 0.01em; color: var(--hero); margin-bottom: 22px;">
+  July 2026 Sales Report
+</div>
+<section>
+  <div class="section-title">Sales Updates</div>
+  <div style="background: var(--surface); border-radius: 14px; padding: 18px 22px; color: var(--text); font-size: 0.86rem; line-height: 1.6; margin-bottom: 28px;">
+    On July 29, Meta ad spend jumped from an average of $218/day to $497/day — a 128% increase — following
+    a budget increase made that day. Spend held at this elevated level through the rest of the month.
+  </div>
+</section>
+
+<section>
+  <div class="section-title">July at a Glance</div>
+  <div class="tile-grid">
+    <div class="tile"><div class="tile-label">Total Spend</div><div class="tile-value">$7,588.77</div></div>
+    <div class="tile"><div class="tile-label">MGL Leads</div><div class="tile-value hero-color">63</div></div>
+    <div class="tile"><div class="tile-label">MGL CPL</div><div class="tile-value">$120.46</div></div>
+    <div class="tile"><div class="tile-label">Discovery Calls</div><div class="tile-value">63</div></div>
+    <div class="tile"><div class="tile-label">Deals Won</div><div class="tile-value hero-color">13</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Funnel — Leads to Won</div>
+  <div class="funnel-wrap">
+    <div class="funnel-bar" style="width:100%;max-width:560px;">
+      <span class="funnel-stage-label">Total Leads (July)</span>
+      <span class="funnel-stage-value">99</span>
+    </div>
+    <div class="funnel-conv">↓ <span class="funnel-conv-pct">83.8%</span> (83 of 99) to Discovery Call</div>
+    <div class="funnel-bar" style="width:84%;max-width:470px;">
+      <span class="funnel-stage-label">Discovery Calls Booked</span>
+      <span class="funnel-stage-value">83</span>
+    </div>
+    <div class="funnel-conv">↓ <span class="funnel-conv-pct">15.7%</span> (13 of 83) to Won</div>
+    <div class="funnel-bar" style="width:40%;max-width:225px;">
+      <span class="funnel-stage-label">Won Deals</span>
+      <span class="funnel-stage-value">13</span>
+    </div>
+  </div>
+  <div style="display:flex;align-items:baseline;gap:10px;justify-content:center;margin-top:18px;">
+    <div style="font-size:1.8rem;font-weight:800;color:var(--hero);line-height:1;">13.1%</div>
+    <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);">Lead &rarr; Won</div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Deal Source Distribution — July</div>
+  <div class="chart-row" style="grid-template-columns: 1fr 1fr;">
+    <div class="chart-card">
+      <div class="chart-card-title">Leads by Source</div>
+      <svg id="chartJulyLeadsSource" viewBox="0 0 240 200" width="100%"></svg>
+      <div class="legend legend-source" id="julyLeadsLegend"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Won Deals by Source</div>
+      <svg id="chartJulyWonSource" viewBox="0 0 240 200" width="100%"></svg>
+      <div class="legend legend-source" id="julyWonLegend"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Won Deals — Month over Month</div>
+  <div class="chart-row" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabel0">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValue0">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDelta0">won deals</div>
+    </div>
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabel1">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValue1">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDelta1">won deals</div>
+    </div>
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabel2">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValue2">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDelta2">won deals</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Won Deals — July</div>
+  <div class="tile-grid" style="margin-bottom: 16px;">
+    <div class="tile"><div class="tile-label">Broker Dealer Deals</div><div class="tile-value hero-color">3 of 13</div></div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="text-align:left;">Deal</th>
+        <th>Value</th>
+        <th style="text-align:left;">Capital Raiser Intent</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="text-align:left;">Altitude Capital Partners GP LLC</td>
+        <td><input type="text" class="value-input" data-id="gfWnkv7v3nnVvSLaYlbH" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Doug Beasley - BD</td>
+        <td><input type="text" class="value-input" data-id="zhH9NbSez7WGLOjkfCCY" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Bob Weissman</td>
+        <td><input type="text" class="value-input" data-id="zYAbC9cELbUYk1b9lBGb" placeholder="$"></td>
+        <td style="text-align:left;" class="empty-field">—</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Sierra Vale Capital</td>
+        <td><input type="text" class="value-input" data-id="d4YbtFMqmCjOb5ZFM6yL" placeholder="$"></td>
+        <td style="text-align:left;" class="empty-field">—</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Amazing Hospitality Group</td>
+        <td><input type="text" class="value-input" data-id="LAq3RBwfvJ07CDjLA03Z" placeholder="$"></td>
+        <td style="text-align:left;">Issuer Team</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Skygate Growth Strategies</td>
+        <td><input type="text" class="value-input" data-id="bP0hWoW5hV2ae6mLVLZp" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr class="bd-row">
+        <td style="text-align:left;">RAS Technologies</td>
+        <td><input type="text" class="value-input" data-id="7VvPSdUyrFl9caGcISZM" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Fincera Series 1</td>
+        <td><input type="text" class="value-input" data-id="lAG77KU7lPgP8493GJQC" placeholder="$"></td>
+        <td style="text-align:left;">Issuer Team</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Orlando Surf Park Fund I, LP</td>
+        <td><input type="text" class="value-input" data-id="LuJiEk7swQFH39k10XEz" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr class="bd-row">
+        <td style="text-align:left;">IPC - Reg D</td>
+        <td><input type="text" class="value-input" data-id="Rc2HLIgjqoNJwDvUlZ0i" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Teaching Mens Fashion</td>
+        <td><input type="text" class="value-input" data-id="kQVDEhI1zN4hKJyOfNWW" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr class="bd-row">
+        <td style="text-align:left;">Clever Capital Fund</td>
+        <td><input type="text" class="value-input" data-id="m46wiNn9Uvht1sqxVGhL" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Baymahni</td>
+        <td><input type="text" class="value-input" data-id="RM0racM0bT8M4dY5I2LU" placeholder="$"></td>
+        <td style="text-align:left;" class="empty-field">—</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="section-title">Notes</div>
+  <div class="caveat" style="margin-top: 0; border-top: none; padding-top: 0;">
+    <strong style="color: var(--text);">July at a Glance —</strong> MGL Leads/CPL match the fully-reviewed
+    Leads by Source donut below (source in MGL/FORM/"Meta Survey - Capital Raising", plus the
+    manually-resolved contact-level and booking-artifact cases from the 2026-08-03 review), created-date in
+    July, "Test Lead Axiskey" dummy record excluded -- 63 of 99 real leads. Discovery Calls = unique prospects
+    with a Discovery Call appointment dated in July, deduped across mirrored calendar bookings; excludes 7
+    events on Alex Zinny's Personal Calendar that were mis-tagged to a rep's own contact record instead of the
+    real prospect (2 of which were clearly internal meetings, not prospect calls). Deals Won = opportunities
+    marked won with a Date Won in July, matching the All-Time Won tab.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Funnel —</strong> Overall Leads → Won: 13.1% (13 of 99). Total Leads
+    matches the fully-reviewed Leads by Source donut (99, "Test Lead Axiskey" dummy record excluded). Bar
+    widths are for visual taper only, not exact area-proportional to volume. "Discovery Calls Booked" here is
+    total call volume (85 deduped calendar events, minus 2 clearly-internal meetings misfiled on the Discovery
+    Call calendar) -- not the same as the "Discovery Calls" tile above, which counts 63 unique prospects
+    reached (a lead getting 2 calls via reschedule counts once there, twice here). These are period counts,
+    not a strict single cohort: "Discovery Calls Booked" and "Won Deals" can include contacts whose lead
+    entered the pipeline in an earlier month, so these conversion rates are directional, not a precise
+    same-cohort conversion rate.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Deal Source Distribution —</strong> Same channel buckets as the
+    Overview tab's Signings by Source chart (SGL/Referral/MGL/Client/Other), "Referral - &lt;name&gt;"
+    variants folded into one Referral slice. Leads by Source falls back to the contact's own "Source" custom
+    field when the deal's own source is blank, treats any "AxisKey Discovery Call"-style value (a
+    booking-calendar artifact, not a real source) as MGL, and treats a bare referrer name (e.g. "Kirt", "Rob
+    Saracco") as Referral. Fully manually reviewed 2026-08-03 -- every lead resolved to a real channel except
+    "Test Lead Axiskey", a dummy test record excluded entirely, leaving 99 -- the same total used in the
+    funnel and MGL Leads tile above. Won Deals by Source updates live if you edit an Agreement Signed date on
+    the All-Time Won tab in a way that moves a deal into or out of July; Teaching Mens Fashion's source was
+    backfilled on the contact record 2026-08-03.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Won Deals — Month over Month —</strong> Same May/June/July won-deal
+    counts as the Overview tab's Signings bar chart, classified by Agreement Signed date where set, otherwise
+    Date Won; updates live from the same edits. % badge is growth vs. the prior month; May has none since
+    there's no April data in this system.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Won Deals —</strong> Blue-highlighted rows (RAS Technologies, Clever
+    Capital Fund, IPC - Reg D) are the deals confirmed as exclusively Broker Dealer -- a manual call, not
+    derived from the Capital Raiser Intent field: IPC's field was actually blank until confirmed manually,
+    while 5 other deals show "Broker Dealer" in that field but aren't exclusively BD engagements. Rows ordered
+    by Date Won, matching the All-Time Won tab. Value is a live input, typed directly into the browser -- it
+    auto-saves to this browser's localStorage on change, so it survives a normal refresh of this same file.
+    It will NOT carry over to a different browser, a different device, or if browsing data for this file's
+    location gets cleared, and file:// pages can behave inconsistently across browsers for local storage --
+    so for anything you can't afford to retype, copy the entered values back into this HTML file's
+    &lt;input value="..."&gt; attributes as a permanent backup.
+  </div>
+</section>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+const MONTHS = ["2026-05", "2026-06", "2026-07", "2026-08"];
+const MONTH_LABEL = {"2026-05": "May", "2026-06": "Jun", "2026-07": "Jul", "2026-08": "Aug"};
+const CURRENT_MONTH_KEY = "2026-08";
+const LEADS_BY_MONTH = {"2026-05": 56, "2026-06": 87, "2026-07": 98, "2026-08": 132};
+const SPEND_BY_MONTH = {"2026-05": 1383.09, "2026-06": 5695.72, "2026-07": 7588.77, "2026-08": 10964.59};
+const WON_BY_MONTH = {"2026-08": 11, "2026-07": 12, "2026-06": 5, "2026-05": 3};
+const MGL_WON_BY_MONTH = {"2026-08": 5, "2026-06": 2, "2026-05": 1};
+const ALLTIME = {
+  spend: 25632.17, won: 31, mglWon: 8,
+  cps: 826.844193548387, cpsMgl: 3204.02125,
+};
+const WON = [{"id": "AY60rZrr0ABzlY9IUhnq", "date_won": "2026-08-20", "name": "26N Partners SPV I LLC", "value": 2000.0, "owner": "Stormer Santana", "source": "Meta Survey - Capital Raising", "agreement_signed": "2026-08-18", "capital_raiser_intent": "Broker Dealer"}, {"id": "fFmTPxuoCGcRhfHQAYw7", "date_won": "2026-08-20", "name": "AI Force, Inc.", "value": 6500.0, "owner": "Joncarlo Tamayo", "source": "MGL", "agreement_signed": "2026-08-20", "capital_raiser_intent": "Issuer Team"}, {"id": "znLRCruhsdeDXzNwqBWu", "date_won": "2026-08-17", "name": "Avid Realty/Shapiro Capital - Reg A", "value": 6000.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-08-14", "capital_raiser_intent": "Broker Dealer"}, {"id": "PGioTPEnRPtokkjCe5aS", "date_won": "2026-08-17", "name": "Avid Realty/Shapiro Capital - Reg D", "value": 6000.0, "owner": "Stormer Santana", "source": "MGL", "agreement_signed": "2026-08-14", "capital_raiser_intent": "Broker Dealer"}, {"id": "hxHOoBEDITuwmeZEv1rg", "date_won": "2026-08-14", "name": "Signature Capital - Accounting", "value": 0.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-08-14", "capital_raiser_intent": null}, {"id": "22g4Ta7mINpk8z8ZfWFt", "date_won": "2026-08-12", "name": "ATS Systems, Inc", "value": 5640.0, "owner": "Stormer Santana", "source": "MGL", "agreement_signed": "2026-08-11", "capital_raiser_intent": "Broker Dealer"}, {"id": "zbmJ39Yascx3WlUOeFkR", "date_won": "2026-08-07", "name": "GBMC - Growth I", "value": 4000.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-08-07", "capital_raiser_intent": "Broker Dealer"}, {"id": "zU6BlKIc78KP9ZIp4LLi", "date_won": "2026-08-07", "name": "StorageBlue", "value": 6000.0, "owner": "Stormer Santana", "source": "Rob Saracco", "agreement_signed": "2026-08-07", "capital_raiser_intent": "Broker Dealer"}, {"id": "kQVDEhI1zN4hKJyOfNWW", "date_won": "2026-08-06", "name": "Teaching Mens Fashion", "value": 6000.0, "owner": "Stormer Santana", "source": "Referral - Joe", "agreement_signed": "2026-08-06", "capital_raiser_intent": "Broker Dealer"}, {"id": "xv2Ir8uAnKPZ2gMi87dW", "date_won": "2026-08-05", "name": "Hydrogel", "value": 2500.0, "owner": "Stormer Santana", "source": "MGL", "agreement_signed": "2026-08-04", "capital_raiser_intent": "Broker Dealer"}, {"id": "RM0racM0bT8M4dY5I2LU", "date_won": "2026-08-02", "name": "Baymahni", "value": 6147.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-07-31", "capital_raiser_intent": null}, {"id": "m46wiNn9Uvht1sqxVGhL", "date_won": "2026-07-31", "name": "Clever Capital Fund", "value": 0.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-07-31", "capital_raiser_intent": "Broker Dealer"}, {"id": "LuJiEk7swQFH39k10XEz", "date_won": "2026-07-30", "name": "Orlando Surf Park Fund I, LP", "value": 0.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-07-28", "capital_raiser_intent": "Broker Dealer"}, {"id": "lAG77KU7lPgP8493GJQC", "date_won": "2026-07-29", "name": "Fincera Series 1", "value": 500.0, "owner": "Stormer Santana", "source": "David Allen", "agreement_signed": "2026-07-28", "capital_raiser_intent": "Issuer Team"}, {"id": "Rc2HLIgjqoNJwDvUlZ0i", "date_won": "2026-07-28", "name": "IPC - Reg D", "value": 0.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-07-28", "capital_raiser_intent": null}, {"id": "LAq3RBwfvJ07CDjLA03Z", "date_won": "2026-07-23", "name": "Amazing Hospitality Group", "value": 6495.0, "owner": "Stormer Santana", "source": "Referral - Kirt", "agreement_signed": null, "capital_raiser_intent": "Issuer Team"}, {"id": "bP0hWoW5hV2ae6mLVLZp", "date_won": "2026-07-21", "name": "Skygate Growth Strategies", "value": 6000.0, "owner": "Stormer Santana", "source": "client", "agreement_signed": null, "capital_raiser_intent": "Broker Dealer"}, {"id": "gfWnkv7v3nnVvSLaYlbH", "date_won": "2026-07-17", "name": "Altitude Capital Partners GP LLC", "value": 5400.0, "owner": "Stormer Santana", "source": "Referral - Kirt", "agreement_signed": null, "capital_raiser_intent": "Broker Dealer"}, {"id": "d4YbtFMqmCjOb5ZFM6yL", "date_won": "2026-07-16", "name": "Sierra Vale Capital", "value": 2000.0, "owner": "Stormer Santana", "source": "Referral - Diego", "agreement_signed": null, "capital_raiser_intent": null}, {"id": "zYAbC9cELbUYk1b9lBGb", "date_won": "2026-07-15", "name": "Bob Weissman", "value": 0.0, "owner": "Stormer Santana", "source": "Referral", "agreement_signed": null, "capital_raiser_intent": "Broker Dealer"}, {"id": "7VvPSdUyrFl9caGcISZM", "date_won": "2026-07-13", "name": "RAS Technologies", "value": 5000.0, "owner": "Stormer Santana", "source": "SGL", "agreement_signed": null, "capital_raiser_intent": "Broker Dealer"}, {"id": "zhH9NbSez7WGLOjkfCCY", "date_won": "2026-07-09", "name": "Doug Beasley - BD", "value": 0.0, "owner": "Stormer Santana", "source": "client", "agreement_signed": null, "capital_raiser_intent": "Broker Dealer"}, {"id": "YcOGlbw6O5lESe9AIsOs", "date_won": "2026-07-01", "name": "Ascent Capital Partners", "value": 0.0, "owner": "Stormer Santana", "source": "client", "agreement_signed": null, "capital_raiser_intent": null}, {"id": "NkTQc2R1ncjsWbegoNQR", "date_won": "2026-06-18", "name": "Jet World Championship", "value": 0.0, "owner": "Stormer Santana", "source": "Referral - Roy", "agreement_signed": null, "capital_raiser_intent": null}, {"id": "EYFAwsR8Oq2FhT49nh6N", "date_won": "2026-06-10", "name": "Careverse Ai", "value": 4500.0, "owner": "Stormer Santana", "source": "MGL", "agreement_signed": null, "capital_raiser_intent": null}, {"id": "2GEa0Bxt6DjnHHnBRojD", "date_won": "2026-06-10", "name": "Lowery Company", "value": 6000.0, "owner": "Stormer Santana", "source": "MGL", "agreement_signed": null, "capital_raiser_intent": null}, {"id": "pTND16qIVM3mkGIW4wOk", "date_won": "2026-06-08", "name": "Wellness District", "value": 1250.0, "owner": "Stormer Santana", "source": "SGL", "agreement_signed": null, "capital_raiser_intent": null}, {"id": "n9ZnfYhFUn0EugB35VHB", "date_won": "2026-06-02", "name": "James Pope", "value": 5000.0, "owner": "Stormer Santana", "source": "Referral - Mike Verdun", "agreement_signed": null, "capital_raiser_intent": null}, {"id": "RKdnREBdnzVYC6F5W9JC", "date_won": "2026-05-21", "name": "Doug Beasley", "value": 6565.0, "owner": "Stormer Santana", "source": "MGL", "agreement_signed": null, "capital_raiser_intent": null}, {"id": "VLbLJc49elKZmWmWuJVw", "date_won": "2026-05-15", "name": "Croxdale", "value": 6000.0, "owner": "Stormer Santana", "source": "SGL", "agreement_signed": null, "capital_raiser_intent": null}, {"id": "YS9mcv2LlbSZPHJ08rTM", "date_won": "2026-05-11", "name": "Marvyn Budd", "value": 5000.0, "owner": "Stormer Santana", "source": "Referral - Dennis Murphy", "agreement_signed": null, "capital_raiser_intent": null}];
+// Fixed anchor for the frozen July tab -- always means July 2026, not a
+// rolling "3rd month" -- so it stays correct no matter how many months
+// MONTHS grows to cover. JULY_LEADS_BY_SOURCE (also frozen, no live
+// equivalent for a per-lead source breakdown that old) is declared in
+// WHITEBOARD_LOGIC_SCRIPT alongside the rest of the donut-drawing code.
+const JULY_KEY = "2026-07";
+</script>
+
+<script>
+function fmtMoney(n) {
+  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+function fmtMoney2(n) {
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+
+function effectiveDate(w) { return w.agreement_signed || w.date_won; }
+
+function computeSigningsByMonth(months = MONTHS) {
+  const counts = {};
+  months.forEach(m => { counts[m] = 0; });
+  WON.forEach(w => {
+    const m = effectiveDate(w).slice(0, 7);
+    if (m !== undefined && counts.hasOwnProperty(m)) counts[m] += 1;
+  });
+  return counts;
+}
+
+
+// ── Derived per-month + totals (all months, May through current) ──────────
+let derived = {}, totals = {}, recent = {}, recentMonths = [], BASIS = {}, BASIS_LABEL = {};
+
+function recomputeDerived() {
+  const signingsByMonth = computeSigningsByMonth();
+  const sourceByMonth = computeSourceByMonth();
+  derived = {};
+  MONTHS.forEach(m => {
+    const spend = SPEND_BY_MONTH[m] || 0;
+    const leads = LEADS_BY_MONTH[m] || 0;
+    const signings = signingsByMonth[m] || 0;
+    const mglSignings = (sourceByMonth[m] || {}).MGL || 0;
+    derived[m] = {
+      spend, leads, signings, mglSignings,
+      cpl:    leads > 0 ? spend / leads : 0,
+      cps:    signings > 0 ? spend / signings : 0,
+      cpsMgl: mglSignings > 0 ? spend / mglSignings : 0,
+      conv:   leads > 0 ? signings / leads : 0,
+    };
+  });
+
+  totals = MONTHS.reduce((acc, m) => {
+    acc.spend += derived[m].spend;
+    acc.leads += derived[m].leads;
+    acc.signings += derived[m].signings;
+    return acc;
+  }, { spend: 0, leads: 0, signings: 0 });
+  totals.cpl = totals.leads > 0 ? totals.spend / totals.leads : 0;
+  totals.cps = totals.signings > 0 ? totals.spend / totals.signings : 0;
+
+  // "Recent" = last 2 COMPLETE months (excludes the current in-progress
+  // month) -- used for the hero CPL and the simulator's default basis, same
+  // intent as this file's original Jun+Jul basis right after July closed.
+  const completeMonths = MONTHS.filter(m => m !== CURRENT_MONTH_KEY);
+  recentMonths = completeMonths.slice(-2);
+  recent = recentMonths.reduce((acc, m) => {
+    acc.spend += derived[m].spend;
+    acc.leads += derived[m].leads;
+    acc.signings += derived[m].signings;
+    return acc;
+  }, { spend: 0, leads: 0, signings: 0 });
+  recent.cpl = recent.leads > 0 ? recent.spend / recent.leads : 0;
+  recent.cps = recent.signings > 0 ? recent.spend / recent.signings : 0;
+  recent.conv = recent.leads > 0 ? recent.signings / recent.leads : 0;
+
+  BASIS = {};
+  BASIS_LABEL = {};
+  MONTHS.forEach(m => {
+    BASIS[m] = { cpl: derived[m].cpl, conv: derived[m].conv };
+    BASIS_LABEL[m] = MONTH_LABEL[m];
+  });
+  BASIS["recent"] = { cpl: recent.cpl, conv: recent.conv };
+  BASIS_LABEL["recent"] = recentMonths.map(m => MONTH_LABEL[m]).join("+");
+}
+
+// ── Render Overview (hero, tiles, table, bar charts) ───────────────────────
+function renderOverview() {
+  document.getElementById("heroCPL").textContent = fmtMoney2(recent.cpl);
+  document.getElementById("heroCPLLabel").textContent = `Blended cost per lead (${BASIS_LABEL["recent"]})`;
+  document.getElementById("heroNote").textContent =
+    `Based on ${recent.leads} leads from ${fmtMoney(recent.spend)} of spend across ${recentMonths.map(m => MONTH_LABEL[m]).join(" + ")}.`;
+  document.getElementById("totSpend").textContent = fmtMoney(totals.spend);
+  document.getElementById("totLeads").textContent = totals.leads.toLocaleString();
+  document.getElementById("totSignings").textContent = totals.signings.toLocaleString();
+  document.getElementById("totCPL").textContent = fmtMoney2(totals.cpl);
+  document.getElementById("totCPS").textContent = fmtMoney(ALLTIME.cps);
+  document.getElementById("totCPSFormula").textContent =
+    `${fmtMoney2(ALLTIME.spend)} spend since Apr 2026 ÷ ${ALLTIME.won} won`;
+  document.getElementById("totCPSMgl").textContent = fmtMoney(ALLTIME.cpsMgl);
+  document.getElementById("totCPSMglFormula").textContent =
+    `${fmtMoney2(ALLTIME.spend)} spend since Apr 2026 ÷ ${ALLTIME.mglWon} MGL won`;
+
+  const tbody = document.getElementById("kpiTableBody");
+  tbody.innerHTML = "";
+  MONTHS.forEach(m => {
+    const d = derived[m];
+    const tr = document.createElement("tr");
+    const label = MONTH_LABEL[m] + (m === CURRENT_MONTH_KEY ? " (MTD)" : "");
+    const cells = [
+      label,
+      fmtMoney2(d.spend),
+      d.leads.toLocaleString(),
+      d.signings.toLocaleString(),
+      d.leads > 0 ? fmtMoney2(d.cpl) : "—",
+      d.signings > 0 ? fmtMoney(d.cps) : "—",
+    ];
+    cells.forEach((c, i) => {
+      const td = document.createElement("td");
+      td.textContent = c;
+      if (i === 3) td.className = "hero-color";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  drawBarChart("chartSpend", "spend", v => fmtMoney(v), "Spend");
+  drawBarChart("chartLeads", "leads", v => v.toLocaleString(), "Leads");
+  drawBarChart("chartSignings", "signings", v => v.toLocaleString(), "Signings");
+  drawSourceChart();
+  drawCPSChart();
+
+  // July tab's "Won Deals — Month over Month" mini-cards -- always the
+  // first 3 months (May/June/July), a fixed historical view rather than a
+  // rolling window, since this whole tab is specifically about July.
+  MONTHS.slice(0, 3).forEach((m, i) => {
+    const val = derived[m].signings;
+    document.getElementById(`momLabel${i}`).textContent = MONTH_LABEL[m];
+    document.getElementById(`momValue${i}`).textContent = val;
+    const deltaEl = document.getElementById(`momDelta${i}`);
+    const prevMonth = i > 0 ? MONTHS[i - 1] : null;
+    const prevVal = prevMonth ? derived[prevMonth].signings : null;
+    if (prevVal) {
+      const pct = Math.round((val - prevVal) / prevVal * 100);
+      deltaEl.innerHTML = `won deals &middot; <span style="color:var(--hero);font-weight:700;">${pct >= 0 ? "+" : ""}${pct}%</span>`;
+    } else {
+      deltaEl.textContent = "won deals";
+    }
+  });
+
+  drawGenericDonut("chartJulyLeadsSource", "julyLeadsLegend", JULY_LEADS_BY_SOURCE, "leads");
+  drawGenericDonut("chartJulyWonSource", "julyWonLegend", computeSourceByMonth()[JULY_KEY] || {}, "won");
+}
+
+// ── Signings by source (stacked bar) ───────────────────────────────────────
+// "Referral - <name>" variants fold into one "Referral" channel — the
+// specific referrer isn't a channel distinction for this chart (still visible
+// per-deal on the All-Time Won tab).
+const CHANNELS = [
+  { key: "SGL",      label: "SGL",      color: "var(--series-1)" },
+  { key: "Referral", label: "Referral", color: "var(--series-2)" },
+  { key: "MGL",      label: "MGL",      color: "var(--series-3)" },
+  { key: "client",   label: "Client",   color: "var(--series-4)" },
+];
+const OTHER_CHANNEL = { key: "Other", label: "Other", color: "var(--series-other)" };
+
+// Bare referrer names (no "Referral - " prefix) that should still count as
+// Referral -- found reviewing July's Other bucket 2026-08-03 (e.g. Fincera
+// Series 1's source is literally "David Allen", a person, not a category).
+const REFERRAL_NAME_HINTS = ["kirt", "rob saracco", "david allen"];
+
+function sourceChannel(source) {
+  if (!source) return "Other";
+  if (source.startsWith("Referral")) return "Referral";
+  if (source === "SGL") return "SGL";
+  if (source === "MGL") return "MGL";
+  if (source === "client") return "client";
+  const lower = source.toLowerCase();
+  if (REFERRAL_NAME_HINTS.some(n => lower.includes(n))) return "Referral";
+  return "Other";
+}
+
+function computeSourceByMonth(months = MONTHS) {
+  const result = {};
+  months.forEach(m => { result[m] = {}; });
+  WON.forEach(w => {
+    const m = effectiveDate(w).slice(0, 7);
+    if (!m || !result.hasOwnProperty(m)) return;
+    const ch = sourceChannel(w.source);
+    result[m][ch] = (result[m][ch] || 0) + 1;
+  });
+  return result;
+}
+
+// legend built once — channel set/order is fixed regardless of data
+const sourceLegendEl = document.getElementById("sourceLegend");
+CHANNELS.concat([OTHER_CHANNEL]).forEach(ch => {
+  const item = document.createElement("span");
+  item.className = "legend-item";
+  const swatch = document.createElement("span");
+  swatch.className = "legend-swatch-rect";
+  swatch.style.background = ch.color;
+  const label = document.createElement("span");
+  label.textContent = ch.label;
+  item.appendChild(swatch);
+  item.appendChild(label);
+  sourceLegendEl.appendChild(item);
+});
+
+// month selector for the pie (built once; "All" combines May–Jul)
+let sourceMonthSelection = "All";
+const sourceMonthToggle = document.getElementById("sourceMonthToggle");
+["All", ...MONTHS].forEach(key => {
+  const btn = document.createElement("button");
+  btn.textContent = key === "All" ? "All" : MONTH_LABEL[key];
+  btn.style.fontSize = "0.68rem";
+  btn.style.padding = "6px 8px";
+  if (key === sourceMonthSelection) btn.classList.add("active");
+  btn.addEventListener("click", () => {
+    sourceMonthSelection = key;
+    [...sourceMonthToggle.children].forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    drawSourceChart();
+  });
+  sourceMonthToggle.appendChild(btn);
+});
+
+function polarPoint(cx, cy, r, angleDeg) {
+  const rad = (angleDeg - 90) * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function donutSlicePath(cx, cy, rOuter, rInner, startAngle, endAngle) {
+  const startOuter = polarPoint(cx, cy, rOuter, endAngle);
+  const endOuter = polarPoint(cx, cy, rOuter, startAngle);
+  const startInner = polarPoint(cx, cy, rInner, endAngle);
+  const endInner = polarPoint(cx, cy, rInner, startAngle);
+  const largeArc = endAngle - startAngle > 180 ? "1" : "0";
+  return `M${startOuter.x},${startOuter.y} A${rOuter},${rOuter} 0 ${largeArc} 0 ${endOuter.x},${endOuter.y} `
+    + `L${endInner.x},${endInner.y} A${rInner},${rInner} 0 ${largeArc} 1 ${startInner.x},${startInner.y} Z`;
+}
+
+// ── Generic donut (July Leads/Won-by-source) — reuses CHANNELS/donutSlicePath
+const JULY_LEADS_BY_SOURCE = { MGL: 63, SGL: 13, Referral: 16, client: 7, Other: 0 };
+
+function buildChannelLegend(containerId) {
+  const box = document.getElementById(containerId);
+  CHANNELS.concat([OTHER_CHANNEL]).forEach(ch => {
+    const item = document.createElement("span");
+    item.className = "legend-item";
+    const swatch = document.createElement("span");
+    swatch.className = "legend-swatch-rect";
+    swatch.style.background = ch.color;
+    const label = document.createElement("span");
+    label.textContent = ch.label;
+    item.appendChild(swatch);
+    item.appendChild(label);
+    box.appendChild(item);
+  });
+}
+buildChannelLegend("julyLeadsLegend");
+buildChannelLegend("julyWonLegend");
+
+function drawGenericDonut(svgId, legendId, data, centerLabel) {
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = "";
+  const total = Object.values(data).reduce((a, b) => a + b, 0);
+  const cx = 120, cy = 92, rOuter = 66, rInner = 38;
+
+  const centerVal = el("text", { x: cx, y: cy - 2, "text-anchor": "middle", class: "bar-value" });
+  centerVal.style.fontSize = "20px";
+  centerVal.textContent = total;
+  const centerLbl = el("text", { x: cx, y: cy + 14, "text-anchor": "middle", class: "bar-month" });
+  centerLbl.textContent = centerLabel;
+
+  if (total === 0) {
+    svg.appendChild(el("circle", { cx, cy, r: rOuter, fill: "none", stroke: "var(--line)", "stroke-width": 1 }));
+    svg.appendChild(centerVal);
+    svg.appendChild(centerLbl);
+    return;
+  }
+
+  const orderedKeys = CHANNELS.map(c => c.key).concat([OTHER_CHANNEL.key]).filter(k => data[k] > 0);
+  let angle = 0;
+  const GAP_DEG = orderedKeys.length > 1 ? 2 : 0;
+
+  orderedKeys.forEach(key => {
+    const val = data[key];
+    const chDef = CHANNELS.find(c => c.key === key) || OTHER_CHANNEL;
+    const sweep = (val / total) * 360;
+    const startAngle = angle + GAP_DEG / 2;
+    const endAngle = angle + sweep - GAP_DEG / 2;
+
+    const mark = el("path", {
+      d: donutSlicePath(cx, cy, rOuter, rInner, startAngle, endAngle),
+      fill: chDef.color, class: "seg-mark"
+    });
+    svg.appendChild(mark);
+    mark.addEventListener("pointerenter", () => mark.classList.add("seg-hover"));
+    mark.addEventListener("pointerleave", () => { mark.classList.remove("seg-hover"); hideTooltip(); });
+    mark.addEventListener("pointermove", (e) => {
+      const pct = Math.round((val / total) * 100);
+      showTooltip(e.clientX, e.clientY, [[chDef.label, `${val} (${pct}%)`]]);
+    });
+    mark.style.cursor = "pointer";
+
+    angle += sweep;
+  });
+
+  svg.appendChild(centerVal);
+  svg.appendChild(centerLbl);
+}
+
+
+function drawSourceChart() {
+  const svg = document.getElementById("chartSourceBreakdown");
+  svg.innerHTML = "";
+  const byMonth = computeSourceByMonth();
+
+  let data;
+  if (sourceMonthSelection === "All") {
+    data = {};
+    MONTHS.forEach(m => {
+      Object.entries(byMonth[m]).forEach(([k, v]) => { data[k] = (data[k] || 0) + v; });
+    });
+  } else {
+    data = byMonth[sourceMonthSelection];
+  }
+
+  const total = Object.values(data).reduce((a, b) => a + b, 0);
+  const cx = 120, cy = 92, rOuter = 66, rInner = 38;
+
+  const centerVal = el("text", { x: cx, y: cy - 2, "text-anchor": "middle", class: "bar-value" });
+  centerVal.style.fontSize = "20px";
+  centerVal.textContent = total;
+  const centerLabel = el("text", { x: cx, y: cy + 14, "text-anchor": "middle", class: "bar-month" });
+  centerLabel.textContent = "signings";
+
+  if (total === 0) {
+    svg.appendChild(el("circle", { cx, cy, r: rOuter, fill: "none", stroke: "var(--line)", "stroke-width": 1 }));
+    svg.appendChild(centerVal);
+    svg.appendChild(centerLabel);
+    return;
+  }
+
+  const orderedKeys = CHANNELS.map(c => c.key).concat([OTHER_CHANNEL.key]).filter(k => data[k] > 0);
+  let angle = 0;
+  const GAP_DEG = orderedKeys.length > 1 ? 2 : 0;
+
+  orderedKeys.forEach(key => {
+    const val = data[key];
+    const chDef = CHANNELS.find(c => c.key === key) || OTHER_CHANNEL;
+    const sweep = (val / total) * 360;
+    const startAngle = angle + GAP_DEG / 2;
+    const endAngle = angle + sweep - GAP_DEG / 2;
+
+    const mark = el("path", {
+      d: donutSlicePath(cx, cy, rOuter, rInner, startAngle, endAngle),
+      fill: chDef.color, class: "seg-mark"
+    });
+    svg.appendChild(mark);
+
+    mark.addEventListener("pointerenter", () => mark.classList.add("seg-hover"));
+    mark.addEventListener("pointerleave", () => { mark.classList.remove("seg-hover"); hideTooltip(); });
+    mark.addEventListener("pointermove", (e) => {
+      const pct = Math.round((val / total) * 100);
+      showTooltip(e.clientX, e.clientY, [[chDef.label, `${val} (${pct}%)`]]);
+    });
+    mark.style.cursor = "pointer";
+
+    angle += sweep;
+  });
+
+  svg.appendChild(centerVal);
+  svg.appendChild(centerLabel);
+}
+
+
+// ── Tooltip helper ────────────────────────────────────────────────────────
+const tooltip = document.getElementById("tooltip");
+function showTooltip(x, y, rows) {
+  tooltip.innerHTML = "";
+  rows.forEach(([label, value]) => {
+    const row = document.createElement("div");
+    const vSpan = document.createElement("span");
+    vSpan.className = "tt-value";
+    vSpan.textContent = value;
+    const lSpan = document.createElement("span");
+    lSpan.className = "tt-label";
+    lSpan.textContent = " " + label;
+    row.appendChild(vSpan);
+    row.appendChild(lSpan);
+    tooltip.appendChild(row);
+  });
+  tooltip.style.display = "block";
+  tooltip.style.left = (x + 14) + "px";
+  tooltip.style.top = (y + 14) + "px";
+}
+function hideTooltip() { tooltip.style.display = "none"; }
+
+
+// ── Small-multiple bar chart builder ──────────────────────────────────────
+const SVG_NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs) {
+  const e = document.createElementNS(SVG_NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+
+function drawBarChart(svgId, key, formatter, tooltipLabel) {
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = "";
+  const W = 240, H = 160, padTop = 14, padBottom = 26, padSide = 16;
+  const plotH = H - padTop - padBottom;
+  const maxVal = Math.max(...MONTHS.map(m => derived[m][key])) * 1.15;
+  const barW = 24, gap = (W - padSide * 2 - barW * MONTHS.length) / (MONTHS.length - 1 + 1.5);
+
+  // gridline (baseline)
+  svg.appendChild(el("line", {
+    x1: padSide, x2: W - padSide, y1: H - padBottom, y2: H - padBottom,
+    class: "gridline"
+  }));
+
+  MONTHS.forEach((m, i) => {
+    const val = derived[m][key];
+    const barH = (val / maxVal) * plotH;
+    const x = padSide + i * (barW + gap) + gap / 2;
+    const y = H - padBottom - barH;
+
+    const rect = el("rect", {
+      x, y, width: barW, height: barH, rx: 4,
+      class: "bar-rect"
+    });
+    svg.appendChild(rect);
+
+    // value label above bar
+    const label = el("text", {
+      x: x + barW / 2, y: y - 6, "text-anchor": "middle", class: "bar-value"
+    });
+    label.textContent = formatter(val);
+    svg.appendChild(label);
+
+    // month label
+    const monthLabel = el("text", {
+      x: x + barW / 2, y: H - 8, "text-anchor": "middle", class: "bar-month"
+    });
+    monthLabel.textContent = MONTH_LABEL[m];
+    svg.appendChild(monthLabel);
+
+    // hit target
+    const hit = el("rect", {
+      x: x - 4, y: padTop, width: barW + 8, height: H - padTop - padBottom,
+      class: "bar-hit"
+    });
+    hit.addEventListener("pointerenter", () => rect.classList.add("hover"));
+    hit.addEventListener("pointerleave", () => { rect.classList.remove("hover"); hideTooltip(); });
+    hit.addEventListener("pointermove", (e) => {
+      showTooltip(e.clientX, e.clientY, [[tooltipLabel, formatter(val)], ["Month", MONTH_LABEL[m]]]);
+    });
+    svg.appendChild(hit);
+  });
+}
+
+
+// ── Cost / Signing toggle chart — Overall vs. MGL ──────────────────────────
+// Toggled rather than shown together -- Overall and MGL sit on very
+// different scales, so sharing one axis flattens the Overall line. Each
+// selection gets its own y-axis. A month with 0 signings for a series is
+// skipped (cost/signing is undefined at zero) rather than plotted as 0.
+const CPS_SERIES = {
+  Overall: { key: "cps",    color: "var(--hero)",     signingsKey: "signings",    signingsLabel: "Signings" },
+  MGL:     { key: "cpsMgl", color: "var(--series-3)", signingsKey: "mglSignings", signingsLabel: "MGL signings" },
+};
+let cpsSelection = "Overall";
+
+const cpsToggle = document.getElementById("cpsToggle");
+Object.keys(CPS_SERIES).forEach(key => {
+  const btn = document.createElement("button");
+  btn.textContent = key;
+  if (key === cpsSelection) btn.classList.add("active");
+  btn.addEventListener("click", () => {
+    cpsSelection = key;
+    [...cpsToggle.children].forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    drawCPSChart();
+  });
+  cpsToggle.appendChild(btn);
+});
+
+function drawCPSChart() {
+  const svg = document.getElementById("chartCPS");
+  svg.innerHTML = "";
+  const { key, color, signingsKey, signingsLabel } = CPS_SERIES[cpsSelection];
+  const W = 720, H = 180, padT = 18, padB = 30, padL = 60, padR = 20;
+  const x = i => padL + (i / (MONTHS.length - 1)) * (W - padL - padR);
+  const yMax = Math.max(...MONTHS.map(m => derived[m][key]), 1) * 1.15;
+  const y = v => H - padB - (v / yMax) * (H - padT - padB);
+
+  const ticks = 4;
+  for (let i = 0; i <= ticks; i++) {
+    const val = (yMax / ticks) * i;
+    const ty = y(val);
+    svg.appendChild(el("line", { x1: padL, x2: W - padR, y1: ty, y2: ty, class: "gridline" }));
+    const t = el("text", { x: padL - 8, y: ty + 4, "text-anchor": "end", class: "bar-month" });
+    t.textContent = fmtMoney(val);
+    svg.appendChild(t);
+  }
+
+  MONTHS.forEach((m, i) => {
+    const t = el("text", { x: x(i), y: H - 8, "text-anchor": "middle", class: "bar-month" });
+    t.textContent = MONTH_LABEL[m] + (m === CURRENT_MONTH_KEY ? "*" : "");
+    svg.appendChild(t);
+  });
+
+  const pts = MONTHS.map((m, i) => ({ m, i, val: derived[m][key] })).filter(p => p.val > 0);
+  if (pts.length >= 2) {
+    const d = pts.map((p, idx) => `${idx === 0 ? "M" : "L"}${x(p.i)},${y(p.val)}`).join(" ");
+    svg.appendChild(el("path", { d, fill: "none", stroke: color, "stroke-width": 2, "stroke-linecap": "round" }));
+  }
+  pts.forEach(p => {
+    const cx = x(p.i), cy = y(p.val);
+    svg.appendChild(el("circle", { cx, cy, r: 6, fill: "var(--surface)" }));
+    svg.appendChild(el("circle", { cx, cy, r: 4, fill: color }));
+    const hit = el("circle", { cx, cy, r: 14, fill: "transparent", style: "cursor:pointer" });
+    hit.addEventListener("pointermove", (e) => {
+      showTooltip(e.clientX, e.clientY, [
+        [p.m === CURRENT_MONTH_KEY ? `${MONTH_LABEL[p.m]} (month to date)` : MONTH_LABEL[p.m], fmtMoney(p.val)],
+        [signingsLabel, derived[p.m][signingsKey]],
+      ]);
+    });
+    hit.addEventListener("pointerleave", hideTooltip);
+    svg.appendChild(hit);
+  });
+}
+
+// ── Initial compute + render (Overview depends on WON, so this must run
+// before the basis toggle reads BASIS's keys) ──────────────────────────────
+recomputeDerived();
+renderOverview();
+
+// ── Simulator ─────────────────────────────────────────────────────────────
+let currentBasis = "recent";
+
+const basisToggle = document.getElementById("basisToggle");
+Object.keys(BASIS).forEach(key => {
+  const btn = document.createElement("button");
+  btn.textContent = BASIS_LABEL[key];
+  if (key === currentBasis) btn.classList.add("active");
+  btn.addEventListener("click", () => {
+    currentBasis = key;
+    [...basisToggle.children].forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    updateSim();
+    drawSimChart();
+  });
+  basisToggle.appendChild(btn);
+});
+
+const spendSlider = document.getElementById("spendSlider");
+const spendValueEl = document.getElementById("spendValue");
+
+function updateSim() {
+  const spend = Number(spendSlider.value);
+  const basis = BASIS[currentBasis];
+  const leads = basis.cpl > 0 ? spend / basis.cpl : 0;
+  const signings = leads * basis.conv;
+  const cps = signings > 0 ? spend / signings : 0;
+
+  spendValueEl.textContent = fmtMoney(spend);
+  document.getElementById("predLeads").textContent = leads.toFixed(1);
+  document.getElementById("predSignings").textContent = signings.toFixed(1);
+  document.getElementById("predCPS").textContent = signings > 0 ? fmtMoney(cps) : "—";
+  document.getElementById("predCPLUsed").textContent = fmtMoney2(basis.cpl);
+  drawMarker();
+}
+
+// ── Simulator line chart ──────────────────────────────────────────────────
+const simSvg = document.getElementById("chartSim");
+const SIM_W = 800, SIM_H = 260, SIM_PAD_L = 50, SIM_PAD_R = 20, SIM_PAD_T = 16, SIM_PAD_B = 34;
+const SIM_MAX_SPEND = 15000;
+
+function simX(spend) {
+  return SIM_PAD_L + (spend / SIM_MAX_SPEND) * (SIM_W - SIM_PAD_L - SIM_PAD_R);
+}
+function simY(leads, maxLeads) {
+  return SIM_H - SIM_PAD_B - (leads / maxLeads) * (SIM_H - SIM_PAD_T - SIM_PAD_B);
+}
+
+let markerGroup = null;
+
+function drawSimChart() {
+  simSvg.innerHTML = "";
+  const basis = BASIS[currentBasis];
+  const maxLeadsOnLine = SIM_MAX_SPEND / basis.cpl;
+  const maxActualLeads = Math.max(...MONTHS.map(m => derived[m].leads));
+  const maxLeads = Math.max(maxLeadsOnLine, maxActualLeads) * 1.1;
+
+  // gridlines (y-axis ticks)
+  const ticks = 4;
+  for (let i = 0; i <= ticks; i++) {
+    const val = (maxLeads / ticks) * i;
+    const y = simY(val, maxLeads);
+    simSvg.appendChild(el("line", { x1: SIM_PAD_L, x2: SIM_W - SIM_PAD_R, y1: y, y2: y, class: "gridline" }));
+    const t = el("text", { x: SIM_PAD_L - 8, y: y + 4, "text-anchor": "end", class: "bar-month" });
+    t.textContent = Math.round(val);
+    simSvg.appendChild(t);
+  }
+  // x-axis label ticks
+  [0, 5000, 10000, 15000].forEach(v => {
+    const x = simX(v);
+    const t = el("text", { x, y: SIM_H - 10, "text-anchor": "middle", class: "bar-month" });
+    t.textContent = "$" + (v / 1000) + "K";
+    simSvg.appendChild(t);
+  });
+
+  // projected line
+  const x0 = simX(0), y0 = simY(0, maxLeads);
+  const x1 = simX(SIM_MAX_SPEND), y1 = simY(maxLeadsOnLine, maxLeads);
+  simSvg.appendChild(el("line", {
+    x1: x0, y1: y0, x2: x1, y2: y1,
+    stroke: "var(--hero)", "stroke-width": 2, "stroke-linecap": "round"
+  }));
+
+  // actual month dots
+  MONTHS.forEach(m => {
+    const d = derived[m];
+    const cx = simX(d.spend), cy = simY(d.leads, maxLeads);
+    const ring = el("circle", { cx, cy, r: 6, fill: "var(--surface)" });
+    const dot = el("circle", { cx, cy, r: 4, fill: "var(--text-mute)" });
+    simSvg.appendChild(ring);
+    simSvg.appendChild(dot);
+
+    const hit = el("circle", { cx, cy, r: 14, fill: "transparent", style: "cursor:pointer" });
+    hit.addEventListener("pointermove", (e) => {
+      showTooltip(e.clientX, e.clientY, [
+        [MONTH_LABEL[m], `${fmtMoney(d.spend)} spend`],
+        ["Leads", d.leads], ["Signings", d.signings], ["CPL", fmtMoney2(d.cpl)]
+      ]);
+    });
+    hit.addEventListener("pointerleave", hideTooltip);
+    simSvg.appendChild(hit);
+  });
+
+  // hover crosshair across whole chart
+  const hitArea = el("rect", {
+    x: SIM_PAD_L, y: SIM_PAD_T, width: SIM_W - SIM_PAD_L - SIM_PAD_R, height: SIM_H - SIM_PAD_T - SIM_PAD_B,
+    fill: "transparent", style: "cursor:crosshair"
+  });
+  hitArea.addEventListener("pointermove", (e) => {
+    const rect = simSvg.getBoundingClientRect();
+    const scaleX = SIM_W / rect.width;
+    const svgX = (e.clientX - rect.left) * scaleX;
+    const spend = Math.max(0, Math.min(SIM_MAX_SPEND, ((svgX - SIM_PAD_L) / (SIM_W - SIM_PAD_L - SIM_PAD_R)) * SIM_MAX_SPEND));
+    const leads = spend / basis.cpl;
+    showTooltip(e.clientX, e.clientY, [
+      [`at ${fmtMoney(spend)} spend`, `${leads.toFixed(1)} leads`]
+    ]);
+  });
+  hitArea.addEventListener("pointerleave", hideTooltip);
+  simSvg.appendChild(hitArea);
+
+  markerGroup = el("g", {});
+  simSvg.appendChild(markerGroup);
+  drawMarker();
+}
+
+function drawMarker() {
+  if (!markerGroup) return;
+  markerGroup.innerHTML = "";
+  const spend = Number(spendSlider.value);
+  const basis = BASIS[currentBasis];
+  const maxLeadsOnLine = SIM_MAX_SPEND / basis.cpl;
+  const maxActualLeads = Math.max(...MONTHS.map(m => derived[m].leads));
+  const maxLeads = Math.max(maxLeadsOnLine, maxActualLeads) * 1.1;
+  const leads = spend / basis.cpl;
+  const x = simX(spend), y = simY(leads, maxLeads);
+
+  markerGroup.appendChild(el("line", {
+    x1: x, x2: x, y1: SIM_PAD_T, y2: SIM_H - SIM_PAD_B,
+    stroke: "var(--text-mute)", "stroke-width": 1, "stroke-dasharray": "3,3"
+  }));
+  const ring = el("circle", { cx: x, cy: y, r: 7, fill: "var(--surface)" });
+  const dot = el("circle", { cx: x, cy: y, r: 5, fill: "var(--hero)" });
+  markerGroup.appendChild(ring);
+  markerGroup.appendChild(dot);
+}
+
+
+spendSlider.addEventListener("input", updateSim);
+
+updateSim();
+drawSimChart();
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+  });
+});
+
+
+// ── All-time won list (live from GHL -- Agreement Signed / Capital Raiser
+// Intent are read-only display now; edit them on the opportunity in GHL) ──
+function renderWonTable() {
+  const wonBody = document.getElementById("wonTableBody");
+  wonBody.innerHTML = "";
+  WON.forEach(w => {
+    const tr = document.createElement("tr");
+
+    const dateTd = document.createElement("td");
+    dateTd.textContent = w.date_won;
+    tr.appendChild(dateTd);
+
+    const nameTd = document.createElement("td");
+    nameTd.style.textAlign = "left";
+    nameTd.textContent = w.name;
+    tr.appendChild(nameTd);
+
+    const valueTd = document.createElement("td");
+    valueTd.textContent = fmtMoney2(w.value);
+    tr.appendChild(valueTd);
+
+    const ownerTd = document.createElement("td");
+    ownerTd.style.textAlign = "left";
+    ownerTd.textContent = w.owner;
+    tr.appendChild(ownerTd);
+
+    const sourceTd = document.createElement("td");
+    sourceTd.style.textAlign = "left";
+    if (w.source) {
+      sourceTd.textContent = w.source;
+    } else {
+      sourceTd.textContent = "—";
+      sourceTd.className = "empty-field";
+    }
+    tr.appendChild(sourceTd);
+
+    const agreementTd = document.createElement("td");
+    if (w.agreement_signed) {
+      agreementTd.textContent = w.agreement_signed;
+    } else {
+      agreementTd.textContent = w.date_won;
+      agreementTd.className = "empty-field";
+      agreementTd.title = "Not set on the opportunity in GHL yet -- showing Date Won as a default.";
+    }
+    tr.appendChild(agreementTd);
+
+    const intentTd = document.createElement("td");
+    intentTd.style.textAlign = "left";
+    if (w.capital_raiser_intent) {
+      intentTd.textContent = w.capital_raiser_intent;
+    } else {
+      intentTd.textContent = "—";
+      intentTd.className = "empty-field";
+    }
+    tr.appendChild(intentTd);
+
+    wonBody.appendChild(tr);
+  });
+}
+renderWonTable();
+document.getElementById("wonTabBtn").textContent = `All-Time Won (${WON.length})`;
+
+// ── July Sales Report — Won Deals Value (editable, saved in this browser) ──
+const JULY_VALUE_STORAGE_KEY = "axiskey_kpi_whiteboard_july_won_values";
+function loadJulyValueOverrides() {
+  try { return JSON.parse(localStorage.getItem(JULY_VALUE_STORAGE_KEY) || "{}"); } catch (e) { return {}; }
+}
+function saveJulyValueOverride(id, val) {
+  const o = loadJulyValueOverrides();
+  o[id] = val;
+  localStorage.setItem(JULY_VALUE_STORAGE_KEY, JSON.stringify(o));
+}
+const savedJulyValues = loadJulyValueOverrides();
+document.querySelectorAll(".value-input").forEach(input => {
+  const id = input.dataset.id;
+  if (savedJulyValues[id] !== undefined) input.value = savedJulyValues[id];
+  input.addEventListener("change", () => saveJulyValueOverride(id, input.value));
+});
+
+
+// ── SDR Capacity & Lead Target Calculator ──────────────────────────────────
+(function () {
+  const $ = id => document.getElementById(id);
+
+  const sdrInputs = {
+    numSDRs: $("numSDRs"),
+    callsPerSDR: $("callsPerSDR"),
+    numManagers: $("numManagers"),
+    managerPct: $("managerPct"),
+    workingDays: $("workingDays"),
+    weeksPerMonth: $("weeksPerMonth"),
+    conversionRate: $("conversionRate"),
+  };
+
+  let scenario = "target"; // "target" (raw math) | "conservative" (floors capacity/day)
+
+  const scenarioToggle = $("scenarioToggle");
+  [
+    { key: "target", label: "Target (raw math)" },
+    { key: "conservative", label: "Conservative (rounds down capacity)" },
+  ].forEach(opt => {
+    const btn = document.createElement("button");
+    btn.textContent = opt.label;
+    if (opt.key === scenario) btn.classList.add("active");
+    btn.addEventListener("click", () => {
+      scenario = opt.key;
+      [...scenarioToggle.children].forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      sdrRecalc();
+    });
+    scenarioToggle.appendChild(btn);
+  });
+
+  $("preset4").addEventListener("click", () => {
+    sdrInputs.weeksPerMonth.value = 4;
+    $("preset4").classList.add("active");
+    $("preset433").classList.remove("active");
+    sdrRecalc();
+  });
+  $("preset433").addEventListener("click", () => {
+    sdrInputs.weeksPerMonth.value = 4.33;
+    $("preset433").classList.add("active");
+    $("preset4").classList.remove("active");
+    sdrRecalc();
+  });
+  sdrInputs.weeksPerMonth.addEventListener("input", () => {
+    const v = Number(sdrInputs.weeksPerMonth.value);
+    $("preset4").classList.toggle("active", v === 4);
+    $("preset433").classList.toggle("active", Math.abs(v - 4.33) < 0.001);
+  });
+
+  function fmtCalls(n) { return Math.round(n).toLocaleString("en-US"); }
+  function fmtContacts(n) { return Math.ceil(n).toLocaleString("en-US"); }
+  function fmtRaw(n, decimals = 2) { return n.toLocaleString("en-US", { maximumFractionDigits: decimals }); }
+
+  function sdrRecalc() {
+    const numSDRs = Math.max(0, Number(sdrInputs.numSDRs.value) || 0);
+    const callsPerSDRRaw = Math.max(0, Number(sdrInputs.callsPerSDR.value) || 0);
+    const numManagers = Math.max(0, Number(sdrInputs.numManagers.value) || 0);
+    const managerPct = Math.max(0, Number(sdrInputs.managerPct.value) || 0);
+    const workingDays = Math.max(1, Number(sdrInputs.workingDays.value) || 1);
+    const weeksPerMonth = Math.max(1, Number(sdrInputs.weeksPerMonth.value) || 1);
+    const conversionRate = Math.min(100, Math.max(0.01, Number(sdrInputs.conversionRate.value) || 0.01));
+
+    const perSDRDayRaw = callsPerSDRRaw;
+    const perSDRDay = scenario === "conservative" ? Math.floor(perSDRDayRaw) : perSDRDayRaw;
+
+    const managerDayRaw = numManagers * (callsPerSDRRaw * (managerPct / 100));
+    const managerDay = scenario === "conservative" ? Math.floor(managerDayRaw) : managerDayRaw;
+
+    const sdrRoleDay = numSDRs * perSDRDay;
+    const totalDay = sdrRoleDay + managerDay;
+    const totalWeek = totalDay * workingDays;
+    const totalMonth = totalWeek * weeksPerMonth;
+
+    const conv = conversionRate / 100;
+    const contactsMonth = totalMonth / conv;
+    const contactsWeek = totalWeek / conv;
+    const contactsDay = totalDay / conv;
+
+    const tbody = $("capacityBody");
+    tbody.innerHTML = "";
+
+    function addRow(label, day, week, month, isTotal, muted) {
+      const tr = document.createElement("tr");
+      if (isTotal) tr.className = "total-row";
+      const labelTd = document.createElement("td");
+      labelTd.textContent = label;
+      if (muted) labelTd.className = "role-label";
+      tr.appendChild(labelTd);
+      [day, week, month].forEach(v => {
+        const td = document.createElement("td");
+        td.className = "mono";
+        td.textContent = fmtCalls(v);
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }
+
+    for (let i = 1; i <= numSDRs; i++) {
+      addRow(`SDR ${i}`, perSDRDay, perSDRDay * workingDays, perSDRDay * workingDays * weeksPerMonth, false, true);
+    }
+    if (numManagers > 0) {
+      addRow("Sales Manager (combined)", managerDay, managerDay * workingDays, managerDay * workingDays * weeksPerMonth, false, true);
+    }
+    addRow("Total calls", totalDay, totalWeek, totalMonth, true, false);
+
+    $("targetMonth").textContent = fmtContacts(contactsMonth);
+    $("targetWeek").textContent = fmtContacts(contactsWeek);
+    $("targetDay").textContent = fmtContacts(contactsDay);
+    $("assumedRate").textContent = conversionRate + "%";
+
+    const steps = $("stepsBody");
+    steps.innerHTML = "";
+    const lines = [
+      `Calls/day per SDR role = ${numSDRs} SDR${numSDRs === 1 ? "" : "s"} × ${fmtRaw(perSDRDay)} calls/day${scenario === "conservative" ? " (floored)" : ""} = <span class="step-val">${fmtRaw(sdrRoleDay)}</span>`,
+      `Calls/day for Sales Manager = ${numManagers} manager${numManagers === 1 ? "" : "s"} × (${fmtRaw(callsPerSDRRaw)} × ${managerPct}%)${scenario === "conservative" ? " (floored)" : ""} = <span class="step-val">${fmtRaw(managerDay)}</span>`,
+      `Total calls/day = ${fmtRaw(sdrRoleDay)} + ${fmtRaw(managerDay)} = <span class="step-val">${fmtRaw(totalDay)}</span> → rounded: <span class="step-result">${fmtCalls(totalDay)}</span>`,
+      `Total calls/week = ${fmtRaw(totalDay)} × ${workingDays} working days = <span class="step-val">${fmtRaw(totalWeek)}</span> → rounded: <span class="step-result">${fmtCalls(totalWeek)}</span>`,
+      `Total calls/month = ${fmtRaw(totalWeek)} × ${weeksPerMonth} weeks = <span class="step-val">${fmtRaw(totalMonth)}</span> → rounded: <span class="step-result">${fmtCalls(totalMonth)}</span>`,
+      `Required contacts/month = ${fmtRaw(totalMonth)} ÷ ${conversionRate}% = <span class="step-result">${fmtContacts(contactsMonth)}</span> (rounded up)`,
+      `Required contacts/week = ${fmtRaw(totalWeek)} ÷ ${conversionRate}% = <span class="step-result">${fmtContacts(contactsWeek)}</span> (rounded up)`,
+      `Required contacts/working day = ${fmtRaw(totalDay)} ÷ ${conversionRate}% = <span class="step-result">${fmtContacts(contactsDay)}</span> (rounded up)`,
+    ];
+    lines.forEach(line => {
+      const div = document.createElement("div");
+      div.className = "step-line";
+      div.innerHTML = line;
+      steps.appendChild(div);
+    });
+  }
+
+  Object.values(sdrInputs).forEach(inp => inp.addEventListener("input", sdrRecalc));
+  sdrRecalc();
+})();
+
+</script>
+
+</body>
+</html>
