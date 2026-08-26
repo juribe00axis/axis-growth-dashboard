@@ -163,6 +163,27 @@ print(f"  Total: {len(all_opps)}")
 print()
 
 
+# ─── 5b. EXCLUDE "instantly"-TAGGED LEADS ────────────────────────────────────
+# Instantly (instantly.ai) is a cold-email tool -- opportunities it creates get
+# tagged "instantly" on the contact record (not a distinct source value, and
+# not consistently on a dedicated "Instantly" source either -- e.g. some carry
+# source "SGL" or no source at all). Operator doesn't want these counted as
+# organic new-lead volume, so every "new leads by created date" metric in the
+# Marketing & Leads section (This Week/Last Week/WoW, Monthly Volume chart +
+# its full-history popout's non-MGL numbers) is computed from leads_opps
+# instead of all_opps. Everything else on the dashboard (funnel, MGL score
+# buckets, source breakdown, won/pipeline metrics) is untouched.
+EXCLUDE_LEAD_TAG = "instantly"
+
+def _has_tag(opp, tag):
+    tags = (opp.get("contact") or {}).get("tags") or []
+    return any((t or "").strip().lower() == tag for t in tags)
+
+leads_opps = [opp for opp in all_opps if not _has_tag(opp, EXCLUDE_LEAD_TAG)]
+print(f"  Excluding {len(all_opps) - len(leads_opps)} opp(s) tagged '{EXCLUDE_LEAD_TAG}' from lead-volume metrics")
+print()
+
+
 # ─── 6. COMPUTE METRICS ──────────────────────────────────────────────────────
 
 print("Computing metrics...")
@@ -175,7 +196,7 @@ date_keys         = [d.strftime("%Y-%m-%d") for d in date_range]
 date_labels_short = [f"{d.strftime('%b')} {d.day}" for d in date_range]
 
 daily_counts = defaultdict(int)
-for opp in all_opps:
+for opp in leads_opps:
     raw = opp.get("createdAt")
     if not raw:
         continue
@@ -298,7 +319,7 @@ _funnel_won = (
 # ── 6c. Summary tiles ────────────────────────────────────────────────────────
 
 new_this_week = 0
-for opp in all_opps:
+for opp in leads_opps:
     raw = opp.get("createdAt")
     if not raw:
         continue
@@ -331,7 +352,7 @@ prev_14_start = (today - timedelta(days=27)).replace(hour=0,  minute=0,  second=
 prev_14_end   = day_14_ago  # exclusive upper bound
 
 prev_14d = sum(
-    1 for opp in all_opps
+    1 for opp in leads_opps
     if opp.get("createdAt")
     and prev_14_start
     <= datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00"))
@@ -346,7 +367,7 @@ delta_14d_dir = "↑" if delta_14d > 0 else ("↓" if delta_14d < 0 else "→")
 last_week_start = week_start - timedelta(weeks=1)
 last_week_end   = week_start - timedelta(seconds=1)
 last_week_new   = sum(
-    1 for opp in all_opps
+    1 for opp in leads_opps
     if opp.get("createdAt")
     and last_week_start
     <= datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00"))
@@ -369,16 +390,16 @@ _m1_year     = _this_year if _this_month > 1 else _this_year - 1
 _m2_month    = (_this_month - 2) or 12
 _m2_year     = _this_year if _this_month > 2 else (_m1_year if _this_month == 2 else _this_year - 1)
 
-month1_count   = _month_count(all_opps, _m1_year, _m1_month)
-month2_count   = _month_count(all_opps, _m2_year, _m2_month)
-cur_month_count = _month_count(all_opps, _this_year, _this_month)
+month1_count   = _month_count(leads_opps, _m1_year, _m1_month)
+month2_count   = _month_count(leads_opps, _m2_year, _m2_month)
+cur_month_count = _month_count(leads_opps, _this_year, _this_month)
 month1_label   = datetime(_m1_year, _m1_month, 1).strftime("%b")
 month2_label   = datetime(_m2_year, _m2_month, 1).strftime("%b")
 cur_month_label = today.strftime("%b")
 
-# Full month-by-month history for the Monthly Volume "expand" view -- May 2026
-# is the earliest month with real lead data, so nothing older is lost even
-# though the compact 3-month view above only shows the most recent quarter.
+# Month sequence helper for the Monthly Volume "expand" view -- May 2026 is
+# the earliest month with real lead data. monthly_full itself (MGL-only, per
+# operator request) is built in 6d once mgl_opps exists.
 ALL_MONTHS_START = (2026, 5)
 def _month_seq(start_year, start_month, end_year, end_month):
     y, m = start_year, start_month
@@ -389,11 +410,6 @@ def _month_seq(start_year, start_month, end_year, end_month):
         if m > 12:
             m, y = 1, y + 1
     return out
-
-monthly_full = [
-    {"label": datetime(y, m, 1).strftime("%b"), "count": _month_count(all_opps, y, m)}
-    for (y, m) in _month_seq(*ALL_MONTHS_START, _this_year, _this_month)
-]
 
 # Last 7 days slice from the 14-day arrays (already computed)
 day_7_labels = date_labels_short[-7:]
@@ -432,6 +448,15 @@ SGL_SOURCES = {"SGL", "Stormer Santana's Calendar", "Fundraising Discussion"}
 mgl_opps   = [opp for opp in all_opps if opp.get("source") in MGL_SOURCES]
 mgl_ids    = {opp["contactId"] for opp in mgl_opps if opp.get("contactId")}
 sgl_opps   = [opp for opp in all_opps if opp.get("source") in SGL_SOURCES]
+
+# Full month-by-month history for the Monthly Volume "expand" popout -- MGL
+# only (per operator request), unlike the compact 3-month chart above it
+# which shows all lead volume minus "instantly"-tagged leads. May 2026 is
+# the earliest month with real lead data.
+monthly_full = [
+    {"label": datetime(y, m, 1).strftime("%b"), "count": _month_count(mgl_opps, y, m)}
+    for (y, m) in _month_seq(*ALL_MONTHS_START, _this_year, _this_month)
+]
 
 # Current-month MGL count/pct for the Monthly Volume badge (matches the chart's
 # own timeframe -- was previously a rolling-14-day figure, which didn't line up).
@@ -747,10 +772,12 @@ print("Computing week grid...")
 # The reps whose Weekly Rocks are tracked individually (owner ID -> display name).
 # Jennifer left the team (2026-07-24) and is no longer mapped -- her historical
 # movements/appointments still show under "All" but not a dedicated tab.
+# Cole Lytle added 2026-08-26, joined the team.
 ROCK_OWNERS = {
     "mMOdJLXRcIhuzcgsHx3M": "Stormer",
     "NftaswY26aPKq64te7Hn": "Alex",
     "kNU1jv4vrjjoehHNhlne": "Joncarlo",
+    "Xeprp2GjJCDQFoJV4jqS": "Cole",
 }
 
 WEEK1_START = datetime(2026, 7, 1, tzinfo=timezone.utc).date()
@@ -823,7 +850,7 @@ for opp in all_opps:
             "opp_name":   opp.get("name") or "(unnamed)",
             "contact":    (opp.get("contact") or {}).get("name") or "",
             "owner":      user_map.get(_owner_id, "Unassigned") if _owner_id else "Unassigned",
-            "rock_owner": ROCK_OWNERS.get(_owner_id, ""),  # Stormer/Alex/Joncarlo, or "" if untracked/unassigned
+            "rock_owner": ROCK_OWNERS.get(_owner_id, ""),  # Stormer/Alex/Joncarlo/Cole, or "" if untracked/unassigned
             "source":     opp.get("source") or "",
         })
 
@@ -2086,7 +2113,7 @@ HERO = f"""
       <div style="border-right:1px solid var(--line);padding:0 24px;padding-top:2px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
           <div style="display:flex;align-items:center;gap:6px;">
-            <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume{_info_icon("Compact view shows the last 3 months (2 months ago, last month, current month) by lead created date. The expand icon opens every month back to May 2026 in a popout. The MGL badge is always scoped to the current month, not a rolling window.")}</div>
+            <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume{_info_icon("Compact view shows the last 3 months (2 months ago, last month, current month) of all new leads by created date, excluding any lead tagged 'instantly' (Instantly.ai cold-email leads). The expand icon opens a separate popout: MGL-source leads only, every month back to May 2026. The MGL badge is always scoped to the current month, not a rolling window.")}</div>
             <button class="expand-icon-btn" onclick="openMonthlyModal()" title="View full month-by-month history" aria-label="Expand Monthly Volume">⤢</button>
           </div>
           <span class="mgl-pill" style="font-size:0.56rem;padding:2px 7px;white-space:nowrap;">MGL&nbsp;{cur_month_mgl}&nbsp;·&nbsp;{cur_month_mgl_pct}%&nbsp;·&nbsp;{cur_month_label}</span>
@@ -2382,9 +2409,9 @@ GRANOLA_SECTION = f"""
 
 # ── 7h2. Glossary modal — plain-English definition for every metric on the page
 GLOSSARY_TERMS = [
-    ("This Week / Last Week", "New leads (opportunities created) in the Sales Pipeline, Monday-Sunday. WoW badge compares this week's count to last week's."),
+    ("This Week / Last Week", "New leads (opportunities created), Monday-Sunday, excluding any lead tagged 'instantly' (Instantly.ai cold-email tool). WoW badge compares this week's count to last week's."),
     ("MGL CPL", "Meta ad spend divided by MGL-source leads for the selected period (7D/30D/90D toggle). The delta badge compares to the immediately preceding period of equal length; hidden for 90D since spend history only goes back 90 days. Lower is better."),
-    ("Monthly Volume (bar chart)", "Only the last 3 months (2 months ago, last month, current month) by lead created date, across all pipelines/statuses. Not all-time volume -- older months exist in the data but aren't shown here. The MGL badge next to it shows the current month's MGL count and % of that month's total leads (not a rolling window)."),
+    ("Monthly Volume (bar chart)", "Only the last 3 months (2 months ago, last month, current month) by lead created date, across all pipelines/statuses, excluding leads tagged 'instantly' (Instantly.ai cold-email tool). The MGL badge next to it shows the current month's MGL count and % of that month's total leads shown in this chart (not a rolling window). The expand icon opens a separate full-history popout showing MGL-source leads only, back to May 2026 -- a different slice of data than this compact chart, not the same data zoomed out."),
     ("Daily Performance table (Spend/Clicks/CPC/Leads/Conv%/CPL)", "Meta ad spend, link clicks, cost-per-click, MGL leads, lead conversion rate, and cost per MGL lead, one row per day. Excludes today (spend/clicks are incomplete until the day closes out). Use the date-range picker to view any custom window back to 90 days."),
     ("Lead Sources — MGL / SGL / Other", "Essentially all-time within the Sales Pipeline: every opportunity ever won or lost, plus any currently open at New Lead stage or beyond. MGL = Marketing Generated Lead, SGL = Sales Generated Lead."),
     ("Call Quality (Great Fit / Potential / Poor Fit / Unscored)", "Quality score set on the contact record, shown for opportunities at Discovery Call stage or beyond, broken out by source (MGL/SGL/Other)."),
@@ -2425,10 +2452,10 @@ MONTHLY_MODAL = """
   <div id="monthlyOverlay" onclick="if(event.target===this)closeMonthlyModal()">
     <div class="glossary-modal" style="max-width:820px;">
       <div class="glossary-modal-header">
-        <span class="glossary-modal-title">Monthly Volume — Full History</span>
+        <span class="glossary-modal-title">MGL Volume — Full History</span>
         <button class="glossary-close" onclick="closeMonthlyModal()">&times;</button>
       </div>
-      <div class="glossary-sub">New leads by month, since May 2026 (by lead created date)</div>
+      <div class="glossary-sub">MGL-source leads by month, since May 2026 (by lead created date)</div>
       <div style="position:relative;height:380px;"><canvas id="chartMonthlyFull"></canvas></div>
     </div>
   </div>
@@ -2498,6 +2525,7 @@ STAGE_MOVEMENT = f"""
           <button onclick="setRockOwner('stormer',this)" class="mktg-btn smv-owner-btn">Stormer</button>
           <button onclick="setRockOwner('alex',this)" class="mktg-btn smv-owner-btn">Alex</button>
           <button onclick="setRockOwner('joncarlo',this)" class="mktg-btn smv-owner-btn">Joncarlo</button>
+          <button onclick="setRockOwner('cole',this)" class="mktg-btn smv-owner-btn">Cole</button>
         </div>
       </div>
     </div>
@@ -2536,6 +2564,7 @@ _apw_all      = _build_weekly_matrix(weekly_appts, APPT_TYPE_LABELS, _APW_NOTE, 
 _apw_stormer  = _build_weekly_matrix(weekly_appts_by_owner["Stormer"], APPT_TYPE_LABELS, _APW_NOTE, _APW_EMPTY)
 _apw_alex     = _build_weekly_matrix(weekly_appts_by_owner["Alex"], APPT_TYPE_LABELS, _APW_NOTE, _APW_EMPTY)
 _apw_joncarlo = _build_weekly_matrix(weekly_appts_by_owner["Joncarlo"], APPT_TYPE_LABELS, _APW_NOTE, _APW_EMPTY)
+_apw_cole     = _build_weekly_matrix(weekly_appts_by_owner["Cole"], APPT_TYPE_LABELS, _APW_NOTE, _APW_EMPTY)
 
 APPT_WEEKLY_SECTION = f"""
   <section class="card" style="margin-top:22px;">
@@ -2546,12 +2575,14 @@ APPT_WEEKLY_SECTION = f"""
         <button onclick="setApptOwner('stormer',this)" class="mktg-btn smv-owner-btn2">Stormer</button>
         <button onclick="setApptOwner('alex',this)" class="mktg-btn smv-owner-btn2">Alex</button>
         <button onclick="setApptOwner('joncarlo',this)" class="mktg-btn smv-owner-btn2">Joncarlo</button>
+        <button onclick="setApptOwner('cole',this)" class="mktg-btn smv-owner-btn2">Cole</button>
       </div>
     </div>
     <div id="apwView-all" style="margin-top:14px;">{_apw_all}</div>
     <div id="apwView-stormer" style="margin-top:14px;display:none;">{_apw_stormer}</div>
     <div id="apwView-alex" style="margin-top:14px;display:none;">{_apw_alex}</div>
     <div id="apwView-joncarlo" style="margin-top:14px;display:none;">{_apw_joncarlo}</div>
+    <div id="apwView-cole" style="margin-top:14px;display:none;">{_apw_cole}</div>
   </section>
 """
 
@@ -2694,7 +2725,7 @@ CHARTS_SCRIPT = """
 
     // ── Weekly Rocks — date range + owner filter (field-based, no week grid) ──
     let rockOwnerFilter = "all";
-    const ROCK_OWNER_NAMES = { stormer: "Stormer", alex: "Alex", joncarlo: "Joncarlo" };
+    const ROCK_OWNER_NAMES = { stormer: "Stormer", alex: "Alex", joncarlo: "Joncarlo", cole: "Cole" };
 
     function setRockOwner(which, btn) {
       rockOwnerFilter = which;
@@ -2748,7 +2779,7 @@ CHARTS_SCRIPT = """
     function setApptOwner(which, btn) {
       document.querySelectorAll(".smv-owner-btn2").forEach(b => b.classList.remove("mktg-btn-active"));
       btn.classList.add("mktg-btn-active");
-      ["all", "stormer", "alex", "joncarlo"].forEach(k => {
+      ["all", "stormer", "alex", "joncarlo", "cole"].forEach(k => {
         document.getElementById("apwView-" + k).style.display = (k === which) ? "" : "none";
       });
     }
@@ -2861,7 +2892,7 @@ CHARTS_SCRIPT = """
               legend: { display: false },
               tooltip: {
                 displayColors: false,
-                callbacks: { label: ctx => ` ${ctx.parsed.y} new leads` },
+                callbacks: { label: ctx => ` ${ctx.parsed.y} MGL leads` },
               },
             },
             scales: {

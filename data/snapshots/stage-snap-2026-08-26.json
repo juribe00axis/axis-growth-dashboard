@@ -1,9 +1,13 @@
 {
   "date": "2026-08-26",
   "opps": {
+    "pSrgFENSKsvkrom8sq1L": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
     "UyvG72nPzCsvK7SL66u8": {
       "stage": "Discovery call set",
-      "owner": "Xeprp2GjJCDQFoJV4jqS"
+      "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "mkAjfEqCmi3I9GExRzJ1": {
       "stage": "Discovery call set",
@@ -26,15 +30,15 @@
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "0CJb33zK1eMOdeYQ6Ql2": {
-      "stage": "Discovery call set",
+      "stage": "New Lead",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "c6oLnDseSEb5DFuYNuo2": {
-      "stage": "Discovery call set",
+      "stage": "Proposal Sent",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "leZrc7kKw05vjLdqOpHC": {
-      "stage": "Discovery call set",
+      "stage": "Discovery Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "znfh6nwrT1UeHtj4UaPL": {
@@ -58,7 +62,7 @@
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "ZlMuTjYlu1LL8PCSVSjj": {
-      "stage": "Discovery call set",
+      "stage": "New Lead",
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "dKHzg52vk92rFkbTepZr": {
@@ -105,12 +109,8 @@
       "stage": "Discovery Call",
       "owner": "NftaswY26aPKq64te7Hn"
     },
-    "ev3TM7I0XFFTAqfjWS4q": {
-      "stage": "Discovery call set",
-      "owner": "NftaswY26aPKq64te7Hn"
-    },
     "0PfNfIXZvSbeQXyhU4MV": {
-      "stage": "Discovery Call",
+      "stage": "Proposal Sent",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "mmGyFT4U8WMFqeKRJE96": {
@@ -138,7 +138,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "mF35m73mWTJz390JAbbi": {
-      "stage": "New Lead",
+      "stage": "Discovery call set",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "ay8hoWMQE2knxzBikuP4": {
@@ -180,10 +180,6 @@
     "Apy8PeRKqIuqyBBrs5Yc": {
       "stage": "New Lead",
       "owner": "kNU1jv4vrjjoehHNhlne"
-    },
-    "YXtEhn8EibrIebCHwl9T": {
-      "stage": "Discovery Call",
-      "owner": "NftaswY26aPKq64te7Hn"
     },
     "JiVBmG7TYAbHE7mSZxNH": {
       "stage": "New Lead",
@@ -241,12 +237,8 @@
       "stage": "Agreement Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
-    "Qkb3nPOw9hTBlNzAKtCi": {
-      "stage": "New Lead",
-      "owner": "NftaswY26aPKq64te7Hn"
-    },
     "XV12MSyB8eWUsuZiizfd": {
-      "stage": "Discovery Call",
+      "stage": "Strategy Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "V9Arpc68EQMOuRYevv0F": {
@@ -280,10 +272,6 @@
     "TSpduqMVpTSIv762xMw7": {
       "stage": "New Lead",
       "owner": "kNU1jv4vrjjoehHNhlne"
-    },
-    "Ysve9HhDPF2UnuNhcP0a": {
-      "stage": "Discovery Call",
-      "owner": "NftaswY26aPKq64te7Hn"
     },
     "YDL6EEh6qSPw3Bk6xaGN": {
       "stage": "Reactivation Queue - no call booked",
@@ -321,10 +309,6 @@
       "stage": "Discovery Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
-    "2agQb1sme46FmGFF3EqJ": {
-      "stage": "Discovery Call",
-      "owner": "NftaswY26aPKq64te7Hn"
-    },
     "bNoocMMeLG6zmgaF8aN2": {
       "stage": "Proposal Sent",
       "owner": "NftaswY26aPKq64te7Hn"
@@ -351,10 +335,6 @@
     },
     "NYmyFMpMMkbzZXjqRteV": {
       "stage": "New Lead",
-      "owner": "NftaswY26aPKq64te7Hn"
-    },
-    "DPw1AJSKbTWcXAhdMTMl": {
-      "stage": "Strategy Call",
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "ZNkLwflb7Ini36ySn97v": {
