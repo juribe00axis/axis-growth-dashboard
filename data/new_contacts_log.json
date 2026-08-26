@@ -1,0 +1,994 @@
+[
+  {
+    "id": "NL1cHkygH3Sbd0vkSmW9",
+    "created_local": "2026-08-07T14:03:55.059000-04:00",
+    "date": "2026-08-07",
+    "name": "Cayetano Sevilla",
+    "source": "Referral",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "anFvQYagF2BEK1sq7KSW",
+    "created_local": "2026-08-07T14:08:29.821000-04:00",
+    "date": "2026-08-07",
+    "name": "Karl Krummenacher",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "zNpIQijPYjxniUtFSf8A",
+    "created_local": "2026-08-07T15:29:27.069000-04:00",
+    "date": "2026-08-07",
+    "name": "Major Miller",
+    "source": "Client",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "g863G5gzkoF8N3vr3lsj",
+    "created_local": "2026-08-07T19:36:33.593000-04:00",
+    "date": "2026-08-07",
+    "name": "Girish Souki",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "yQpBK4rWkjMNWQwOiaFV",
+    "created_local": "2026-08-08T01:45:15.118000-04:00",
+    "date": "2026-08-08",
+    "name": "Jeefferson Doura",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "pUnJqnZFFE0iDNvBiZ35",
+    "created_local": "2026-08-08T05:15:36.420000-04:00",
+    "date": "2026-08-08",
+    "name": "Diane Persicke",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "2vaowZgn62vgGPDHXtWJ",
+    "created_local": "2026-08-08T10:29:01.357000-04:00",
+    "date": "2026-08-08",
+    "name": "Michael Smith",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "y2nm5TgQGpjHHnVpUy1t",
+    "created_local": "2026-08-08T13:22:19.570000-04:00",
+    "date": "2026-08-08",
+    "name": "Garth Smith",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "Aj6TiSZGzJ0FzGolzUuN",
+    "created_local": "2026-08-08T16:56:51.244000-04:00",
+    "date": "2026-08-08",
+    "name": "Stephen Hollingshead",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "Gzk8gWAuEbzovJJUZ0Fz",
+    "created_local": "2026-08-08T18:28:44.890000-04:00",
+    "date": "2026-08-08",
+    "name": "Jason de Murray",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "V2SWtgcYjAwWWQMUeCFh",
+    "created_local": "2026-08-08T20:50:51.234000-04:00",
+    "date": "2026-08-08",
+    "name": "Van Allen",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "I5M8NWkJCE5q3yf3WK7h",
+    "created_local": "2026-08-08T21:04:32.416000-04:00",
+    "date": "2026-08-08",
+    "name": "Thomas Pepy",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "QpBAicPwDLLjdCSyVtV7",
+    "created_local": "2026-08-08T22:44:05.445000-04:00",
+    "date": "2026-08-08",
+    "name": "Michael Avy",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "FecVMPiGV6kFnY2JPrOf",
+    "created_local": "2026-08-09T02:13:47.923000-04:00",
+    "date": "2026-08-09",
+    "name": "Dan White",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "875CWHSQnpGxmxwe7mwM",
+    "created_local": "2026-08-09T02:23:46.027000-04:00",
+    "date": "2026-08-09",
+    "name": "Terry Brown",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "iL6YGXUaeTPgJgT3RIW7",
+    "created_local": "2026-08-09T13:06:53.602000-04:00",
+    "date": "2026-08-09",
+    "name": "Eric Stoffers",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "ZphVnnVYNzzD9T02K57R",
+    "created_local": "2026-08-09T13:07:14.452000-04:00",
+    "date": "2026-08-09",
+    "name": "Mariana",
+    "source": "",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "5fjb065gt75ITdgc0ke1",
+    "created_local": "2026-08-09T14:28:25.576000-04:00",
+    "date": "2026-08-09",
+    "name": "Roger King",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "acLd7MltPCAUKIhT8MdP",
+    "created_local": "2026-08-09T14:55:11.363000-04:00",
+    "date": "2026-08-09",
+    "name": "Robert Mordini",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "g2OHHdeFzekdgPCyUwcQ",
+    "created_local": "2026-08-10T09:53:54.814000-04:00",
+    "date": "2026-08-10",
+    "name": "Justin Minotti",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "ncqJld8Z0gBXCJt5Izuv",
+    "created_local": "2026-08-10T14:30:47.654000-04:00",
+    "date": "2026-08-10",
+    "name": "Otero Matthew",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "UNyshzjkb1Zy3yt0bdxj",
+    "created_local": "2026-08-10T19:40:18.370000-04:00",
+    "date": "2026-08-10",
+    "name": "Brandon Wynn",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "5pBDhD0CwPoMOOOjPrJ7",
+    "created_local": "2026-08-10T21:53:47.045000-04:00",
+    "date": "2026-08-10",
+    "name": "Danny Mulcahy",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "vdBhtlmwoPrQWYK4UnON",
+    "created_local": "2026-08-10T22:13:22.336000-04:00",
+    "date": "2026-08-10",
+    "name": "Ricardo hicks",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "unP1s6iWCGpkbYsU6f6K",
+    "created_local": "2026-08-11T06:19:23.962000-04:00",
+    "date": "2026-08-11",
+    "name": "Junhua Chang",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "hNg431Q1f3kyJjQ1NLAD",
+    "created_local": "2026-08-11T07:16:17.362000-04:00",
+    "date": "2026-08-11",
+    "name": "Gideon Pfeffer",
+    "source": "SGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "1i1wfjZiAkIoO18zBf1N",
+    "created_local": "2026-08-11T10:40:30.465000-04:00",
+    "date": "2026-08-11",
+    "name": "Mikyle Jessen",
+    "source": "SGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "paVNv2EdzxZwBLqd8HeX",
+    "created_local": "2026-08-11T11:02:58.237000-04:00",
+    "date": "2026-08-11",
+    "name": "Henry Diefenbach",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "UUPI5a3JaK4ja0WfSTgr",
+    "created_local": "2026-08-11T11:41:56.420000-04:00",
+    "date": "2026-08-11",
+    "name": "Michael Fernandez",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "GLeQBbFhfZRECWsL9j0x",
+    "created_local": "2026-08-11T11:42:55.429000-04:00",
+    "date": "2026-08-11",
+    "name": "Henry Diefenbach",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "gQrgK7yKrrH4Kf1YCWLz",
+    "created_local": "2026-08-11T12:49:21.014000-04:00",
+    "date": "2026-08-11",
+    "name": "Tom Sarig",
+    "source": "SGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "8eR8WmXG0Glj5he7Xr7Y",
+    "created_local": "2026-08-11T15:35:48.662000-04:00",
+    "date": "2026-08-11",
+    "name": "Gideon Pfeffer",
+    "source": "SGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "4nR5vVATIAmia8uEHC0w",
+    "created_local": "2026-08-11T22:35:44.285000-04:00",
+    "date": "2026-08-11",
+    "name": "Utsav Sarkar",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "Gy7iZ9yTumEUEr5MUEzb",
+    "created_local": "2026-08-12T09:31:28.062000-04:00",
+    "date": "2026-08-12",
+    "name": "Hayden Walters",
+    "source": "",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "I5Kelh2GXWdyrkBpsiKk",
+    "created_local": "2026-08-12T16:15:34.980000-04:00",
+    "date": "2026-08-12",
+    "name": "John R (Grizz) Deal",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "xH846fVFwyICwe6EnScl",
+    "created_local": "2026-08-12T23:43:35.066000-04:00",
+    "date": "2026-08-12",
+    "name": "Ray Holley",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "msSdlRBekHUqUEPvu1LQ",
+    "created_local": "2026-08-13T11:04:35.273000-04:00",
+    "date": "2026-08-13",
+    "name": "Aaron Boesky",
+    "source": "",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "rNZv8OPr6TWnDIO5fky7",
+    "created_local": "2026-08-13T13:42:03.990000-04:00",
+    "date": "2026-08-13",
+    "name": "Matt Omara",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "6BVmGl5Zt4ebnWIJdLWI",
+    "created_local": "2026-08-13T15:47:41.430000-04:00",
+    "date": "2026-08-13",
+    "name": "Neil Fleischman",
+    "source": "Client",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "MHMaDQ5tY55qF8TlRO8I",
+    "created_local": "2026-08-17T19:46:39.534000-04:00",
+    "date": "2026-08-17",
+    "name": "James Clark",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "LR6y4CYXiEbXKCCCCooc",
+    "created_local": "2026-08-17T21:01:10.305000-04:00",
+    "date": "2026-08-17",
+    "name": "Latonia Wilson",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "LOx2cEUW12RDsGsH3ALj",
+    "created_local": "2026-08-14T07:52:48.656000-04:00",
+    "date": "2026-08-14",
+    "name": "Gabe Gutierrez",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "baFBr6hbLVEVwvUtoTD5",
+    "created_local": "2026-08-14T09:36:55.482000-04:00",
+    "date": "2026-08-14",
+    "name": "Denis Palmer",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "wj536mdsAwo39yPfKoe6",
+    "created_local": "2026-08-14T12:50:20.890000-04:00",
+    "date": "2026-08-14",
+    "name": "Saul Perez",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "Vz0V9jnqjrhC8IBEaYnI",
+    "created_local": "2026-08-14T14:31:20.090000-04:00",
+    "date": "2026-08-14",
+    "name": "Michael Thines",
+    "source": "",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "CJXBtKglpk39eCWyvxkf",
+    "created_local": "2026-08-14T14:32:19.389000-04:00",
+    "date": "2026-08-14",
+    "name": "Jack Takacs",
+    "source": "",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "iwJiHVmGFJEb1aCf4I4Q",
+    "created_local": "2026-08-14T14:49:52.841000-04:00",
+    "date": "2026-08-14",
+    "name": "George Anaya",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "8PNE0OsV6ekoS9FrrbEO",
+    "created_local": "2026-08-14T16:42:44.228000-04:00",
+    "date": "2026-08-14",
+    "name": "Dan Abbate",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "PLKzSpNUw7DifW0SQ9Nb",
+    "created_local": "2026-08-14T17:57:54.988000-04:00",
+    "date": "2026-08-14",
+    "name": "Angel Marces",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "JV12Ymw0Qd3cxC6OEV29",
+    "created_local": "2026-08-14T22:48:22.667000-04:00",
+    "date": "2026-08-14",
+    "name": "Paris Roussos",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "XLJVBv3uu5s5sCLQ2m4e",
+    "created_local": "2026-08-15T00:03:58.652000-04:00",
+    "date": "2026-08-15",
+    "name": "Brady Gordon",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "r9x8uNBF5wd2aIrnzUQY",
+    "created_local": "2026-08-15T00:07:43.109000-04:00",
+    "date": "2026-08-15",
+    "name": "Shamil Bond",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "WJ5ODmRdgPICaUJElk3b",
+    "created_local": "2026-08-15T01:38:05.671000-04:00",
+    "date": "2026-08-15",
+    "name": "Jordan Tietz",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "x5PSDry8zXQ2g0RLNdh7",
+    "created_local": "2026-08-15T05:14:36.426000-04:00",
+    "date": "2026-08-15",
+    "name": "Patrick Bockarie Jr",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "pOhDzLOBGjYNEYPyCcmB",
+    "created_local": "2026-08-15T05:15:14.838000-04:00",
+    "date": "2026-08-15",
+    "name": "Mackie Lahai",
+    "source": "",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "DAcJqvWbKIaCL5VQiM5S",
+    "created_local": "2026-08-15T08:46:44.206000-04:00",
+    "date": "2026-08-15",
+    "name": "Michelle Sanchez",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "9LnxgaxQerJruAsv4lrM",
+    "created_local": "2026-08-15T21:54:09.118000-04:00",
+    "date": "2026-08-15",
+    "name": "Kory Rankine",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "wtAwryzUJkpkg6pfTx3E",
+    "created_local": "2026-08-15T23:26:04.965000-04:00",
+    "date": "2026-08-15",
+    "name": "Fernando Gonzalez",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "qD1Toh4B11anBPaAHKvO",
+    "created_local": "2026-08-16T00:26:05.837000-04:00",
+    "date": "2026-08-16",
+    "name": "Richard Jensen",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "L6MsY0gos347BlhL8lhG",
+    "created_local": "2026-08-16T05:40:49.027000-04:00",
+    "date": "2026-08-16",
+    "name": "John Baker",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "Nh2pEW5ucxxiXMat3QVq",
+    "created_local": "2026-08-16T08:52:26.453000-04:00",
+    "date": "2026-08-16",
+    "name": "Matt Blanton",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "RlfxVyZOhM22ul5J7wio",
+    "created_local": "2026-08-16T14:59:35.361000-04:00",
+    "date": "2026-08-16",
+    "name": "Sebastian Harris",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "s8GcOuRvvQZ4VRaHO9Gs",
+    "created_local": "2026-08-23T01:21:49.041000-04:00",
+    "date": "2026-08-23",
+    "name": "Robert Pagan",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "Q1oXhhabKmsZ1JhxFqe2",
+    "created_local": "2026-08-23T01:35:49.278000-04:00",
+    "date": "2026-08-23",
+    "name": "Matthew Joynes",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "7bqO7c5hePDUzGwLt4rz",
+    "created_local": "2026-08-23T06:02:41.047000-04:00",
+    "date": "2026-08-23",
+    "name": "Philip Hefenieder",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "i2VkMNkBCZdVhhjClYTU",
+    "created_local": "2026-08-23T08:46:50.413000-04:00",
+    "date": "2026-08-23",
+    "name": "Kria Pitta",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "Et6J1PLOQBZkUp1iB7Es",
+    "created_local": "2026-08-23T10:03:12.161000-04:00",
+    "date": "2026-08-23",
+    "name": "Jerry Conti",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "ArIjZmZtjET2bsgwUEkR",
+    "created_local": "2026-08-23T10:03:52.359000-04:00",
+    "date": "2026-08-23",
+    "name": "Jessica",
+    "source": "",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "9py1I4r8KVdC30B0XF6Q",
+    "created_local": "2026-08-23T18:36:36.154000-04:00",
+    "date": "2026-08-23",
+    "name": "Michael Easterday",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "BTiSjSyUPZlT3ti5T3cc",
+    "created_local": "2026-08-18T02:38:34.231000-04:00",
+    "date": "2026-08-18",
+    "name": "Chase McBride",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "OquzKjllfSdXC1hmfa5V",
+    "created_local": "2026-08-18T20:55:07.188000-04:00",
+    "date": "2026-08-18",
+    "name": "Tesh Patel",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "Rgp3agBhe3QCkH6hE8G7",
+    "created_local": "2026-08-18T23:27:56.872000-04:00",
+    "date": "2026-08-18",
+    "name": "Juan Garcia",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "VJhPl3SwTAJogkqP35wL",
+    "created_local": "2026-08-19T10:31:58.231000-04:00",
+    "date": "2026-08-19",
+    "name": "Aditya Varanasi",
+    "source": "Referral",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "azi0lOCCpZ3KA0q6gX4j",
+    "created_local": "2026-08-19T11:34:11.017000-04:00",
+    "date": "2026-08-19",
+    "name": "Jason Talbot",
+    "source": "",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "Oyd7nQNG2lEehibI9H6M",
+    "created_local": "2026-08-19T11:39:00.847000-04:00",
+    "date": "2026-08-19",
+    "name": "Margo Black",
+    "source": "",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "3tzoRNFLLFC6p15DaYE9",
+    "created_local": "2026-08-19T13:19:24.315000-04:00",
+    "date": "2026-08-19",
+    "name": "Vincent Collaso",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "sbFQhFIqNRGrXQCwOzuz",
+    "created_local": "2026-08-19T18:09:10.148000-04:00",
+    "date": "2026-08-19",
+    "name": "Yisrael Artison",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "xzz3dltXCs1kHlhY7UBb",
+    "created_local": "2026-08-20T14:03:45.029000-04:00",
+    "date": "2026-08-20",
+    "name": "Sasha Shkolnik",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "oFVkDuH3AJa9k2qJZuaY",
+    "created_local": "2026-08-20T17:10:48.486000-04:00",
+    "date": "2026-08-20",
+    "name": "John calicchio",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "hYvNLvH2zLi7Go5N3Vgk",
+    "created_local": "2026-08-20T17:19:04.430000-04:00",
+    "date": "2026-08-20",
+    "name": "Grier Galloway",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "WHesSL2Y1cay4ccrRAyV",
+    "created_local": "2026-08-20T17:19:05.900000-04:00",
+    "date": "2026-08-20",
+    "name": "Stu Strumwasser",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "lOSeAGB9CDJO1a51dJIe",
+    "created_local": "2026-08-20T17:19:07.399000-04:00",
+    "date": "2026-08-20",
+    "name": "Dick Anderson",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "h6wEDlr4GbH56Z8FNa7N",
+    "created_local": "2026-08-20T17:19:08.916000-04:00",
+    "date": "2026-08-20",
+    "name": "Paul Ellis",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "hiVVsfXrqOl9MkOmvN0N",
+    "created_local": "2026-08-20T17:19:12.273000-04:00",
+    "date": "2026-08-20",
+    "name": "Rick Coe",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "i38hPyBOwuRbI2FbcV9Y",
+    "created_local": "2026-08-20T17:19:13.457000-04:00",
+    "date": "2026-08-20",
+    "name": "Jud Pankey",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "wDcNib50zJatKW1hzFjb",
+    "created_local": "2026-08-20T17:41:07.931000-04:00",
+    "date": "2026-08-20",
+    "name": "Michael Collins",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "ZKnhiLPTga06j9XuLsVk",
+    "created_local": "2026-08-20T17:41:09.380000-04:00",
+    "date": "2026-08-20",
+    "name": "Max Sharkansky",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "HUzzyd0KYhEsnrbE1gOw",
+    "created_local": "2026-08-20T17:41:10.813000-04:00",
+    "date": "2026-08-20",
+    "name": "Joshua Lappen",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "AyIhR7yujfggIrBynmht",
+    "created_local": "2026-08-20T17:41:12.318000-04:00",
+    "date": "2026-08-20",
+    "name": "Alex Gill",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "wiusNLHnycm1btyL2P45",
+    "created_local": "2026-08-20T17:41:13.831000-04:00",
+    "date": "2026-08-20",
+    "name": "Robert Meschi",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "9ZZeBWxmmOyG1n5nuaBS",
+    "created_local": "2026-08-20T17:41:15.325000-04:00",
+    "date": "2026-08-20",
+    "name": "David Smilow",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "NIDXOD9PnDpXoNZzfqzR",
+    "created_local": "2026-08-20T17:41:16.796000-04:00",
+    "date": "2026-08-20",
+    "name": "Mark Buffington",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "XaeMV8lBbH6pWAqpSTaC",
+    "created_local": "2026-08-20T17:41:18.317000-04:00",
+    "date": "2026-08-20",
+    "name": "Martin Hoe",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "YHCzLsKYPrUE9O4KPZcs",
+    "created_local": "2026-08-20T17:41:19.953000-04:00",
+    "date": "2026-08-20",
+    "name": "Amy Ratliff",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "cAYV5gJX42e1TW1OnFUG",
+    "created_local": "2026-08-20T17:41:24.981000-04:00",
+    "date": "2026-08-20",
+    "name": "Shawn T. Carolan",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "bEqemF3ak1GT9D2Wf1Ty",
+    "created_local": "2026-08-20T17:41:27.404000-04:00",
+    "date": "2026-08-20",
+    "name": "Forrest Corral",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "QvCvlOvLOMRXvUooxNyM",
+    "created_local": "2026-08-20T17:41:28.877000-04:00",
+    "date": "2026-08-20",
+    "name": "Caulene Flores",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "adoQhn3u0pOYkldbNS4t",
+    "created_local": "2026-08-20T17:52:05.964000-04:00",
+    "date": "2026-08-20",
+    "name": "Martin Pinilla",
+    "source": "SGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "4HxkH1pQRjDqLZJxdiH4",
+    "created_local": "2026-08-20T17:52:08.958000-04:00",
+    "date": "2026-08-20",
+    "name": "Ryan Messer",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "tv5U0ft9w8LvK45aP72e",
+    "created_local": "2026-08-20T17:52:11.975000-04:00",
+    "date": "2026-08-20",
+    "name": "Sunny Abbasi",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "LcZuDByDGRQXPJfbmbWZ",
+    "created_local": "2026-08-20T21:09:40.506000-04:00",
+    "date": "2026-08-20",
+    "name": "Barth Williams",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "gBIX1kTMm5UIdhW3Rf19",
+    "created_local": "2026-08-21T01:14:33.188000-04:00",
+    "date": "2026-08-21",
+    "name": "maxwell lloyd",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "SkvkNyk0fWJJabkFsgXA",
+    "created_local": "2026-08-21T08:28:53.620000-04:00",
+    "date": "2026-08-21",
+    "name": "Paul Skema",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "56X6KZDQP7ZmrH3QbJJJ",
+    "created_local": "2026-08-21T09:13:32.356000-04:00",
+    "date": "2026-08-21",
+    "name": "Matt Welch, CFA",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "F7Nz2XO3g3N8bsDQWtaw",
+    "created_local": "2026-08-21T09:46:51.205000-04:00",
+    "date": "2026-08-21",
+    "name": "Russell Uy",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "jY93vvV1RrQD1B1dGov6",
+    "created_local": "2026-08-21T10:17:28.064000-04:00",
+    "date": "2026-08-21",
+    "name": "Jack Kashani",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "xEtJE95S3yo4aB9uwYTL",
+    "created_local": "2026-08-21T11:04:11.368000-04:00",
+    "date": "2026-08-21",
+    "name": "Anthony Orso",
+    "source": "",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "Ud7FiT54G5HAVMTVs59H",
+    "created_local": "2026-08-21T11:24:17.952000-04:00",
+    "date": "2026-08-21",
+    "name": "Lynn Boyer",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "vRODQLOFGpgdBgpcxqm6",
+    "created_local": "2026-08-21T11:44:39.030000-04:00",
+    "date": "2026-08-21",
+    "name": "Howard Prager",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "625xgIGi0edB7xkeRPmX",
+    "created_local": "2026-08-21T12:25:33.260000-04:00",
+    "date": "2026-08-21",
+    "name": "JEAN LOCHARD",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "fwp7kRbfXGjTh8deWAZU",
+    "created_local": "2026-08-21T13:42:06.097000-04:00",
+    "date": "2026-08-21",
+    "name": "Aaron Levy",
+    "source": "",
+    "owner": "Jose Antonio Uribe"
+  },
+  {
+    "id": "Ai5TQOd0opib5Akc4oV2",
+    "created_local": "2026-08-22T02:02:35.128000-04:00",
+    "date": "2026-08-22",
+    "name": "Kent Mills II",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "7o3Eb7IzK3IkLUJSQKe6",
+    "created_local": "2026-08-22T02:17:13.354000-04:00",
+    "date": "2026-08-22",
+    "name": "John Dubuk",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "dW76ywlqIdIyeQizRa2X",
+    "created_local": "2026-08-22T09:12:51.342000-04:00",
+    "date": "2026-08-22",
+    "name": "Shobhit Agrawal",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "0iMELyFtbQ0PpOKgKd91",
+    "created_local": "2026-08-22T10:37:09.701000-04:00",
+    "date": "2026-08-22",
+    "name": "Marrionna Cook",
+    "source": "",
+    "owner": ""
+  },
+  {
+    "id": "hcVBX69XlzXiao84zUiL",
+    "created_local": "2026-08-22T13:24:04.504000-04:00",
+    "date": "2026-08-22",
+    "name": "Joseph Bramante",
+    "source": "MGL",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "kPm2P2LLigkoy05fQrPR",
+    "created_local": "2026-08-22T14:15:31.002000-04:00",
+    "date": "2026-08-22",
+    "name": "Michael Reid",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "PMQIqbze1LaBs3W4b0tw",
+    "created_local": "2026-08-22T16:21:14.651000-04:00",
+    "date": "2026-08-22",
+    "name": "Mikyle Jessen",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "R0vr89WurwBTNWt5H0BF",
+    "created_local": "2026-08-22T18:32:22.274000-04:00",
+    "date": "2026-08-22",
+    "name": "Tim Flaherty",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "jEg2f3ajhHpdYbJbctll",
+    "created_local": "2026-08-22T19:53:39.524000-04:00",
+    "date": "2026-08-22",
+    "name": "Ryan Garland",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "xB0BZlCa5NKD0OvJsDXz",
+    "created_local": "2026-08-22T21:22:35.886000-04:00",
+    "date": "2026-08-22",
+    "name": "Anna Sandra",
+    "source": "MGL",
+    "owner": "Joncarlo Tamayo"
+  },
+  {
+    "id": "j1ISiDKH3QvDvZeOXlxH",
+    "created_local": "2026-08-24T07:56:34.516000-04:00",
+    "date": "2026-08-24",
+    "name": "Charles",
+    "source": "",
+    "owner": "Alex Zinny"
+  },
+  {
+    "id": "vkJa3w66P4Xn5Qi4DMqh",
+    "created_local": "2026-08-24T13:27:06.214000-04:00",
+    "date": "2026-08-24",
+    "name": "Colin O\u2019Farrell",
+    "source": "MGL",
+    "owner": "Stormer Santana"
+  },
+  {
+    "id": "E9lBrwvtIFhkzlcTunOp",
+    "created_local": "2026-08-24T14:54:37.895000-04:00",
+    "date": "2026-08-24",
+    "name": "Daniel Angel Mejia",
+    "source": "",
+    "owner": ""
+  }
+]
