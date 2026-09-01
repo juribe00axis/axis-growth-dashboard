@@ -1,0 +1,925 @@
+{
+  "date": "2026-09-01",
+  "opps": {
+    "CxbNU8ZAEWIentGXzQSR": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "zwBbX2SmPO8Fmq0y20dQ": {
+      "stage": "Discovery call set",
+      "owner": "unassigned"
+    },
+    "kq1S3R4JpXW3oaM73tqY": {
+      "stage": "Discovery call set",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "WYO71K2IocPKB7YzCdjr": {
+      "stage": "Discovery call set",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "kpOOqiyFGLY9Uj6DoCUO": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "OLnjw1BCIG0bPPLzn7XP": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "NfGECSn4RSwsn0ZyoSOs": {
+      "stage": "Discovery call set",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "r1bcgOLP2WsxAsQUUmGt": {
+      "stage": "Strategy Call",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "qcr88tmZsy6fcixiK7Jg": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "RCZAniojH8NXDSbYirQw": {
+      "stage": "Discovery call set",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "GxYnD8WUSghfPfYwkvJE": {
+      "stage": "Discovery Call",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "Fv3yRRVU3jBeLTee8Sx1": {
+      "stage": "Discovery Call",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "pQlXz1X8smrf1IbOLMzx": {
+      "stage": "New Lead",
+      "owner": "unassigned"
+    },
+    "2JfbWYotAO2U8D1nQFWF": {
+      "stage": "Discovery call set",
+      "owner": "unassigned"
+    },
+    "IpYNNeadTwJro22rNlYw": {
+      "stage": "Discovery call set",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "Al6Y3VNxy9WSI9RoBvY6": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "SEEB4OFftY7Oxv3h6CcN": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "QD8rKetF0bOzHm9zt2Oc": {
+      "stage": "Discovery call set",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "Rk00Md2uMUGhs3IfthOz": {
+      "stage": "Discovery call set",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "rkbAZFJcgPpjLNJTuyDS": {
+      "stage": "Discovery Call",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "ucZSmU0Gs1TF2OKwhb9v": {
+      "stage": "Closing Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "X77yyh6ux55Sl9eIEG5p": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "O5Z9etx1d5q72Bi184fh": {
+      "stage": "Discovery Call",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "wsRzjAhgKu90CEPz00Ls": {
+      "stage": "Proposal Sent",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "zDpLC6qlP0QZTDydvIxV": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "B12SNFFW8exWwmsghC8h": {
+      "stage": "Discovery call set",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "1idxQQa7S4Ql5NbRHgCx": {
+      "stage": "Discovery call set",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "bVWyrIaWP0jIQbs8tqjy": {
+      "stage": "Agreement Signed",
+      "owner": "L9Ntyu8qzZFuCdjINcco"
+    },
+    "A8i8N3wvuzMzkX79QhEy": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "5C0VBvvGRua69btjBiBK": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "9Q6p1F863K75Lu1KIepz": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "RHuwyKtTlJI7Pk1gKBD0": {
+      "stage": "Discovery Call",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "yWotO4C6FKz3xM5nG2Ye": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "mNKlIx9jRW60eYUVe39K": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "TMdtQesp71knPuBD9Cuo": {
+      "stage": "New Lead",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "lyNXeIlXSPIWZuyPAX2V": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "Tmd6RQmnJQZnEdn27uW7": {
+      "stage": "Discovery Call",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "TNbJ4MmcZccR9KNwvlm6": {
+      "stage": "Discovery Call",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "9VVmPCyTAG0XRTxUibtN": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "JjuOC9qKOehl86NFq6Jr": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "wfbJWXjal2Pb20RwMJGR": {
+      "stage": "Discovery Call",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "CdV9lhfYeG3dlGGmJmDl": {
+      "stage": "Discovery Call",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "OPvOnLI2IhSv8LsK31qN": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "deNeQfhbZxAYObpbfGmj": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "unassigned"
+    },
+    "mGzKJl6fZfg1GuBBeBzm": {
+      "stage": "New Lead",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "mkAjfEqCmi3I9GExRzJ1": {
+      "stage": "Discovery call set",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "qIinqWvNYl93NE3BuMZv": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "f728hH53zapyAHFOyCEr": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "1wKcQtV3KXtWMI8IRihD": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "c6oLnDseSEb5DFuYNuo2": {
+      "stage": "Proposal Sent",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "leZrc7kKw05vjLdqOpHC": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "znfh6nwrT1UeHtj4UaPL": {
+      "stage": "Proposal Sent",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "7Bp7dInYIAxmxS4CntwQ": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "wgba7S75JEvG5Am766Zi": {
+      "stage": "Discovery call set",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "JGAQDFiYLDG6xNPhnoAf": {
+      "stage": "Discovery call set",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "hJWZTXUSbZ8GTJV9VMPJ": {
+      "stage": "Discovery call set",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "ZlMuTjYlu1LL8PCSVSjj": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "dKHzg52vk92rFkbTepZr": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "5rggaUHe3KCE2xMYJXnK": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "AqfiOPB51rqZqpPdlca9": {
+      "stage": "Discovery Call",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "iukFjsPwenGW79QOFpvm": {
+      "stage": "Proposal Sent",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "H3btMt8eTxDwqsq4MGn1": {
+      "stage": "Proposal Sent",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "rKs6IZHkIYjmlFBnjYQk": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "o3TxkK6tzkT4yNTyxSA1": {
+      "stage": "Discovery call set",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "kgu2oAnv6qw2frR1kcJ5": {
+      "stage": "Discovery Call",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "0PfNfIXZvSbeQXyhU4MV": {
+      "stage": "Proposal Sent",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "mmGyFT4U8WMFqeKRJE96": {
+      "stage": "Proposal Sent",
+      "owner": "L9Ntyu8qzZFuCdjINcco"
+    },
+    "npfB7XfgXQmHfdOr2kvb": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "4jfFXkaE4yjuXjbKTbgM": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "6sKpPaoPRz9VWjw0B6lU": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "WxWHeUhvfrYaoh86Zgc6": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "fWuiP0WRyQmarnfXGlcW": {
+      "stage": "Discovery Call",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "mF35m73mWTJz390JAbbi": {
+      "stage": "Discovery Call",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "ay8hoWMQE2knxzBikuP4": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "J2uRzr4dMpwnPrxiKbGz": {
+      "stage": "Proposal Sent",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "bOrWiRy6IZB5ttZe7rhe": {
+      "stage": "Discovery Call",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "csfski2EaTAeeiF3kCVx": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "FgRkjm0vhPjcSKddbNDz": {
+      "stage": "Discovery call set",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "SidLsbqhmk8ACjBATE30": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "IntLdOfMkODkMnYwYCBj": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "Apy8PeRKqIuqyBBrs5Yc": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "JiVBmG7TYAbHE7mSZxNH": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "LdNKaOl00WK3GWRZGBv2": {
+      "stage": "New Lead",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "0jKK7UPBDL3W6a9KG6E1": {
+      "stage": "Proposal Sent",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "4LWrkq8h7pnHG4f96rXB": {
+      "stage": "Discovery call set",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "kUsfrDrpgJeCzo8TeuPZ": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "U5eJmOCNuB0eXAeaVfoA": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "edEGlcu7eVz02ygBJOGg": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "JxyR906XVWPUzEuCrS5M": {
+      "stage": "Proposal Sent",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "PsGrwLKXqbLKQ0K54Ley": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "OBU7F87Twk9p2uBR9aHN": {
+      "stage": "Closing Call",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "7jXeszdOEhbLb3A20HUQ": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "srOWAeNbzxQlkUohwHf8": {
+      "stage": "New Lead",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "orKaACDLL7wqy5hIZfKj": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "91cxLXvQWVVGu89KVpe9": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "XV12MSyB8eWUsuZiizfd": {
+      "stage": "Proposal Sent",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "V9Arpc68EQMOuRYevv0F": {
+      "stage": "New Lead",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "96xTJyxisD5xJJExcNBv": {
+      "stage": "Discovery Call",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "rKbFvFT0m9ZqnLsJLW2x": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "C7DM2hai8Ao5PJhBj11y": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "vEUsGTOW6jBmRlAbg9Si": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "TSpduqMVpTSIv762xMw7": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "YDL6EEh6qSPw3Bk6xaGN": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "unassigned"
+    },
+    "8HcqHtM86Shiwa7GJzXo": {
+      "stage": "Discovery Call",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "GISDwUIlWkkur7EixiNE": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "pEKDqxJyaQFQTW1i965R": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "OQ00LxlDGeRlRyhkumRx": {
+      "stage": "Closing Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "jM6gVeXoKK44IyrsDns9": {
+      "stage": "Discovery call set",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "o71g4HkapN3g1xj3AJnh": {
+      "stage": "Discovery Call",
+      "owner": "unassigned"
+    },
+    "UisU5IFAP8nRl83ikhk8": {
+      "stage": "Discovery Call",
+      "owner": "unassigned"
+    },
+    "wABQ01AceCFP3pQU0GZ5": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "bNoocMMeLG6zmgaF8aN2": {
+      "stage": "Proposal Sent",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "OvzMnyYn5j0JlFCgN0eg": {
+      "stage": "Proposal Sent",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "HE7yqEs1qkgxrOj0EAd2": {
+      "stage": "Discovery Call",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "h4npd7s4b7H3dCqrJdKk": {
+      "stage": "Discovery Call",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "QhDTSIKhmLcynSGN7XS9": {
+      "stage": "New Lead",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "ovIAkJzLqtgNUpYV6oY6": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "NYmyFMpMMkbzZXjqRteV": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "ZNkLwflb7Ini36ySn97v": {
+      "stage": "Proposal Sent",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "7eZ4d22FSCgmozsXwR8o": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "Lf99yNlNG029Ro8fqUwq": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "DWRgnOpsjhV2SJvepMT6": {
+      "stage": "Closing Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "S1fmAaAcDL4d3g69lFx3": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "NXoJ2SHqvBG6CH1DUl64": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "9tmpUQXr9qDXRfW370VK": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "844a97DzkMhjlIlmllfh": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "s1rGxmozzT0mY4BLOWGq": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "hwIWSYX6zsgOIVnfSA3o": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "dSATFQ4vkWWsGPTCdEIH": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "H2HbXaGMrKTqwlUgIi58": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "HGjw8xOcURTmh1WXdbMj": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "dhpWrBc2EjSZ8SMMqNBD": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "kJXjVNtulewPolAGLr6U": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "L9Ntyu8qzZFuCdjINcco"
+    },
+    "OHwSTvbvh6vxTPyWVw99": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "L9Ntyu8qzZFuCdjINcco"
+    },
+    "LqzoRK5zlnpwyCPgwDqZ": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "L9Ntyu8qzZFuCdjINcco"
+    },
+    "VwWIEGC879bx9HtG181F": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "L9Ntyu8qzZFuCdjINcco"
+    },
+    "72TuOl80Gl3Ss2xXmWyR": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "L9Ntyu8qzZFuCdjINcco"
+    },
+    "9LZnciWDUxQuVbPFZsIu": {
+      "stage": "Proposal Sent",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "EMWLApJlhpQcKQnwEQdt": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "sbkaiXh8lVFsNVpH3ezh": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "oIImDo6qwDolcxIumjEJ": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "GKFFW5RxAfdZVZu5OnJl": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "2h1PCJEdLswPp8FD62Qp": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "35AAmUUTlCFGBHKLFYi5": {
+      "stage": "Proposal Sent",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "Cr4DE2wkyIaXR3yL0Ipo": {
+      "stage": "New Lead",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "GKaRzrgDceacRWGS9u0q": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "y86zdrS9ZaosmyyhMH8h": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "yfIHctUxFWlV3mmNMMl7": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "CN7Mb81wHA1kDvnYcvnI": {
+      "stage": "Discovery Call",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "OtxH4sw8Esw9EgmaZXu8": {
+      "stage": "Closing Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "gMQZPKZoAZo0JgSTBduq": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "s0NY6uCrIHoFDHFlhl8E": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "1KmxveH6SMipsoYTpXuo": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "EDg6XkLLAtj93PjxjpBj": {
+      "stage": "Agreement Sent",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "G2lkJ7BsWt9WmdTmrg9R": {
+      "stage": "Proposal Sent",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "YuoPajMsh58j0qSxiA1y": {
+      "stage": "Strategy Call",
+      "owner": "unassigned"
+    },
+    "qRnqUDNwDBmA5ClMxRKK": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "v1VAUJEEvl5fgd9zb726": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "C08h7r3RAVDWPsTAkL6u": {
+      "stage": "Proposal Sent",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "eRYl6PdZdoF1PbwPYZWm": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "jZslR8cfqOggSxCm6YC1": {
+      "stage": "Closing Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "O62tfDTRygZ16bUiPCYg": {
+      "stage": "Discovery Call",
+      "owner": "unassigned"
+    },
+    "0m7myN7EO4Oclo7HT1id": {
+      "stage": "Discovery Call",
+      "owner": "unassigned"
+    },
+    "TTD4Zo2y1XYNw0OC1GXN": {
+      "stage": "Discovery Call",
+      "owner": "unassigned"
+    },
+    "4DWzUNztQkzGLMZecGWS": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "1SJxaC1UYzuW3uJqO4kh": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "mVMkARDYQDcJBuXXi0Q3": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "ISffUhkdKZFYtqJ68jCQ": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "owYrYxM0JwQ6qQNtdUlZ": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "y3pexhuABVLnGT0ezZIN": {
+      "stage": "Discovery Call",
+      "owner": "unassigned"
+    },
+    "FG5S9wL173vbi2LS82Bm": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "NLN4gUgsr6GczFG0zkBP": {
+      "stage": "Strategy Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "aUASzB7p3xxnlQ0weKwe": {
+      "stage": "Strategy Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "Z4uON4nLs59czTOrOau3": {
+      "stage": "Strategy Call",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "9xMsguDnNTF6N2fQfoza": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "brKZfWxw53uA4dENdFcv": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "GQgfmPeD3kMmIA0uCeI4": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "O9hVHl3dEBrzEO52Sget": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "QmcroEbWc9ODISABBIn0": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "zxMVhvDsbWlDv1dyl0ai": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "hiIv6ZuYE7zcy1ulUlnQ": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "Dt5Ehl7Py3THqKYbaTad": {
+      "stage": "Strategy Call",
+      "owner": "unassigned"
+    },
+    "kQ5i2X5gOb9j6u6LU5wc": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "QBhdnX2PuKqk5wPASFMg": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "Gnc8EOvQPssgi6rOH0we": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "QK939UWYmUYFzTRCTG13": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "aWqBWXXN9kWFUfF2FZDL": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "h0chnGkIDY3sHWEdmxyV": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "P4Df0Zxnxn8R3I8HxOee": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "vBs7nvj6eM82W0N0eXVl": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "FLRcC0gfwAnqIV1OOPz7": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "tK1eyEwbk8HTDRIZPCOj": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "567isOX9hmJysIDsTdMK": {
+      "stage": "Strategy Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "cjqHR0ALQSepN68S2mZp": {
+      "stage": "Closing Call",
+      "owner": "unassigned"
+    },
+    "vJyheFJ9fOMhq70B0wfM": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "JRoYh48J4XjmcRuZIi0d": {
+      "stage": "Strategy Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "rejXJgXSxLM7xtNDqA6S": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "bl7XgAwNrx6Tyc12Tktp": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "bVXUdKfEDLENTFN2DvcV": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "fYmDUmJmd0g7Hrj4wE1V": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "uFHHik8s3pshRwBLCb3O": {
+      "stage": "Closing Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "XxWXXd1vIpWqxyVdtuT2": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "OVvFQnKrN1q2pkbUluSf": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "IH13vSFid4S7tMFY7tbT": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "JxyJf3C9xupzTODOMriK": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "UvTKkZXHITPvLNxWhjOH": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "DfqTGm0Rtf1pDfGj2HAs": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "uua1vlXpb1lsGMzZxp0E": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "idb2YpmXbq08zG2w5Ofk": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "wjcXCoosHyONqj3REyug": {
+      "stage": "Closing Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "vFyZwuk11KGkOJlGNyPE": {
+      "stage": "Not a fit",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "COJxfianXPpfWmt7Stgf": {
+      "stage": "Strategy Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "bGv4XT0QAl6NjmFnUu5r": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "OiS0j222fb4w6kihMLTG": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "obImIXSvPv47DMZ617kA": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "G4RWAfZMRPJzlITW0pRB": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "auuMBTPdaenIsOk8HFRp": {
+      "stage": "Proposal Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "oL8wOM0BWYMhHIFozm4W": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "mXejMuVsSfPRZ3PslWhh": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "pbLHcZdd1iiuL7Vnx667": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "RpkCAA1cKtYJYUizsl9l": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "exZvlblT4BjYPEfjRACn": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "UY8BT6LLUaBoyjUtpyt4": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "LQnCJ1Jw45GcawoHiiaP": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "1IJaODucgh6dLPiX8y0L": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "N3NwMOtvgnlTkX6vkszn": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "pHrQ9vVzsForY4RQP88g": {
+      "stage": "New Lead",
+      "owner": "unassigned"
+    },
+    "LYXL19KhvEMv2hR7Mcrs": {
+      "stage": "Closing Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "00QZQwejlLwQgx4WYNJb": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "s6X48P7U1dFghXuc6p9D": {
+      "stage": "Reactivation Queue - no call booked",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    }
+  }
+}
