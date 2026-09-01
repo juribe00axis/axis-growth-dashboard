@@ -1,6 +1,22 @@
 {
   "date": "2026-09-01",
   "opps": {
+    "mBujZ9f3138psnQz7GlU": {
+      "stage": "Discovery call set",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "tg6PDRU0Xwq45dstPFwy": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "ZzHznxqlyRlSxhuTvfMe": {
+      "stage": "Proposal Sent",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "gZh3fToQE5oQBlkpTfDn": {
+      "stage": "Discovery Call",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
     "CxbNU8ZAEWIentGXzQSR": {
       "stage": "Discovery call set",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
@@ -14,7 +30,7 @@
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "WYO71K2IocPKB7YzCdjr": {
-      "stage": "Discovery call set",
+      "stage": "Discovery Call",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "kpOOqiyFGLY9Uj6DoCUO": {
@@ -30,7 +46,7 @@
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "r1bcgOLP2WsxAsQUUmGt": {
-      "stage": "Strategy Call",
+      "stage": "Proposal Sent",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "qcr88tmZsy6fcixiK7Jg": {
@@ -110,7 +126,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "bVWyrIaWP0jIQbs8tqjy": {
-      "stage": "Agreement Signed",
+      "stage": "Onboarding",
       "owner": "L9Ntyu8qzZFuCdjINcco"
     },
     "A8i8N3wvuzMzkX79QhEy": {
@@ -126,7 +142,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "RHuwyKtTlJI7Pk1gKBD0": {
-      "stage": "Discovery Call",
+      "stage": "Strategy Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "yWotO4C6FKz3xM5nG2Ye": {
@@ -413,10 +429,6 @@
       "stage": "Reactivation Queue - no call booked",
       "owner": "unassigned"
     },
-    "8HcqHtM86Shiwa7GJzXo": {
-      "stage": "Discovery Call",
-      "owner": "kNU1jv4vrjjoehHNhlne"
-    },
     "GISDwUIlWkkur7EixiNE": {
       "stage": "New Lead",
       "owner": "NftaswY26aPKq64te7Hn"
@@ -556,10 +568,6 @@
     "EMWLApJlhpQcKQnwEQdt": {
       "stage": "New Lead",
       "owner": "kNU1jv4vrjjoehHNhlne"
-    },
-    "sbkaiXh8lVFsNVpH3ezh": {
-      "stage": "Agreement Sent",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "oIImDo6qwDolcxIumjEJ": {
       "stage": "New Lead",
