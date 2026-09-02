@@ -3,31 +3,31 @@
   "stages": [
     {
       "name": "New Lead",
-      "count": 52
+      "count": 51
     },
     {
       "name": "Discovery call set",
-      "count": 26
+      "count": 28
     },
     {
       "name": "Discovery Call",
-      "count": 37
+      "count": 34
     },
     {
       "name": "Strategy Call",
-      "count": 10
+      "count": 9
     },
     {
       "name": "Proposal Sent",
-      "count": 32
+      "count": 35
     },
     {
       "name": "Closing Call",
-      "count": 13
+      "count": 15
     },
     {
       "name": "Agreement Sent",
-      "count": 13
+      "count": 12
     },
     {
       "name": "Onboarding",
@@ -38,7 +38,7 @@
       "count": 46
     }
   ],
-  "total_open": 230,
+  "total_open": 231,
   "source": {
     "labels": [
       "MGL",
@@ -46,10 +46,10 @@
       "Other - Referrals"
     ],
     "data": [
-      166,
+      167,
       21,
       86
     ],
-    "total": 273
+    "total": 274
   }
 }
