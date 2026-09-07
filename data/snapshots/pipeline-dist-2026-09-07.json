@@ -7,7 +7,7 @@
     },
     {
       "name": "Discovery call set",
-      "count": 33
+      "count": 35
     },
     {
       "name": "Discovery Call",
@@ -34,7 +34,7 @@
       "count": 47
     }
   ],
-  "total_open": 240,
+  "total_open": 242,
   "source": {
     "labels": [
       "MGL",
@@ -42,10 +42,10 @@
       "Other - Referrals"
     ],
     "data": [
-      179,
+      181,
       21,
       85
     ],
-    "total": 285
+    "total": 287
   }
 }
