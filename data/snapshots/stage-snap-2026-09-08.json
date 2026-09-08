@@ -1,6 +1,14 @@
 {
   "date": "2026-09-08",
   "opps": {
+    "TAzuqUc9Vac6DbMTqeXJ": {
+      "stage": "New Lead",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
+    "sXdIVaELVZaTOvcGEzJt": {
+      "stage": "Discovery call set",
+      "owner": "NftaswY26aPKq64te7Hn"
+    },
     "3OOlp69Y0acFDMmpyw1q": {
       "stage": "Discovery call set",
       "owner": "NftaswY26aPKq64te7Hn"
@@ -26,7 +34,7 @@
       "owner": "unassigned"
     },
     "Y6MbQZY7WmMi2G39tPVq": {
-      "stage": "Discovery call set",
+      "stage": "Discovery Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "C4za9BExRL5wUO2EVwz9": {
@@ -38,7 +46,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "N1xo3BQ3AXdsyzRlhf3U": {
-      "stage": "Discovery call set",
+      "stage": "Discovery Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "zvCwFPLxlsHQQhq9fjPd": {
@@ -46,7 +54,7 @@
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "rzcPbKuH4WWAAhGowmP4": {
-      "stage": "Discovery call set",
+      "stage": "New Lead",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "iNBMqxOtswbYPMk1pJVn": {
@@ -98,7 +106,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "aIfPQqiX2rOOC207Y0qC": {
-      "stage": "Discovery call set",
+      "stage": "New Lead",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "ByeibOAYZM8HVUxzoDP1": {
@@ -130,7 +138,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "jRx7W4Wb0CPAPlZ5NIx5": {
-      "stage": "Discovery Call",
+      "stage": "Strategy Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "HDo3gHY1MpSFyiN57RQt": {
@@ -166,7 +174,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "OLnjw1BCIG0bPPLzn7XP": {
-      "stage": "Discovery call set",
+      "stage": "Reactivation Queue - no call booked",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "r1bcgOLP2WsxAsQUUmGt": {
@@ -174,7 +182,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "qcr88tmZsy6fcixiK7Jg": {
-      "stage": "Discovery call set",
+      "stage": "Discovery Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "RCZAniojH8NXDSbYirQw": {
@@ -250,11 +258,11 @@
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "yWotO4C6FKz3xM5nG2Ye": {
-      "stage": "Discovery call set",
+      "stage": "Reactivation Queue - no call booked",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "mNKlIx9jRW60eYUVe39K": {
-      "stage": "Discovery call set",
+      "stage": "Reactivation Queue - no call booked",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "TMdtQesp71knPuBD9Cuo": {
@@ -262,7 +270,7 @@
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "lyNXeIlXSPIWZuyPAX2V": {
-      "stage": "Discovery call set",
+      "stage": "Reactivation Queue - no call booked",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "Tmd6RQmnJQZnEdn27uW7": {
@@ -274,11 +282,7 @@
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "9VVmPCyTAG0XRTxUibtN": {
-      "stage": "Discovery call set",
-      "owner": "Xeprp2GjJCDQFoJV4jqS"
-    },
-    "JjuOC9qKOehl86NFq6Jr": {
-      "stage": "New Lead",
+      "stage": "Reactivation Queue - no call booked",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "CdV9lhfYeG3dlGGmJmDl": {
@@ -446,7 +450,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "edEGlcu7eVz02ygBJOGg": {
-      "stage": "Discovery Call",
+      "stage": "Proposal Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "JxyR906XVWPUzEuCrS5M": {
@@ -476,10 +480,6 @@
     "91cxLXvQWVVGu89KVpe9": {
       "stage": "Agreement Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
-    "XV12MSyB8eWUsuZiizfd": {
-      "stage": "Proposal Sent",
-      "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "V9Arpc68EQMOuRYevv0F": {
       "stage": "New Lead",
@@ -698,8 +698,8 @@
       "owner": "NftaswY26aPKq64te7Hn"
     },
     "YuoPajMsh58j0qSxiA1y": {
-      "stage": "Strategy Call",
-      "owner": "unassigned"
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "qRnqUDNwDBmA5ClMxRKK": {
       "stage": "Proposal Sent",
@@ -847,7 +847,7 @@
     },
     "cjqHR0ALQSepN68S2mZp": {
       "stage": "Closing Call",
-      "owner": "unassigned"
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "vJyheFJ9fOMhq70B0wfM": {
       "stage": "Reactivation Queue - no call booked",

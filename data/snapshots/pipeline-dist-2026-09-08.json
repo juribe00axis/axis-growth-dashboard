@@ -3,15 +3,15 @@
   "stages": [
     {
       "name": "New Lead",
-      "count": 57
+      "count": 59
     },
     {
       "name": "Discovery call set",
-      "count": 40
+      "count": 31
     },
     {
       "name": "Discovery Call",
-      "count": 26
+      "count": 27
     },
     {
       "name": "Strategy Call",
@@ -27,11 +27,11 @@
     },
     {
       "name": "Agreement Sent",
-      "count": 15
+      "count": 16
     },
     {
       "name": "Reactivation Queue - no call booked",
-      "count": 47
+      "count": 52
     }
   ],
   "total_open": 248,
@@ -42,10 +42,10 @@
       "Other - Referrals"
     ],
     "data": [
-      188,
+      186,
       21,
       84
     ],
-    "total": 293
+    "total": 291
   }
 }
