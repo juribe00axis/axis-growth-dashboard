@@ -1,6 +1,14 @@
 {
   "date": "2026-09-11",
   "opps": {
+    "QEkxbGZjIj5AxjtasbPT": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "R1DyiVEq7Oibs2U2smBs": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
     "XB52S6hq1IWPE1Y4V6hf": {
       "stage": "Discovery call set",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
@@ -22,7 +30,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "nLBFlRTjDCf4xmnHJgk1": {
-      "stage": "Strategy Call",
+      "stage": "Proposal Sent",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "SaO0ACgdr96sRQUI78yV": {
@@ -122,7 +130,7 @@
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "WRzpgSs548dqfi6CNrmu": {
-      "stage": "Discovery call set",
+      "stage": "Discovery Call",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "aIfPQqiX2rOOC207Y0qC": {
@@ -173,16 +181,12 @@
       "stage": "Agreement Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
-    "CxbNU8ZAEWIentGXzQSR": {
-      "stage": "Discovery call set",
-      "owner": "Xeprp2GjJCDQFoJV4jqS"
-    },
     "zwBbX2SmPO8Fmq0y20dQ": {
       "stage": "Strategy Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "WYO71K2IocPKB7YzCdjr": {
-      "stage": "Proposal Sent",
+      "stage": "Closing Call",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "kpOOqiyFGLY9Uj6DoCUO": {
@@ -218,7 +222,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "SEEB4OFftY7Oxv3h6CcN": {
-      "stage": "Discovery Call",
+      "stage": "Proposal Sent",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "Rk00Md2uMUGhs3IfthOz": {
@@ -382,7 +386,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "mF35m73mWTJz390JAbbi": {
-      "stage": "Proposal Sent",
+      "stage": "Closing Call",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "J2uRzr4dMpwnPrxiKbGz": {
@@ -739,10 +743,6 @@
     },
     "NLN4gUgsr6GczFG0zkBP": {
       "stage": "Strategy Call",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
-    "aUASzB7p3xxnlQ0weKwe": {
-      "stage": "Agreement Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "9xMsguDnNTF6N2fQfoza": {

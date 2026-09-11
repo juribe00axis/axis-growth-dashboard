@@ -3,11 +3,11 @@
   "stages": [
     {
       "name": "New Lead",
-      "count": 58
+      "count": 59
     },
     {
       "name": "Discovery call set",
-      "count": 24
+      "count": 23
     },
     {
       "name": "Discovery Call",
@@ -15,7 +15,7 @@
     },
     {
       "name": "Strategy Call",
-      "count": 7
+      "count": 6
     },
     {
       "name": "Proposal Sent",
@@ -23,11 +23,11 @@
     },
     {
       "name": "Closing Call",
-      "count": 21
+      "count": 23
     },
     {
       "name": "Agreement Sent",
-      "count": 16
+      "count": 15
     },
     {
       "name": "Reactivation Queue - no call booked",
@@ -43,9 +43,9 @@
     ],
     "data": [
       181,
-      21,
+      22,
       84
     ],
-    "total": 286
+    "total": 287
   }
 }
