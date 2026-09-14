@@ -1019,6 +1019,86 @@ def _funnel_vs_new_lead_html():
 # at this point in the file -- _funnel_matrix_html() above has everything it
 # needs already and is called from there.
 
+# ─── 6e5. Funnel per Rep — prior month vs. current MTD vs. projection ────────
+# Powers the whiteboard's "Funnel per Rep" tab (added 2026-09-08). Same
+# source and same independent-per-period tally as 6e4's Funnel Conversion
+# card -- field_movement_events, floored at FUNNEL_FLOOR -- just split by
+# rep and restricted to two months: the last COMPLETE month and the current
+# in-progress one. Both roll forward automatically; no month is hardcoded.
+#
+# The third column is a straight run-rate projection of the current month:
+# each stage's MTD count scaled by (business days in month / business days
+# elapsed). Business days rather than calendar days because stage entries
+# are overwhelmingly weekday events -- a calendar-day divisor would
+# systematically under-project every time the month-to-date window happens
+# to include a weekend. It is a projection of ACTIVITY VOLUME, not a cohort
+# forecast: it says "at the pace set so far, the month ends near here", and
+# inherits 6e4's caveat that a month's later-stage counts are mostly fed by
+# leads that entered in earlier months.
+def _last_day_of_month(y, m):
+    return 31 if m == 12 else (datetime(y, m + 1, 1) - timedelta(days=1)).day
+
+def _business_days(y, m, through_day=None):
+    _last = _last_day_of_month(y, m)
+    _end = min(through_day, _last) if through_day else _last
+    return sum(1 for _d in range(1, _end + 1) if datetime(y, m, _d).weekday() < 5)
+
+_rf_cur_y, _rf_cur_m = today.year, today.month
+_rf_current = f"{_rf_cur_y:04d}-{_rf_cur_m:02d}"
+_rf_pri_y, _rf_pri_m = (_rf_cur_y - 1, 12) if _rf_cur_m == 1 else (_rf_cur_y, _rf_cur_m - 1)
+_rf_prior = f"{_rf_pri_y:04d}-{_rf_pri_m:02d}"
+
+_rf_bd_elapsed = _business_days(_rf_cur_y, _rf_cur_m, today.day)
+_rf_bd_total   = _business_days(_rf_cur_y, _rf_cur_m)
+_rf_factor     = (_rf_bd_total / _rf_bd_elapsed) if _rf_bd_elapsed else 0.0
+
+# rep → month → stage → count. "All" is every event including deals owned by
+# someone outside ROCK_OWNERS (or unassigned), so the rep columns can sum to
+# less than All -- same convention the homepage Weekly Rocks card uses.
+rep_funnel = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+for _e in field_movement_events:
+    if _e["stage"] not in ROCKS_STAGE_LABELS:
+        continue
+    if _e["date"] < FUNNEL_FLOOR.isoformat():
+        continue
+    _mk = _e["date"][:7]
+    if _mk not in (_rf_prior, _rf_current):
+        continue
+    rep_funnel["All"][_mk][_e["stage"]] += 1
+    if _e["rock_owner"]:
+        rep_funnel[_e["rock_owner"]][_mk][_e["stage"]] += 1
+
+# Only offer reps that actually have events in one of the two months, so the
+# selector doesn't list someone with an entirely empty table.
+_rf_reps = ["All"] + [
+    _name for _name in ROCK_OWNERS.values()
+    if _name in rep_funnel and any(rep_funnel[_name][_m] for _m in (_rf_prior, _rf_current))
+]
+
+rep_funnel_data = {
+    _rep: {
+        _m: {_s: rep_funnel[_rep][_m].get(_s, 0) for _s in ROCKS_STAGE_LABELS}
+        for _m in (_rf_prior, _rf_current)
+    }
+    for _rep in _rf_reps
+}
+
+rep_funnel_meta = {
+    "reps":         _rf_reps,
+    "stages":       ROCKS_STAGE_LABELS,
+    "priorKey":     _rf_prior,
+    "currentKey":   _rf_current,
+    "priorLabel":   datetime(_rf_pri_y, _rf_pri_m, 1).strftime("%B %Y"),
+    "currentLabel": datetime(_rf_cur_y, _rf_cur_m, 1).strftime("%B %Y"),
+    "bdElapsed":    _rf_bd_elapsed,
+    "bdTotal":      _rf_bd_total,
+    "factor":       round(_rf_factor, 4),
+    "asOf":         today.strftime("%Y-%m-%d"),
+}
+print(f"  Funnel per Rep: {len(_rf_reps)} selections, {_rf_prior} vs {_rf_current} "
+      f"(MTD {_rf_bd_elapsed}/{_rf_bd_total} business days, ×{_rf_factor:.2f} projection)")
+print()
+
 # ── 6f. Lead → Discovery conversion (since Jul 1, W1) ────────────────────────
 # Numerator is the running total of distinct opportunities that entered
 # Discovery Call, read straight from field_movement_events (6e2) -- no week
@@ -1384,6 +1464,43 @@ for _e in won_deals_events:
             if _cri:
                 _e["capital_raiser_intent"] = ", ".join(_cri)
 
+# ── Contact Type — existing-client flag (added 2026-09-08) ───────────────────
+# GHL's STANDARD contact field `type` ("lead" / "customer"). The operator sets
+# it to "customer" on contacts that were already clients, so a won deal from
+# one of them is expansion/repeat revenue rather than something the funnel
+# produced. Fetched per-contact because /opportunities/search's embedded
+# contact object only carries companyName/email/id/name/phone/score/tags --
+# `type` is NOT among them (verified live 2026-09-08), so a separate
+# GET /contacts/{id} is required. Only the won deals are looked up (~35
+# calls), cached by contact id since one contact can hold several deals
+# (e.g. Avid Realty's Reg A / Reg D pair).
+_contact_type_cache = {}
+
+def _contact_type(contact_id):
+    if not contact_id:
+        return None
+    if contact_id not in _contact_type_cache:
+        try:
+            _c = ghl_get(f"/contacts/{contact_id}").get("contact") or {}
+            _contact_type_cache[contact_id] = _c.get("type")
+        except Exception as _exc:
+            # A contact deleted/merged in GHL after the deal was won 400s here.
+            # Treat as unknown rather than failing the whole build.
+            print(f"  ⚠ Contact {contact_id} type lookup failed ({str(_exc)[:60]}) — treated as unknown")
+            _contact_type_cache[contact_id] = None
+        time.sleep(0.12)  # stay well inside the 100 req/10s limit
+    return _contact_type_cache[contact_id]
+
+for _e in won_deals_events:
+    _opp = _onboarding_by_id.get(_e["id"]) or {}
+    _e["contact_type"] = _contact_type((_opp.get("contact") or {}).get("id") or _opp.get("contactId"))
+    # Only an explicit "customer" excludes a deal. Unknown/blank stays counted
+    # as new business, so a missing value never silently shrinks the funnel.
+    _e["existing_client"] = (_e["contact_type"] or "").lower() == "customer"
+
+_existing_client_total = sum(1 for _e in won_deals_events if _e["existing_client"])
+print(f"  Contact Type: {_existing_client_total} of {len(won_deals_events)} won deals are existing clients (excluded from funnel math)")
+
 # kpi_whiteboard.html's WON schema uses date_won/name (its original
 # hand-curated field names) rather than won_deals_events' date/opp_name
 # (matched to the Raw Data page's schema instead) -- remap here rather than
@@ -1393,9 +1510,28 @@ whiteboard_won = [
         "id": e["id"], "date_won": e["date"], "name": e["opp_name"],
         "value": e["value"], "owner": e["owner"], "source": e["source"],
         "agreement_signed": e["agreement_signed"], "capital_raiser_intent": e["capital_raiser_intent"],
+        "contact_type": e["contact_type"], "existing_client": e["existing_client"],
     }
     for e in won_deals_events
 ]
+
+# New-business won deals per month, on the SAME "effective date" basis the
+# whiteboard's JS uses for signings (effectiveDate() = agreement_signed ||
+# date_won, see WHITEBOARD_LOGIC_SCRIPT) rather than the stage-change date
+# whiteboard_won_by_month uses -- so the monthly Sales Report tabs, the MoM
+# cards and the Signings chart all bucket a deal into the same month.
+# Existing-client deals (Contact Type = customer) are excluded here; they
+# still appear on the All-Time Won tab, just flagged.
+whiteboard_new_won_by_month = defaultdict(int)
+whiteboard_new_won_deals    = defaultdict(list)
+for _e in won_deals_events:
+    if _e["existing_client"]:
+        continue
+    _eff_month = (_e["agreement_signed"] or _e["date"])[:7]
+    whiteboard_new_won_by_month[_eff_month] += 1
+    whiteboard_new_won_deals[_eff_month].append(_e)
+for _m in whiteboard_new_won_deals:
+    whiteboard_new_won_deals[_m].sort(key=lambda e: (e["agreement_signed"] or e["date"]))
 
 print(f"  Whiteboard: {len(whiteboard_month_keys)} months ({whiteboard_month_keys[0]}–{whiteboard_month_keys[-1]})")
 print()
@@ -4327,6 +4463,159 @@ WHITEBOARD_HEAD = """<!DOCTYPE html>
   tr.bd-row td { background: rgba(57, 135, 229, 0.16); }
   tr.bd-row td:first-child { border-left: 3px solid var(--series-1); }
 
+  /* Existing-client won deals (Contact Type = "customer" on the contact).
+     Amber matches --series-4, already the "Client" colour in the source
+     donuts, so the same idea reads the same way across the page. The pill
+     carries the meaning on its own -- colour alone would be lost in print
+     and to anyone who can't distinguish it from the blue BD highlight. */
+  tr.client-row td { background: rgba(201, 133, 0, 0.14); }
+  tr.client-row td:first-child { border-left: 3px solid var(--series-4); }
+  /* Funnel per Rep — compact stacked bars, one per stage */
+  .rf-funnel { display: flex; flex-direction: column; gap: 9px; padding: 6px 0 2px; }
+  /* Stage label sits OUTSIDE the bar: at these counts the later stages are
+     only a few pixels wide, and a label inside the fill gets clipped to a
+     single letter. */
+  .rf-row { display: grid; grid-template-columns: 88px 1fr auto; gap: 9px; align-items: center; }
+  .rf-stage {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+  }
+  .rf-track { background: var(--surface-2); border-radius: 5px; height: 20px; overflow: hidden; }
+  .rf-fill { height: 100%; background: var(--hero); border-radius: 5px; min-width: 3px; }
+  .rf-fill.rf-projected { background: repeating-linear-gradient(
+      135deg, rgba(200,255,1,0.9) 0 7px, rgba(200,255,1,0.45) 7px 14px); }
+  .rf-count { font-size: 0.85rem; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 30px; text-align: right; }
+
+  /* Editable projection inputs. Dashed border marks them as adjustable, the
+     same visual language the July/August won-value inputs already use. */
+  .rf-input {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 3px 6px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    width: 58px;
+    -moz-appearance: textfield;
+  }
+  .rf-input::-webkit-outer-spin-button,
+  .rf-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .rf-input:focus { border-style: solid; border-color: var(--hero); outline: none; }
+  .rf-input.rf-touched { border-color: var(--hero); border-style: solid; color: var(--hero); }
+  .rf-input:disabled { opacity: 0.45; border-style: dotted; }
+  .rf-input-suffix { color: var(--text-mute); font-size: 0.75rem; margin-left: 3px; }
+  .rf-cell-proj { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+  .rf-projnum { font-weight: 800; font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; }
+  .rf-scenario-bar {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    margin: 14px 0 4px;
+  }
+  .rf-reset-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text-mute);
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .rf-reset-btn:hover { border-color: var(--hero); color: var(--hero); }
+  .rf-edited-badge {
+    display: none;
+    background: rgba(201, 133, 0, 0.18);
+    border: 1px solid var(--series-4);
+    color: var(--series-4);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .rf-edited-badge.rf-on { display: inline-block; }
+
+  /* ── Funnel per Rep — legibility/comfort pass (2026-09-08) ─────────────────
+     Deliberately quarantined to this one tab so it can be judged against the
+     untouched tabs before going page-wide. Everything here is either scoped
+     under #tab-repfunnel or gated on body.rf-theme, which the tab-switch
+     handler adds only while this panel is showing -- so deleting this block
+     and the one toggle line reverts the experiment completely.
+
+     Measured starting point: the muted grey was already 6.8:1 on the page
+     background and 6.1:1 on cards, both past WCAG AA -- so the fatigue was
+     size and density, not contrast. Sizes go up, the long-form text gets a
+     lighter grey and a capped measure, and the near-black background lifts
+     slightly (bright text on near-black is what makes long reading harsh). */
+  body.rf-theme { background: #16161C; }
+
+  #tab-repfunnel {
+    --rf-surface:   #212129;
+    --rf-text-soft: #B4B4C0;   /* ~9.5:1 on the lifted background */
+  }
+  #tab-repfunnel table,
+  #tab-repfunnel .chart-card { background: var(--rf-surface); }
+
+  /* The tab had no heading at all -- its title was an 11.5px grey label, the
+     same size as a field caption, so the page had nothing to anchor on. */
+  #tab-repfunnel .rf-page-title {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    color: var(--hero);
+    margin-bottom: 20px;
+  }
+
+  #tab-repfunnel .section-title { font-size: 0.78rem; color: var(--rf-text-soft); }
+  /* Capped measure: these ran the full ~1150px, which is roughly double a
+     comfortable line length for text this size. */
+  #tab-repfunnel .subtitle { font-size: 0.88rem; color: var(--rf-text-soft); line-height: 1.55; max-width: 78ch; }
+  #tab-repfunnel .caveat   { font-size: 0.85rem; color: var(--rf-text-soft); line-height: 1.62; max-width: 80ch; }
+  #tab-repfunnel .control-label { font-size: 0.76rem; color: var(--rf-text-soft); }
+  #tab-repfunnel .segmented button { font-size: 0.82rem; padding: 8px 12px; }
+
+  #tab-repfunnel th { font-size: 0.75rem; color: var(--rf-text-soft); padding: 14px 16px; }
+  #tab-repfunnel td { font-size: 0.9rem; padding: 14px 16px; }
+
+  #tab-repfunnel .chart-card-title { font-size: 0.86rem; }
+  /* 88px was sized for 9.3px labels; the wider column keeps "Agreement
+     Signed" on two tidy lines rather than three at the larger size. */
+  #tab-repfunnel .rf-row   { grid-template-columns: 104px 1fr auto; }
+  #tab-repfunnel .rf-stage { font-size: 0.7rem; color: var(--rf-text-soft); }
+  #tab-repfunnel .rf-count { font-size: 0.92rem; }
+  #tab-repfunnel .rf-pct   { font-size: 0.82rem; color: var(--rf-text-soft); }
+  #tab-repfunnel .rf-input { font-size: 0.86rem; width: 64px; padding: 4px 7px; }
+  #tab-repfunnel .rf-input-suffix { font-size: 0.8rem; color: var(--rf-text-soft); }
+  #tab-repfunnel .rf-reset-btn    { font-size: 0.78rem; padding: 7px 14px; }
+  #tab-repfunnel .rf-edited-badge { font-size: 0.7rem; }
+  .rf-pct { color: var(--text-mute); font-weight: 600; font-size: 0.78rem; }
+  td.rf-proj { color: var(--text-mute); }
+  td.rf-proj .rf-projnum { color: var(--text); font-weight: 700; }
+
+  .client-pill {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(201, 133, 0, 0.22);
+    border: 1px solid var(--series-4);
+    color: var(--series-4);
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
   input.date-input {
     background: var(--surface-2);
     color: var(--text);
@@ -4487,8 +4776,8 @@ WHITEBOARD_HEADER = f"""
       data as the main dashboard -- this page is generated by the same script,
       on the same twice-daily refresh. See Overview for month-by-month detail,
       the simulator for spend projections, and All-Time Won for the full deal
-      list. The July Sales Report tab is a frozen historical recap and stays
-      as originally written.
+      list. The July and August Sales Report tabs are frozen historical
+      recaps and stay as originally written.
     </div>
   </div>
   <span class="badge">Generated {generated_at}</span>
@@ -4499,6 +4788,8 @@ WHITEBOARD_HEADER = f"""
   <button class="tab-btn" data-tab="tab-won" id="wonTabBtn">All-Time Won</button>
   <button class="tab-btn" data-tab="tab-sdr">SDR Capacity</button>
   <button class="tab-btn" data-tab="tab-july">July Sales Report</button>
+  <button class="tab-btn" data-tab="tab-august">August Sales Report</button>
+  <button class="tab-btn" data-tab="tab-repfunnel">Funnel per Rep</button>
 </div>
 """
 
@@ -4632,6 +4923,23 @@ WHITEBOARD_BODY_WON = """
     them on the opportunity in GHL and they'll appear on the next refresh.
     "Source" is GHL's standard opportunity source field.
   </div>
+  <div class="tile-grid" style="margin-bottom: 16px;">
+    <div class="tile">
+      <div class="tile-label">Total Won</div>
+      <div class="tile-value" id="wonTotalAll">—</div>
+      <div class="tile-sub">Everything in the Onboarding stage</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">New Business</div>
+      <div class="tile-value hero-color" id="wonTotalNew">—</div>
+      <div class="tile-sub">Counted in the monthly Sales Reports</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Existing Client</div>
+      <div class="tile-value" id="wonTotalClient" style="color: var(--series-4);">—</div>
+      <div class="tile-sub">Highlighted below, excluded from funnels</div>
+    </div>
+  </div>
   <table>
     <thead>
       <tr>
@@ -4657,7 +4965,14 @@ WHITEBOARD_BODY_WON = """
     "Won" only includes opportunities *currently* sitting in the Onboarding
     stage -- a deal that later moves further along the pipeline drops off
     this list, same as everywhere else on the dashboard that uses this
-    definition.
+    definition. Amber "Existing client" rows are deals whose contact carries
+    GHL's standard Contact Type = "customer" -- expansion or repeat business
+    from an account we already had. They are kept here deliberately (this is
+    the full won ledger) but are excluded from the monthly Sales Report tabs,
+    whose funnels are meant to measure what new marketing and sales activity
+    produced. To change whether a deal counts, set Contact Type on the
+    contact in GHL; only an explicit "customer" excludes it, so a blank value
+    keeps the deal counted as new business.
   </div>
 </section>
 </div>
@@ -4972,6 +5287,390 @@ WHITEBOARD_BODY_JULY = """<div id="tab-july" class="tab-panel">
 </div>
 """
 
+# ============ WHITEBOARD_BODY_AUGUST (verbatim, frozen historical content) ============
+# Built 2026-09-03, same day-of-month-cycle as July's 2026-08-03 review. Leads
+# by Source and the funnel's Total Leads figure come from a full live re-pull
+# and classification of all 200 August-created opportunities (same channel
+# rules July used by hand -- MGL_SOURCES incl. "AxisKey ... Discovery Call"
+# booking-artifact values, contact 'mgl'/'client' tags, then the contact-level
+# "Source" custom field as a last fallback), done via the API rather than by
+# hand. Discovery Calls uses the live "Date Entered" stage-tracking field
+# instead of a manually-deduped calendar-appointment pull -- that field only
+# became reliable dashboard-wide starting 2026-07-27, so it fully covers
+# August (unlike July, which is why July needed the manual calendar pull) --
+# see the Notes section for the full caveat. No deal below has been manually
+# confirmed as "exclusively Broker Dealer" (unlike July's 3 blue rows) --
+# Capital Raiser Intent field values are shown as-is until that review happens.
+#
+# Funnel — Leads to Won (updated 2026-09-03): every stage now comes from the
+# same field-movement source as the main dashboard's Funnel Conversion card
+# (funnel_monthly, 6e4 -- the live "Date Entered" custom fields, FIELD_DATE_
+# STAGES) instead of mixing an opportunity-created count (200) for the top of
+# the funnel with a field-based count for Discovery Call below it. Strategy
+# Call is added as its own stage between Discovery Call and Won -- omitted
+# from July because the Date-Entered fields weren't reliably populated until
+# 2026-07-27, so July's own count would have been a partial-month undercount.
+#
+# Won (updated 2026-09-08): existing-client deals are excluded entirely from
+# this tab -- Contact Type = "customer" on the linked contact means the deal
+# is expansion revenue from an account we already had, so counting it here
+# would credit the funnel with something it didn't produce. Those deals are
+# still listed (and highlighted) on the All-Time Won tab. The count also
+# switches to the agreement_signed-or-date_won "effective date" basis the
+# MoM cards and Signings chart already use, so a deal lands in the same
+# month everywhere on the page.
+_aug_funnel = funnel_monthly.get("2026-08", {})
+_aug_new_lead  = _aug_funnel.get("New Lead", 0)
+_aug_discovery = _aug_funnel.get("Discovery Call", 0)
+_aug_strategy  = _aug_funnel.get("Strategy Call", 0)
+_aug_won_deals = whiteboard_new_won_deals.get("2026-08", [])
+_aug_won       = len(_aug_won_deals)
+_aug_excluded  = [
+    _e for _e in won_deals_events
+    if _e["existing_client"] and (_e["agreement_signed"] or _e["date"])[:7] == "2026-08"
+]
+
+_aug_pct_lead_to_disc = round(_aug_discovery / _aug_new_lead * 100, 1) if _aug_new_lead else 0.0
+_aug_pct_disc_to_strat = round(_aug_strategy / _aug_discovery * 100, 1) if _aug_discovery else 0.0
+_aug_pct_strat_to_won = round(_aug_won / _aug_strategy * 100, 1) if _aug_strategy else 0.0
+_aug_pct_lead_to_won = round(_aug_won / _aug_new_lead * 100, 1) if _aug_new_lead else 0.0
+
+_aug_funnel_max = max(_aug_new_lead, 1)
+_aug_w_lead = 100
+_aug_w_disc = round(max(_aug_discovery / _aug_funnel_max * 100, 14))
+_aug_w_strat = round(max(_aug_strategy / _aug_funnel_max * 100, 10))
+_aug_w_won = round(max(_aug_won / _aug_funnel_max * 100, 8))
+
+# Won-deals table rows, generated from the same filtered list the funnel
+# counts (was a frozen 13-row literal until 2026-09-08). Generating it keeps
+# the table, the funnel's Won bar and the Deals Won tile from ever
+# disagreeing -- the frozen version had already drifted one deal out of sync
+# with live data. Value inputs keep the same data-id/localStorage autosave
+# the July tab uses.
+_aug_bd_count = sum(
+    1 for _e in _aug_won_deals
+    if "broker dealer" in (_e["capital_raiser_intent"] or "").lower()
+)
+_aug_won_rows = ""
+for _e in _aug_won_deals:
+    _cri = _e["capital_raiser_intent"]
+    _cri_td = (
+        f'<td style="text-align:left;">{_cri}</td>' if _cri
+        else '<td style="text-align:left;" class="empty-field">—</td>'
+    )
+    _aug_won_rows += (
+        f'      <tr>\n'
+        f'        <td style="text-align:left;">{_e["opp_name"]}</td>\n'
+        f'        <td><input type="text" class="value-input" data-id="{_e["id"]}" '
+        f'value="{int(_e["value"])}" placeholder="$"></td>\n'
+        f'{_cri_td.rjust(len(_cri_td) + 8)}\n'
+        f'      </tr>\n'
+    )
+
+_aug_excluded_names = ", ".join(sorted(_e["opp_name"] for _e in _aug_excluded))
+
+WHITEBOARD_BODY_AUGUST = f"""<div id="tab-august" class="tab-panel">
+<div style="font-size: 2rem; font-weight: 800; letter-spacing: 0.01em; color: var(--hero); margin-bottom: 22px;">
+  August 2026 Sales Report
+</div>
+<section>
+  <div class="section-title">Sales Updates</div>
+  <div style="background: var(--surface); border-radius: 14px; padding: 18px 22px; color: var(--text); font-size: 0.86rem; line-height: 1.6; margin-bottom: 28px;">
+    No single budget event this month -- Meta spend stayed steady in the $350-650/day range throughout August,
+    unlike July's mid-month jump. The story instead is scale: leads more than doubled from July (200 vs. 99,
+    +102%) as spend roughly doubled alongside it ($15,674.88 vs. $7,588.77, +107%) to sustain the volume. On a
+    new-business basis August closed {_aug_won} deals ({len(_aug_excluded)} further win(s) came from accounts we
+    already had and are excluded throughout -- see Notes), so New Lead &rarr; Won conversion landed at
+    {_aug_pct_lead_to_won}% against July's 13.1%: volume scaled up faster than the pipeline converted it.
+  </div>
+</section>
+
+<section>
+  <div class="section-title">August at a Glance</div>
+  <div class="tile-grid">
+    <div class="tile">
+      <div class="tile-label">Total Spend</div>
+      <div class="tile-value">$15,674.88</div>
+      <div class="tile-sub">vs Jul: <span class="hero-color">+106.6%</span></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">MGL Leads</div>
+      <div class="tile-value hero-color">157</div>
+      <div class="tile-sub">vs Jul: <span class="hero-color">+149.2%</span></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">MGL CPL</div>
+      <div class="tile-value">$99.84</div>
+      <div class="tile-sub">vs Jul: <span class="hero-color">-17.1%</span></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Discovery Calls</div>
+      <div class="tile-value">127</div>
+      <div class="tile-sub">vs Jul: +53.0%<sup>*</sup></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Deals Won</div>
+      <div class="tile-value hero-color">13</div>
+      <div class="tile-sub">vs Jul: <span class="hero-color">+0.0%</span></div>
+    </div>
+  </div>
+  <div style="font-size: 0.68rem; color: var(--text-mute); margin-top: 10px;">
+    * Not a like-for-like comparison -- see Notes below.
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Funnel — Leads to Won</div>
+  <div class="funnel-wrap">
+    <div class="funnel-bar" style="width:{_aug_w_lead}%;max-width:560px;">
+      <span class="funnel-stage-label">New Leads (August)</span>
+      <span class="funnel-stage-value">{_aug_new_lead}</span>
+    </div>
+    <div class="funnel-conv">↓ <span class="funnel-conv-pct">{_aug_pct_lead_to_disc}%</span> ({_aug_discovery} of {_aug_new_lead}) to Discovery Call</div>
+    <div class="funnel-bar" style="width:{_aug_w_disc}%;max-width:358px;">
+      <span class="funnel-stage-label">Discovery Calls Booked</span>
+      <span class="funnel-stage-value">{_aug_discovery}</span>
+    </div>
+    <div class="funnel-conv">↓ <span class="funnel-conv-pct">{_aug_pct_disc_to_strat}%</span> ({_aug_strategy} of {_aug_discovery}) to Strategy Call</div>
+    <div class="funnel-bar" style="width:{_aug_w_strat}%;max-width:280px;">
+      <span class="funnel-stage-label">Strategy Calls Held</span>
+      <span class="funnel-stage-value">{_aug_strategy}</span>
+    </div>
+    <div class="funnel-conv">↓ <span class="funnel-conv-pct">{_aug_pct_strat_to_won}%</span> ({_aug_won} of {_aug_strategy}) to Won</div>
+    <div class="funnel-bar" style="width:{_aug_w_won}%;max-width:225px;">
+      <span class="funnel-stage-label">Won Deals</span>
+      <span class="funnel-stage-value">{_aug_won}</span>
+    </div>
+  </div>
+  <div style="display:flex;align-items:baseline;gap:10px;justify-content:center;margin-top:18px;">
+    <div style="font-size:1.8rem;font-weight:800;color:var(--hero);line-height:1;">{_aug_pct_lead_to_won}%</div>
+    <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);">New Lead &rarr; Won</div>
+  </div>
+  <div style="text-align:center;margin-top:6px;font-size:0.7rem;color:var(--text-mute);">vs. July's 13.1% (13 of 99) -- not directly comparable, see Notes</div>
+</section>
+
+<section>
+  <div class="section-title">Deal Source Distribution — August</div>
+  <div class="chart-row" style="grid-template-columns: 1fr 1fr;">
+    <div class="chart-card">
+      <div class="chart-card-title">Leads by Source</div>
+      <svg id="chartAugustLeadsSource" viewBox="0 0 240 200" width="100%"></svg>
+      <div class="legend legend-source" id="augustLeadsLegend"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Won Deals by Source</div>
+      <svg id="chartAugustWonSource" viewBox="0 0 240 200" width="100%"></svg>
+      <div class="legend legend-source" id="augustWonLegend"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Won Deals — Month over Month</div>
+  <div class="chart-row" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabelA0">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValueA0">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDeltaA0">won deals</div>
+    </div>
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabelA1">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValueA1">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDeltaA1">won deals</div>
+    </div>
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabelA2">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValueA2">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDeltaA2">won deals</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Won Deals — August</div>
+  <div class="tile-grid" style="margin-bottom: 16px;">
+    <div class="tile">
+      <div class="tile-label">Broker Dealer Deals</div>
+      <div class="tile-value hero-color">{_aug_bd_count} of {_aug_won}</div>
+      <div class="tile-sub">Field value only, not manually confirmed</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Existing-Client Deals Excluded</div>
+      <div class="tile-value">{len(_aug_excluded)}</div>
+      <div class="tile-sub">Not counted anywhere on this tab</div>
+    </div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="text-align:left;">Deal</th>
+        <th>Value</th>
+        <th style="text-align:left;">Capital Raiser Intent</th>
+      </tr>
+    </thead>
+    <tbody>
+{_aug_won_rows}    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="section-title">Notes</div>
+  <div class="caveat" style="margin-top: 0; border-top: none; padding-top: 0;">
+    <strong style="color: var(--text);">August at a Glance —</strong> Total Leads (200) is every opportunity
+    created in August across all pipelines, same population the live Overview tab's Leads chart already uses.
+    MGL Leads (157) and the Leads by Source donut below come from re-classifying all 200 of those opportunities
+    live via the GHL API, applying the same channel rules July's manual review used: source in MGL/FORM/"Meta
+    Survey - Capital Raising", any "AxisKey ... Discovery Call"-style value treated as a booking-calendar
+    artifact (MGL), then falling back to the contact's "mgl"/"client" tags and finally the contact-level
+    "Source" custom field when the deal's own source is blank. No dummy test-lead record turned up in August
+    (unlike July's one exclusion). Discovery Calls (127) is NOT the same methodology as July's -- it's read
+    live from GHL's "Date Entered" stage-tracking custom field (the same field the main dashboard's Funnel
+    Conversion card uses), which only started being populated reliably 2026-07-27. That means it fully covers
+    August but only the last few days of July, which is exactly why July needed a manual calendar-appointment
+    pull instead. Treat the "vs Jul" change on this tile as directional only, not a clean comparison. Deals Won
+    ({_aug_won}) counts NEW-BUSINESS deals only -- {len(_aug_excluded)} August deal(s) whose contact carries GHL's
+    standard Contact Type = "customer" are excluded from every figure on this tab, since expansion revenue from
+    an account we already had wasn't produced by this month's funnel. Those deals still appear on the All-Time
+    Won tab, highlighted. Excluded from August: {_aug_excluded_names or "none"}.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Funnel —</strong> Every stage here (New Leads, Discovery Calls,
+    Strategy Calls, Won) is now read from the same live field-movement source as the main dashboard's Funnel
+    Conversion card -- the "Date Entered" custom fields on each opportunity (FIELD_DATE_STAGES), not the
+    "opportunity created" count used for July's Total Leads (99) or for this tab's own "August at a Glance"
+    tile. New Leads (August) = {_aug_new_lead} opportunities that entered the New Lead stage in August per that
+    field, which is why it differs from the 200-opportunities-created figure quoted elsewhere on this page --
+    the two are different populations by design. Strategy Call is a new stage, not shown on July's funnel,
+    because the Date-Entered fields only became reliable dashboard-wide on 2026-07-27 -- a July count would
+    have covered only the last few days of that month. Overall New Lead → Won: {_aug_pct_lead_to_won}%
+    ({_aug_won} of {_aug_new_lead}), vs. July's 13.1% (13 of 99) -- not a like-for-like comparison given the
+    methodology change, shown for rough orientation only. The Won bar counts new business only ({len(_aug_excluded)}
+    existing-client deal(s) excluded, see the note above), and buckets each deal by its Agreement Signed date
+    where set, otherwise Date Won -- the same "effective date" the Month-over-Month cards and the Overview tab's
+    Signings chart use, so a deal lands in the same month everywhere on this page. Bar widths are for visual
+    taper only, not exact area-proportional to volume. Same caveat as July applies: these are period counts,
+    not a strict single cohort, so directional rather than a precise same-cohort conversion rate.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Deal Source Distribution —</strong> Same channel buckets as the
+    Overview tab's Signings by Source chart and July's donut (SGL/Referral/MGL/Client/Other), "Referral -
+    &lt;name&gt;" variants folded into one Referral slice. Leads by Source classification method described
+    above (August at a Glance note) -- done via a live API pull and the same rule-set July applied by hand,
+    not spot-checked contact-by-contact the way July's 2026-08-03 review was, so treat edge cases (the 13-lead
+    Other bucket: 5 are "Instantly" cold-email sourced, 8 have no source signal anywhere on the record) as
+    approximate. Won Deals by Source is fully live, same as July's.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Won Deals — Month over Month —</strong> Same June/July/August won-deal
+    counts as the Overview tab's Signings bar chart, classified by Agreement Signed date where set, otherwise
+    Date Won; updates live from the same edits. % badge is growth vs. the prior month.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Won Deals —</strong> New-business deals only: any deal whose contact
+    has Contact Type = "customer" is left out of this table and every count on this tab
+    ({len(_aug_excluded)} excluded for August). No row is highlighted as "exclusively Broker Dealer" yet --
+    July's blue-highlight rows were a manual call, cross-checked deal by deal, and that review hasn't been
+    done for August. Capital Raiser Intent is shown as recorded on the field ({_aug_bd_count} of {_aug_won}
+    August deals show "Broker Dealer," but per July's own finding that field alone overstates exclusively-BD
+    engagements -- July's notes flagged 5 of its own "Broker Dealer"-tagged deals as not actually exclusive BD
+    engagements). This table is generated live from the same filtered list the funnel counts (it was a frozen
+    hand-written block until 2026-09-08, by which point it had drifted one deal out of sync), ordered by
+    Agreement Signed date where set, otherwise Date Won. Value inputs are pre-filled from the live
+    monetaryValue on each opportunity but stay editable -- same browser-localStorage autosave as the July tab,
+    sharing the same storage key, so edits here follow the same "won't carry across browsers/devices" caveat
+    spelled out on the July tab.
+  </div>
+</section>
+</div>
+"""
+
+# ============ WHITEBOARD_BODY_REPFUNNEL (live, generated) ============
+# Fully live -- no frozen content. Month labels, rep list and the projection
+# multiplier all come from rep_funnel_meta, so this tab rolls forward on its
+# own as the months advance.
+WHITEBOARD_BODY_REPFUNNEL = """<div id="tab-repfunnel" class="tab-panel">
+<div class="rf-page-title">Funnel per Rep</div>
+<section>
+  <div class="section-title">Stage conversion by owner</div>
+  <div class="subtitle" style="margin-bottom: 18px;">
+    Stage entries per rep from GHL's "Date Entered" custom fields -- the same
+    field-movement source as the main dashboard's Funnel Conversion card, just
+    split by owner. Compares the last complete month against the current
+    month-to-date, plus a run-rate projection of where the current month lands
+    if the present pace holds.
+  </div>
+
+  <div class="sim-controls" style="margin-bottom: 20px;">
+    <div class="control-group">
+      <span class="control-label">Rep</span>
+      <div class="segmented" id="rfRepToggle"></div>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Conversion basis</span>
+      <div class="segmented" id="rfModeToggle">
+        <button data-mode="step" class="active">Step over step</button>
+        <button data-mode="newlead">vs. New Lead</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="rfModeNote" class="subtitle" style="margin-bottom: 14px;"></div>
+
+  <div class="rf-scenario-bar">
+    <span class="rf-edited-badge" id="rfEditedBadge">What-if scenario — edited</span>
+    <button class="rf-reset-btn" id="rfResetBtn">Reset to run rate</button>
+    <span class="subtitle" style="margin: 0;">
+      The projected column's New Lead volume and every conversion rate are editable —
+      change one and the rest of the column recalculates.
+    </span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="text-align:left;">Stage</th>
+        <th id="rfHeadPrior">—</th>
+        <th id="rfHeadCurrent">—</th>
+        <th id="rfHeadProjected">—</th>
+      </tr>
+    </thead>
+    <tbody id="rfTableBody"></tbody>
+  </table>
+
+  <div class="chart-row" style="grid-template-columns: repeat(3, 1fr); margin-top: 22px;">
+    <div class="chart-card">
+      <div class="chart-card-title" id="rfFunnelTitlePrior">—</div>
+      <div class="rf-funnel" id="rfFunnelPrior"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title" id="rfFunnelTitleCurrent">—</div>
+      <div class="rf-funnel" id="rfFunnelCurrent"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title" id="rfFunnelTitleProjected">—</div>
+      <div class="rf-funnel" id="rfFunnelProjected"></div>
+    </div>
+  </div>
+
+  <div class="caveat" id="rfProjectionNote"></div>
+  <div class="caveat">
+    <strong style="color: var(--text);">How to read this —</strong> Every stage is
+    tallied independently for the month its own Date-Entered field falls in; there
+    is no per-opportunity join back to New Lead. Because deals take real time to
+    move stage to stage, a month's later-stage counts are mostly fed by leads that
+    entered in earlier months, so these are period activity ratios rather than
+    true same-cohort conversion rates -- the same caveat that applies to the main
+    dashboard's Funnel Conversion card. The "All" selection counts every stage
+    entry including deals owned by someone outside the tracked rep list or left
+    unassigned, so the individual reps can sum to less than All. Per-rep months
+    often rest on single-digit counts, where one deal swings a percentage by tens
+    of points -- read movement at this granularity as noise unless it is large and
+    sustained.
+  </div>
+</section>
+</div>
+"""
+
 # ============ WHITEBOARD_DATA_SCRIPT (f-string, json.dumps injections) ============
 WHITEBOARD_DATA_SCRIPT = f"""
 <div id="tooltip"></div>
@@ -4989,12 +5688,18 @@ const ALLTIME = {{
   cps: {blended_cost_per_signing}, cpsMgl: {blended_cost_per_signing_mgl},
 }};
 const WON = {json.dumps(whiteboard_won)};
-// Fixed anchor for the frozen July tab -- always means July 2026, not a
-// rolling "3rd month" -- so it stays correct no matter how many months
-// MONTHS grows to cover. JULY_LEADS_BY_SOURCE (also frozen, no live
-// equivalent for a per-lead source breakdown that old) is declared in
-// WHITEBOARD_LOGIC_SCRIPT alongside the rest of the donut-drawing code.
+// Fixed anchors for the frozen July/August tabs -- always mean July/August
+// 2026, not a rolling "Nth month" -- so they stay correct no matter how many
+// months MONTHS grows to cover. JULY_LEADS_BY_SOURCE / AUGUST_LEADS_BY_SOURCE
+// (also frozen, no live equivalent for a per-lead source breakdown) are
+// declared in WHITEBOARD_LOGIC_SCRIPT alongside the rest of the donut-
+// drawing code.
 const JULY_KEY = "2026-07";
+const AUGUST_KEY = "2026-08";
+// Funnel per Rep tab (6e5) -- rep → month → stage → count, plus the month
+// labels / business-day run-rate multiplier that drive the projection column.
+const REP_FUNNEL = {json.dumps(rep_funnel_data)};
+const REP_FUNNEL_META = {json.dumps(rep_funnel_meta)};
 </script>
 """
 
@@ -5123,26 +5828,35 @@ function renderOverview() {
   drawSourceChart();
   drawCPSChart();
 
-  // July tab's "Won Deals — Month over Month" mini-cards -- always the
-  // first 3 months (May/June/July), a fixed historical view rather than a
-  // rolling window, since this whole tab is specifically about July.
-  MONTHS.slice(0, 3).forEach((m, i) => {
-    const val = derived[m].signings;
-    document.getElementById(`momLabel${i}`).textContent = MONTH_LABEL[m];
-    document.getElementById(`momValue${i}`).textContent = val;
-    const deltaEl = document.getElementById(`momDelta${i}`);
-    const prevMonth = i > 0 ? MONTHS[i - 1] : null;
-    const prevVal = prevMonth ? derived[prevMonth].signings : null;
-    if (prevVal) {
-      const pct = Math.round((val - prevVal) / prevVal * 100);
-      deltaEl.innerHTML = `won deals &middot; <span style="color:var(--hero);font-weight:700;">${pct >= 0 ? "+" : ""}${pct}%</span>`;
-    } else {
-      deltaEl.textContent = "won deals";
-    }
-  });
+  // July/August tabs' "Won Deals — Month over Month" mini-cards -- each a
+  // fixed 3-month historical view (not a rolling window) ending on that
+  // tab's own month, since each tab is specifically about one month.
+  // idSuffix "" -> momLabel0/1/2 (July tab, unchanged ids); "A" -> momLabelA0/
+  // A1/A2 (August tab).
+  function renderMoMCards(idSuffix, monthKeys) {
+    monthKeys.forEach((m, i) => {
+      const val = derived[m].signings;
+      document.getElementById(`momLabel${idSuffix}${i}`).textContent = MONTH_LABEL[m];
+      document.getElementById(`momValue${idSuffix}${i}`).textContent = val;
+      const deltaEl = document.getElementById(`momDelta${idSuffix}${i}`);
+      const idx = MONTHS.indexOf(m);
+      const prevMonth = idx > 0 ? MONTHS[idx - 1] : null;
+      const prevVal = prevMonth ? derived[prevMonth].signings : null;
+      if (prevVal) {
+        const pct = Math.round((val - prevVal) / prevVal * 100);
+        deltaEl.innerHTML = `won deals &middot; <span style="color:var(--hero);font-weight:700;">${pct >= 0 ? "+" : ""}${pct}%</span>`;
+      } else {
+        deltaEl.textContent = "won deals";
+      }
+    });
+  }
+  renderMoMCards("", MONTHS.slice(0, 3));
+  renderMoMCards("A", MONTHS.slice(1, 4));
 
   drawGenericDonut("chartJulyLeadsSource", "julyLeadsLegend", JULY_LEADS_BY_SOURCE, "leads");
   drawGenericDonut("chartJulyWonSource", "julyWonLegend", computeSourceByMonth()[JULY_KEY] || {}, "won");
+  drawGenericDonut("chartAugustLeadsSource", "augustLeadsLegend", AUGUST_LEADS_BY_SOURCE, "leads");
+  drawGenericDonut("chartAugustWonSource", "augustWonLegend", computeSourceByMonth()[AUGUST_KEY] || {}, "won");
 }
 
 // ── Signings by source (stacked bar) ───────────────────────────────────────
@@ -5233,8 +5947,9 @@ function donutSlicePath(cx, cy, rOuter, rInner, startAngle, endAngle) {
     + `L${endInner.x},${endInner.y} A${rInner},${rInner} 0 ${largeArc} 1 ${startInner.x},${startInner.y} Z`;
 }
 
-// ── Generic donut (July Leads/Won-by-source) — reuses CHANNELS/donutSlicePath
+// ── Generic donut (July/August Leads/Won-by-source) — reuses CHANNELS/donutSlicePath
 const JULY_LEADS_BY_SOURCE = { MGL: 63, SGL: 13, Referral: 16, client: 7, Other: 0 };
+const AUGUST_LEADS_BY_SOURCE = { MGL: 157, SGL: 18, Referral: 6, client: 6, Other: 13 };
 
 function buildChannelLegend(containerId) {
   const box = document.getElementById(containerId);
@@ -5253,6 +5968,8 @@ function buildChannelLegend(containerId) {
 }
 buildChannelLegend("julyLeadsLegend");
 buildChannelLegend("julyWonLegend");
+buildChannelLegend("augustLeadsLegend");
+buildChannelLegend("augustWonLegend");
 
 function drawGenericDonut(svgId, legendId, data, centerLabel) {
   const svg = document.getElementById(svgId);
@@ -5691,6 +6408,11 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
     btn.classList.add("active");
     document.getElementById(btn.dataset.tab).classList.add("active");
+    // Funnel per Rep runs a lifted background while it's the visible panel --
+    // the only part of its legibility pass that can't live inside the panel's
+    // own selector, since the background belongs to <body>. Remove this line
+    // and the body.rf-theme rule together to revert it.
+    document.body.classList.toggle("rf-theme", btn.dataset.tab === "tab-repfunnel");
   });
 });
 
@@ -5702,6 +6424,9 @@ function renderWonTable() {
   wonBody.innerHTML = "";
   WON.forEach(w => {
     const tr = document.createElement("tr");
+    // Existing-client deals stay on this list (it's the full ledger) but are
+    // flagged, since they're excluded from the monthly Sales Report tabs.
+    if (w.existing_client) tr.className = "client-row";
 
     const dateTd = document.createElement("td");
     dateTd.textContent = w.date_won;
@@ -5710,6 +6435,13 @@ function renderWonTable() {
     const nameTd = document.createElement("td");
     nameTd.style.textAlign = "left";
     nameTd.textContent = w.name;
+    if (w.existing_client) {
+      const pill = document.createElement("span");
+      pill.className = "client-pill";
+      pill.textContent = "Existing client";
+      pill.title = "Contact Type is \\"customer\\" in GHL — expansion revenue from an account we already had. Excluded from the monthly Sales Report funnels.";
+      nameTd.appendChild(pill);
+    }
     tr.appendChild(nameTd);
 
     const valueTd = document.createElement("td");
@@ -5754,7 +6486,343 @@ function renderWonTable() {
     wonBody.appendChild(tr);
   });
 }
+// ── Funnel per Rep tab ──────────────────────────────────────────────────────
+// Three columns over the same stage list: last complete month (final),
+// current month-to-date, and a business-day run-rate projection of the
+// current month. Percentages follow the selected basis -- either the stage
+// directly above (step over step) or that column's own New Lead count.
+let rfRep  = REP_FUNNEL_META.reps[0];
+let rfMode = "step";
+
+function rfProject(count) {
+  return Math.round(count * REP_FUNNEL_META.factor);
+}
+
+function rfCounts(rep, monthKey) {
+  return (REP_FUNNEL[rep] || {})[monthKey] || {};
+}
+
+function rfColumnValues(rep, which) {
+  const stages = REP_FUNNEL_META.stages;
+  const key = which === "prior" ? REP_FUNNEL_META.priorKey : REP_FUNNEL_META.currentKey;
+  const c = rfCounts(rep, key);
+  return stages.map(s => c[s] || 0);
+}
+
+// ── Projection as an editable scenario ──────────────────────────────────────
+// The projected column is a chained model: a New Lead volume, then one
+// conversion rate per stage. Left untouched, both default to the observed
+// run rate, so the column opens showing exactly the straight-line projection
+// and nothing else. Editing any input re-runs the chain below it.
+//
+// Edits are held per (rep × basis) because a percentage means a different
+// thing in each basis -- switching either selector shows that combination's
+// own scenario rather than silently reinterpreting the numbers. Nothing is
+// persisted: a reload always returns to the live run rate, so a stale
+// what-if can never be mistaken for real data later.
+const rfEdits = {};
+function rfEditState() {
+  const k = rfRep + "|" + rfMode;
+  if (!rfEdits[k]) {
+    rfEdits[k] = { base: null, pct: REP_FUNNEL_META.stages.map(() => null) };
+  }
+  return rfEdits[k];
+}
+
+function rfDefaultBase() {
+  const mtd = rfCounts(rfRep, REP_FUNNEL_META.currentKey);
+  return rfProject(mtd[REP_FUNNEL_META.stages[0]] || 0);
+}
+
+// The run-rate conversion for a stage == its month-to-date conversion, since
+// every stage is scaled by the same factor.
+function rfDefaultPct(i) {
+  const stages = REP_FUNNEL_META.stages;
+  const mtd = rfCounts(rfRep, REP_FUNNEL_META.currentKey);
+  const num = mtd[stages[i]] || 0;
+  const den = rfMode === "newlead" ? (mtd[stages[0]] || 0) : (mtd[stages[i - 1]] || 0);
+  return den ? num / den * 100 : null;   // null = undefined conversion
+}
+
+function rfProjectedValues() {
+  const stages = REP_FUNNEL_META.stages;
+  const st = rfEditState();
+  const mtd = rfCounts(rfRep, REP_FUNNEL_META.currentKey);
+  const out = [st.base !== null ? st.base : rfDefaultBase()];
+  for (let i = 1; i < stages.length; i++) {
+    const pct = st.pct[i] !== null ? st.pct[i] : rfDefaultPct(i);
+    if (pct === null) {
+      // No conversion is definable (the stage above has no month-to-date
+      // activity to divide by). Fall back to this stage's own run rate so
+      // real activity is never hidden behind a chained zero.
+      out.push(rfProject(mtd[stages[i]] || 0));
+    } else {
+      const den = rfMode === "newlead" ? out[0] : out[i - 1];
+      out.push(Math.round(den * pct / 100));
+    }
+  }
+  return out;
+}
+
+function rfIsEdited() {
+  const st = rfEditState();
+  return st.base !== null || st.pct.some(p => p !== null);
+}
+
+function rfDenominator(values, i) {
+  return rfMode === "newlead" ? values[0] : values[i - 1];
+}
+
+function rfPctText(values, i) {
+  if (i === 0) return "";
+  const denom = rfDenominator(values, i);
+  if (!denom || !values[i]) return "";
+  return ` (${Math.round(values[i] / denom * 100)}%)`;
+}
+
+function rfRenderTable() {
+  const stages = REP_FUNNEL_META.stages;
+  const cols = {
+    prior:     rfColumnValues(rfRep, "prior"),
+    current:   rfColumnValues(rfRep, "current"),
+    projected: rfProjectedValues(),
+  };
+  const st = rfEditState();
+  const body = document.getElementById("rfTableBody");
+  body.innerHTML = "";
+  stages.forEach((stage, i) => {
+    const tr = document.createElement("tr");
+
+    const stageTd = document.createElement("td");
+    stageTd.style.textAlign = "left";
+    stageTd.textContent = stage;
+    tr.appendChild(stageTd);
+
+    ["prior", "current"].forEach(which => {
+      const td = document.createElement("td");
+      const vals = cols[which];
+      if (!vals[i]) {
+        td.textContent = "\\u2014";
+        td.className = "empty-field";
+      } else {
+        td.appendChild(rfTextSpan(vals[i], ""));
+        const pct = rfPctText(vals, i);
+        if (pct) td.appendChild(rfTextSpan(pct, "rf-pct"));
+      }
+      tr.appendChild(td);
+    });
+
+    // Projected cell: computed count + the editable driver behind it. Row 0
+    // takes the New Lead volume itself; every row below takes a conversion %.
+    const projTd = document.createElement("td");
+    projTd.className = "rf-proj";
+    const wrap = document.createElement("div");
+    wrap.className = "rf-cell-proj";
+
+    if (i === 0) {
+      const input = rfMakeInput(cols.projected[0], st.base !== null, v => {
+        st.base = v;
+        rfAfterEdit();
+      });
+      input.title = "Projected New Lead volume for the month. Defaults to the month-to-date run rate.";
+      wrap.appendChild(input);
+    } else {
+      const num = rfTextSpan(cols.projected[i], "rf-projnum");
+      wrap.appendChild(num);
+      const defPct = rfDefaultPct(i);
+      const shown = st.pct[i] !== null ? st.pct[i] : defPct;
+      if (shown === null) {
+        // Undefined conversion -- disabled input, count shown is the raw run
+        // rate for this stage (see rfProjectedValues).
+        const dis = document.createElement("input");
+        dis.className = "rf-input";
+        dis.type = "text";
+        dis.value = "\\u2014";
+        dis.disabled = true;
+        dis.title = "No conversion can be computed: the stage above has no month-to-date activity to divide by. Showing this stage's own run rate instead.";
+        wrap.appendChild(dis);
+      } else {
+        const input = rfMakeInput(Math.round(shown * 10) / 10, st.pct[i] !== null, v => {
+          st.pct[i] = v;
+          rfAfterEdit();
+        });
+        input.title = rfMode === "newlead"
+          ? "% of projected New Leads that reach " + stage
+          : "% of projected " + stages[i - 1] + " that reach " + stage;
+        wrap.appendChild(input);
+      }
+      wrap.appendChild(rfTextSpan("%", "rf-input-suffix"));
+    }
+
+    projTd.appendChild(wrap);
+    tr.appendChild(projTd);
+    body.appendChild(tr);
+  });
+
+  document.getElementById("rfEditedBadge").className =
+    "rf-edited-badge" + (rfIsEdited() ? " rf-on" : "");
+
+  rfRenderFunnel("rfFunnelPrior", cols.prior, false);
+  rfRenderFunnel("rfFunnelCurrent", cols.current, false);
+  rfRenderFunnel("rfFunnelProjected", cols.projected, true);
+}
+
+function rfTextSpan(text, cls) {
+  const el = document.createElement("span");
+  if (cls) el.className = cls;
+  el.textContent = text;
+  return el;
+}
+
+function rfMakeInput(value, touched, onCommit) {
+  const input = document.createElement("input");
+  input.className = "rf-input" + (touched ? " rf-touched" : "");
+  input.type = "number";
+  input.min = "0";
+  input.step = "1";
+  input.value = value;
+  const commit = () => {
+    const raw = parseFloat(input.value);
+    // Blank or nonsense reverts to the run-rate default rather than sticking
+    // at zero, so clearing a field is an undo instead of a silent edit.
+    onCommit(isNaN(raw) || raw < 0 ? null : raw);
+  };
+  input.addEventListener("input", commit);
+  input.addEventListener("change", commit);
+  return input;
+}
+
+// Re-render, then put the caret back where it was -- rebuilding the tbody
+// destroys the focused input, which would otherwise eject the cursor after
+// every keystroke.
+function rfAfterEdit() {
+  const active = document.activeElement;
+  const cellIndex = active && active.closest ? rfInputIndex(active) : -1;
+  rfRenderTable();
+  if (cellIndex >= 0) {
+    const rows = document.getElementById("rfTableBody").querySelectorAll("tr");
+    if (rows[cellIndex]) {
+      const next = rows[cellIndex].querySelector("input:not([disabled])");
+      if (next) { next.focus(); next.select && next.select(); }
+    }
+  }
+}
+
+function rfInputIndex(el) {
+  const rows = Array.from(document.getElementById("rfTableBody").querySelectorAll("tr"));
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].contains(el)) return i;
+  }
+  return -1;
+}
+
+function rfRenderFunnel(elId, values, isProjected) {
+  const host = document.getElementById(elId);
+  host.innerHTML = "";
+  const max = Math.max(...values, 1);
+  REP_FUNNEL_META.stages.forEach((stage, i) => {
+    const row = document.createElement("div");
+    row.className = "rf-row";
+
+    const stageEl = document.createElement("div");
+    stageEl.className = "rf-stage";
+    stageEl.textContent = stage;
+    row.appendChild(stageEl);
+
+    const track = document.createElement("div");
+    track.className = "rf-track";
+    const fill = document.createElement("div");
+    fill.className = "rf-fill" + (isProjected ? " rf-projected" : "");
+    // Zero stays a hairline rather than vanishing, so the stage is still
+    // visibly present in the funnel instead of looking omitted.
+    fill.style.width = values[i] ? Math.max(values[i] / max * 100, 2) + "%" : "3px";
+    track.appendChild(fill);
+    row.appendChild(track);
+
+    const count = document.createElement("div");
+    count.className = "rf-count";
+    count.textContent = values[i];
+    row.appendChild(count);
+
+    host.appendChild(row);
+  });
+}
+
+function rfRenderNotes() {
+  document.getElementById("rfModeNote").textContent = rfMode === "newlead"
+    ? "Each row's % is of that column's own New Lead count -- how far a new lead gets through the pipeline."
+    : "Each row's % is of the stage directly above it in the same column -- the step-over-step drop-off.";
+
+  const m = REP_FUNNEL_META;
+  document.getElementById("rfProjectionNote").innerHTML =
+    '<strong style="color: var(--text);">Projection —</strong> ' + m.currentLabel +
+    " is projected by scaling each stage's month-to-date count by " +
+    "<strong>&times;" + m.factor.toFixed(2) + "</strong> (" + m.bdTotal +
+    " business days in the month &divide; " + m.bdElapsed + " elapsed as of " + m.asOf +
+    "). Business days rather than calendar days, since stage entries are overwhelmingly " +
+    "weekday events. Untouched, every conversion rate in that column equals the " +
+    "month-to-date rate, so the default projection is a straight-line run rate: it " +
+    "assumes the rest of the month looks like the part already observed, and is least " +
+    "reliable early in the month and on reps with low volume. The New Lead volume and " +
+    "each conversion rate are editable -- overwrite any of them to model a what-if and " +
+    "the stages below recalculate from it. Edits are held per rep and per conversion " +
+    "basis, are never saved, and reset to the live run rate on reload.";
+}
+
+function rfRender() {
+  const m = REP_FUNNEL_META;
+  document.getElementById("rfHeadPrior").textContent     = m.priorLabel + " (final)";
+  document.getElementById("rfHeadCurrent").textContent   = m.currentLabel + " (to date)";
+  document.getElementById("rfHeadProjected").textContent = m.currentLabel + " (projected)";
+  document.getElementById("rfFunnelTitlePrior").textContent     = m.priorLabel + " — final";
+  document.getElementById("rfFunnelTitleCurrent").textContent   = m.currentLabel + " — to date";
+  document.getElementById("rfFunnelTitleProjected").textContent = m.currentLabel + " — projected";
+  rfRenderTable();
+  rfRenderNotes();
+}
+
+(function rfInit() {
+  const repToggle = document.getElementById("rfRepToggle");
+  REP_FUNNEL_META.reps.forEach((rep, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = rep;
+    if (i === 0) btn.className = "active";
+    btn.addEventListener("click", () => {
+      rfRep = rep;
+      repToggle.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      rfRenderTable();
+    });
+    repToggle.appendChild(btn);
+  });
+
+  document.getElementById("rfModeToggle").querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      rfMode = btn.dataset.mode;
+      document.getElementById("rfModeToggle").querySelectorAll("button")
+        .forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      rfRenderTable();
+      rfRenderNotes();
+    });
+  });
+
+  // Clears only the current rep × basis scenario -- the one on screen.
+  document.getElementById("rfResetBtn").addEventListener("click", () => {
+    const st = rfEditState();
+    st.base = null;
+    st.pct = REP_FUNNEL_META.stages.map(() => null);
+    rfRenderTable();
+  });
+
+  rfRender();
+})();
+
 renderWonTable();
+const WON_CLIENT_COUNT = WON.filter(w => w.existing_client).length;
+document.getElementById("wonTotalAll").textContent    = WON.length;
+document.getElementById("wonTotalNew").textContent    = WON.length - WON_CLIENT_COUNT;
+document.getElementById("wonTotalClient").textContent = WON_CLIENT_COUNT;
 document.getElementById("wonTabBtn").textContent = `All-Time Won (${WON.length})`;
 
 // ── July Sales Report — Won Deals Value (editable, saved in this browser) ──
@@ -5919,7 +6987,9 @@ document.querySelectorAll(".value-input").forEach(input => {
 
 whiteboard_html = (
     WHITEBOARD_HEAD + WHITEBOARD_HEADER + WHITEBOARD_BODY_OVERVIEW + WHITEBOARD_BODY_WON
-    + WHITEBOARD_BODY_SDR + WHITEBOARD_BODY_JULY + WHITEBOARD_DATA_SCRIPT + WHITEBOARD_LOGIC_SCRIPT
+    + WHITEBOARD_BODY_SDR + WHITEBOARD_BODY_JULY + WHITEBOARD_BODY_AUGUST
+    + WHITEBOARD_BODY_REPFUNNEL
+    + WHITEBOARD_DATA_SCRIPT + WHITEBOARD_LOGIC_SCRIPT
 )
 whiteboard_path = Path(__file__).parent / "kpi_whiteboard.html"
 whiteboard_path.write_text(whiteboard_html, encoding="utf-8")
