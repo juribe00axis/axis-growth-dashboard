@@ -3,15 +3,15 @@
   "stages": [
     {
       "name": "New Lead",
-      "count": 63
+      "count": 64
     },
     {
       "name": "Discovery call set",
-      "count": 36
+      "count": 33
     },
     {
       "name": "Discovery Call",
-      "count": 34
+      "count": 35
     },
     {
       "name": "Strategy Call",
@@ -23,11 +23,11 @@
     },
     {
       "name": "Closing Call",
-      "count": 22
+      "count": 20
     },
     {
       "name": "Agreement Sent",
-      "count": 17
+      "count": 18
     },
     {
       "name": "Onboarding",
@@ -38,7 +38,7 @@
       "count": 54
     }
   ],
-  "total_open": 266,
+  "total_open": 264,
   "source": {
     "labels": [
       "MGL",
@@ -47,9 +47,9 @@
     ],
     "data": [
       204,
-      20,
-      88
+      19,
+      87
     ],
-    "total": 312
+    "total": 310
   }
 }
