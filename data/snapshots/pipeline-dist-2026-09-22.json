@@ -3,15 +3,15 @@
   "stages": [
     {
       "name": "New Lead",
-      "count": 54
+      "count": 59
     },
     {
       "name": "Discovery call set",
-      "count": 42
+      "count": 37
     },
     {
       "name": "Discovery Call",
-      "count": 39
+      "count": 38
     },
     {
       "name": "Strategy Call",
@@ -23,7 +23,7 @@
     },
     {
       "name": "Closing Call",
-      "count": 19
+      "count": 20
     },
     {
       "name": "Agreement Sent",
