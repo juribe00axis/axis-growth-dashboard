@@ -1,6 +1,18 @@
 {
   "date": "2026-09-23",
   "opps": {
+    "pkp0NAUI5bcOKfpEj3w7": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "hOKYJYUjgeJ9pKaYwpwP": {
+      "stage": "Discovery call set",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
+    "hdW0418XFAeDGHsWTTN9": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
     "GOyIY3eaw76YgXRS6Phn": {
       "stage": "Discovery call set",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
@@ -98,7 +110,7 @@
       "owner": "unassigned"
     },
     "MIB6CyZwIwJKSKl3IGtj": {
-      "stage": "Discovery call set",
+      "stage": "Discovery Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "DmWh1R2oYRrCGuCfFBJ4": {
@@ -126,7 +138,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "Eyg5HSVihYOhikbXCOlw": {
-      "stage": "Strategy Call",
+      "stage": "Proposal Sent",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "xA1J7lenWuMBz4P12Kk0": {
@@ -174,7 +186,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "RaKoz33ZHgnjlZcgPtLG": {
-      "stage": "Proposal Sent",
+      "stage": "Agreement Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "odosa2QUsu3J07WZHxnq": {
@@ -275,10 +287,6 @@
     },
     "R1DyiVEq7Oibs2U2smBs": {
       "stage": "Discovery call set",
-      "owner": "Xeprp2GjJCDQFoJV4jqS"
-    },
-    "2UFIHXJD7E7JH2pT4VHv": {
-      "stage": "New Lead",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "8JXbYFFtOFm4VLy5n7a3": {
@@ -889,10 +897,6 @@
       "stage": "Discovery Call",
       "owner": "unassigned"
     },
-    "FG5S9wL173vbi2LS82Bm": {
-      "stage": "Discovery Call",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
     "NLN4gUgsr6GczFG0zkBP": {
       "stage": "Strategy Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
@@ -965,16 +969,8 @@
       "stage": "New Lead",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
-    "567isOX9hmJysIDsTdMK": {
-      "stage": "Strategy Call",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
     "cjqHR0ALQSepN68S2mZp": {
       "stage": "Closing Call",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
-    "JRoYh48J4XjmcRuZIi0d": {
-      "stage": "Strategy Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "rejXJgXSxLM7xtNDqA6S": {
@@ -1027,10 +1023,6 @@
     },
     "vFyZwuk11KGkOJlGNyPE": {
       "stage": "Not a fit",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
-    "COJxfianXPpfWmt7Stgf": {
-      "stage": "Strategy Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "bGv4XT0QAl6NjmFnUu5r": {
