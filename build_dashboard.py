@@ -18,6 +18,7 @@ import urllib.parse
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 
 # ─── 1. LOAD CREDENTIALS ─────────────────────────────────────────────────────
@@ -97,9 +98,23 @@ def meta_get(path, params):
 
 
 # ─── 3. DATE HELPERS ─────────────────────────────────────────────────────────
-# All timestamps in GHL are UTC, so we work in UTC throughout.
+# GHL's API returns timestamps in UTC, but the business (and both the GHL
+# location and the Meta ad account) run on New York time. Every timestamp is
+# converted to LOCAL_TZ before it's bucketed into a day/week/month, so a lead
+# that comes in at 9pm ET counts on that day, not the next one (UTC is 4-5h
+# ahead). Meta's daily spend is already reported in the ad account's New York
+# days, so leads and spend now line up day-for-day. GitHub Actions runs in
+# UTC, so "today" must come from LOCAL_TZ explicitly, not the machine clock.
+# Exception: GHL date-only custom fields (Date Entered / Agreement Signed)
+# stay in UTC -- they're calendar dates stored as midnight, and shifting them
+# would push them back a day.
+LOCAL_TZ = ZoneInfo("America/New_York")
 
-today      = datetime.now(timezone.utc)
+def _parse_ts(raw):
+    """GHL ISO timestamp (UTC, 'Z' suffix) -> aware datetime in New York time."""
+    return datetime.fromisoformat(raw.replace("Z", "+00:00")).astimezone(LOCAL_TZ)
+
+today      = datetime.now(LOCAL_TZ)
 monday     = today - timedelta(days=today.weekday())  # weekday() == 0 on Monday
 week_start = monday.replace(hour=0,  minute=0,  second=0,  microsecond=0)
 week_end   = today.replace( hour=23, minute=59, second=59, microsecond=0)
@@ -200,7 +215,7 @@ for opp in leads_opps:
     raw = opp.get("createdAt")
     if not raw:
         continue
-    d_key = datetime.fromisoformat(raw.replace("Z", "+00:00")).strftime("%Y-%m-%d")
+    d_key = _parse_ts(raw).strftime("%Y-%m-%d")
     if d_key in date_keys:
         daily_counts[d_key] += 1
 
@@ -323,7 +338,7 @@ for opp in leads_opps:
     raw = opp.get("createdAt")
     if not raw:
         continue
-    if week_start <= datetime.fromisoformat(raw.replace("Z", "+00:00")) <= week_end:
+    if week_start <= _parse_ts(raw) <= week_end:
         new_this_week += 1
 
 won_count = 0
@@ -334,7 +349,7 @@ for opp in all_opps:
     raw = opp.get("lastStatusChangeAt")
     if not raw:
         continue
-    if week_start <= datetime.fromisoformat(raw.replace("Z", "+00:00")) <= week_end:
+    if week_start <= _parse_ts(raw) <= week_end:
         won_count += 1
         won_value += float(opp.get("monetaryValue") or 0)
 
@@ -355,7 +370,7 @@ prev_14d = sum(
     1 for opp in leads_opps
     if opp.get("createdAt")
     and prev_14_start
-    <= datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00"))
+    <= _parse_ts(opp["createdAt"])
     < prev_14_end
 )
 delta_14d     = total_14d - prev_14d
@@ -370,7 +385,7 @@ last_week_new   = sum(
     1 for opp in leads_opps
     if opp.get("createdAt")
     and last_week_start
-    <= datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00"))
+    <= _parse_ts(opp["createdAt"])
     <= last_week_end
 )
 
@@ -379,7 +394,7 @@ def _month_count(opps, year, month):
     return sum(
         1 for opp in opps
         if opp.get("createdAt")
-        and (dt := datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00")))
+        and (dt := _parse_ts(opp["createdAt"]))
         and dt.year == year and dt.month == month
     )
 
@@ -425,7 +440,7 @@ week_delta_color = "var(--hero)" if week_delta >= 0 else "#FF5C5C"
 # Human-readable strings used in the HTML
 week_range_str      = f"{week_start.strftime('%b')} {week_start.day} – {today.strftime('%b')} {today.day}"
 last_week_range_str = f"{last_week_start.strftime('%b')} {last_week_start.day} – {(last_week_end).strftime('%b')} {last_week_end.day}"
-generated_at        = f"{today.strftime('%B')} {today.day}, {today.year} at {today.strftime('%H:%M')} UTC"
+generated_at        = f"{today.strftime('%B')} {today.day}, {today.year} at {today.strftime('%-I:%M %p')} {today.strftime('%Z')}"
 
 print(f"  14-day new leads: {total_14d} (prev: {prev_14d}, {delta_14d_dir})")
 print(f"  This week: {new_this_week} | Last week: {last_week_new} ({week_delta_str})")
@@ -509,8 +524,8 @@ print(f"  Source breakdown ({total_source_opps} opps): MGL={_src_mgl} SGL={_src_
 # showing the flat all-time total. "All Time" (the totals above) stays the
 # dropdown default so existing behavior/screenshots don't change.
 def _created_month_key(opp):
-    _c = opp.get("createdAt") or ""
-    return _c[:7] if len(_c) >= 7 else None
+    _c = opp.get("createdAt")
+    return _parse_ts(_c).strftime("%Y-%m") if _c else None
 
 _source_months = sorted({mk for o in source_opps if (mk := _created_month_key(o))})
 source_by_month = {}
@@ -580,7 +595,7 @@ _won_by_month = defaultdict(int)
 for opp in onboarding_opps:
     _ts = opp.get("lastStageChangeAt") or opp.get("createdAt")
     if _ts:
-        _dt = datetime.fromisoformat(_ts.replace("Z", "+00:00"))
+        _dt = _parse_ts(_ts)
         _won_by_month[_dt.strftime("%Y-%m")] += 1
 
 _won_month_keys = sorted(_won_by_month.keys())
@@ -630,7 +645,7 @@ for opp in onboarding_opps:
     _ts = opp.get("lastStageChangeAt") or opp.get("createdAt")
     if not _ts:
         continue
-    _dt = datetime.fromisoformat(_ts.replace("Z", "+00:00"))
+    _dt = _parse_ts(_ts)
     _owner_id = opp.get("assignedTo")
     won_deals_events.append({
         "id":      opp.get("id"),
@@ -715,7 +730,7 @@ other_dc_unscored   = other_dc_plus_total - other_total_scored
 mgl_14d = sum(
     1 for opp in mgl_opps
     if opp.get("createdAt")
-    and datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00")).strftime("%Y-%m-%d") in date_keys
+    and _parse_ts(opp["createdAt"]).strftime("%Y-%m-%d") in date_keys
 )
 mgl_14d_pct = round(mgl_14d / total_14d * 100) if total_14d else 0
 
@@ -731,7 +746,7 @@ for w in range(NUM_WEEKS - 1, -1, -1):
 for opp in mgl_opps:
     if not opp.get("createdAt"):
         continue
-    opp_dt = datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00"))
+    opp_dt = _parse_ts(opp["createdAt"])
     for bucket in week_buckets:
         if bucket["start"] <= opp_dt <= bucket["end"]:
             bucket["count"] += 1
@@ -739,6 +754,10 @@ for opp in mgl_opps:
 
 mgl_week_labels = [b["label"] for b in week_buckets]
 mgl_week_data   = [b["count"] for b in week_buckets]
+
+# Last 4 weeks (incl. the current partial week) for the Monthly Volume popout's
+# weekly chart -- same Mon–Sun MGL buckets as above, just the tail end.
+weekly_mgl_4 = [{"label": b["label"], "count": b["count"]} for b in week_buckets[-4:]]
 
 print(f"  MGL in last 14 days: {mgl_14d} of {total_14d} ({mgl_14d_pct}%)")
 print(f"  Weekly MGL (last 8 wks): {mgl_week_data}")
@@ -1010,7 +1029,7 @@ total_discovery_since_jul1 = sum(1 for e in field_movement_events if e["stage"] 
 total_leads_since_jul1 = sum(
     1 for opp in all_opps
     if opp.get("createdAt")
-    and datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00")).date() >= WEEK1_START
+    and _parse_ts(opp["createdAt"]).date() >= WEEK1_START
 )
 lead_to_disc_pct = round(total_discovery_since_jul1 / total_leads_since_jul1 * 100) if total_leads_since_jul1 else 0
 print(f"  Lead to Discovery: {lead_to_disc_pct}% ({total_discovery_since_jul1} of {total_leads_since_jul1} leads since Jul 1)")
@@ -1039,7 +1058,7 @@ else:
 mgl_by_date = defaultdict(int)
 for opp in mgl_opps:
     if opp.get("createdAt"):
-        _d = datetime.fromisoformat(opp["createdAt"].replace("Z", "+00:00")).strftime("%Y-%m-%d")
+        _d = _parse_ts(opp["createdAt"]).strftime("%Y-%m-%d")
         mgl_by_date[_d] += 1
 
 # Combined 90-day daily data for the Marketing & Leads metrics table
@@ -1070,6 +1089,39 @@ for i in range(90):
 
 mktg_min_date = mktg_daily[0]["date"]
 mktg_max_date = mktg_daily[-1]["date"]
+
+# ── 4-week rolling MGL + CPL (Monthly Volume popout, below the charts) ───────
+# Single weeks swing 25-45 MGL on the same spend, so the popout also shows a
+# trailing 4-week view: avg MGL/week and CPL (4 weeks' spend / 4 weeks' MGL,
+# not an average of weekly CPLs). Complete Mon-Sun weeks only -- the current
+# partial week is left out. Only weeks fully inside the 90-day Meta window
+# count, so every rolling point has real spend behind it.
+ROLL_WEEKS = 4
+_roll_weeks = []
+_wk = week_start.date() - timedelta(weeks=1)
+while _wk >= meta_start:
+    _days = [(_wk + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+    _roll_weeks.insert(0, {
+        "label": f"{_wk.strftime('%b')} {_wk.day}",
+        "mgl":   sum(mgl_by_date.get(d, 0) for d in _days),
+        "spend": sum(float(_meta_by_date.get(d, {}).get("spend", 0)) for d in _days),
+    })
+    _wk -= timedelta(weeks=1)
+
+rolling_mgl = []
+for _i, _w in enumerate(_roll_weeks):
+    _win   = _roll_weeks[max(0, _i - ROLL_WEEKS + 1):_i + 1]
+    _full  = len(_win) == ROLL_WEEKS
+    _mgl   = sum(w["mgl"] for w in _win)
+    _spend = sum(w["spend"] for w in _win)
+    rolling_mgl.append({
+        "label":    _w["label"],
+        "week_mgl": _w["mgl"],
+        "week_cpl": round(_w["spend"] / _w["mgl"], 2) if _w["mgl"] else None,
+        "avg_mgl":  round(_mgl / ROLL_WEEKS, 1) if _full else None,
+        "cpl":      round(_spend / _mgl, 2) if _full and _mgl else None,
+    })
+print(f"  4-wk rolling MGL/CPL: {[(r['label'], r['avg_mgl'], r['cpl']) for r in rolling_mgl if r['avg_mgl'] is not None]}")
 
 # ── MGL CPL hero: computed client-side from MKTG_DAILY (see setCplPeriod JS) ──
 # so it can be toggled between Last 7 / 30 / 90 Days without a rebuild.
@@ -1128,7 +1180,8 @@ blended_cost_mgl_str = f"${blended_cost_per_signing_mgl:,.0f}" if mgl_won_total 
 _mgl_won_this_month = sum(
     1 for opp in onboarding_opps
     if (opp.get("source") or "") in MGL_SOURCES
-    and (opp.get("lastStageChangeAt") or opp.get("createdAt") or "")[:7] == today.strftime("%Y-%m")
+    and (_ts := opp.get("lastStageChangeAt") or opp.get("createdAt"))
+    and _parse_ts(_ts).strftime("%Y-%m") == today.strftime("%Y-%m")
 )
 print(f"  MGL blended cost/signing: {blended_cost_mgl_str} ({mgl_won_total} MGL won all-time, {_mgl_won_this_month} this month)")
 print()
@@ -1931,6 +1984,119 @@ HEAD = """<!DOCTYPE html>
       padding: 40px;
     }
     #monthlyOverlay.open { display: flex; }
+    .mgl-modal-grid {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 32px;
+    }
+    .mgl-modal-panel {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+    .mgl-modal-panel.weekly {
+      background: var(--surface-2);
+      border-color: rgba(200,255,1,0.35);
+    }
+    .mgl-modal-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.56rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-bottom: 8px;
+    }
+    .mgl-modal-tag {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      padding: 3px 9px;
+      border-radius: 6px;
+    }
+    .mgl-modal-tag.monthly { color: #5B8FFF; background: rgba(91,143,255,0.14); }
+    .mgl-modal-tag.weekly  { color: #C8FF01; background: rgba(200,255,1,0.12); }
+    .mgl-modal-tag.rolling { color: #FFB547; background: rgba(255,181,71,0.13); }
+    .roll-section {
+      margin-top: 30px;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+    }
+    .roll-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .roll-sub {
+      font-size: 0.66rem;
+      color: var(--text-mute);
+    }
+    .roll-tiles {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .roll-tile {
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .roll-tile-val {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .roll-tile-lbl {
+      font-size: 0.56rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+    }
+    .roll-tile-delta {
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+    @media (max-width: 760px) {
+      .roll-tiles { grid-template-columns: 1fr; }
+    }
+    .wow-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .wow-chip {
+      text-align: center;
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 7px 4px;
+    }
+    .wow-chip-val {
+      font-size: 0.82rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .wow-chip-sub {
+      font-size: 0.5rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-mute);
+      margin-top: 3px;
+    }
+    @media (max-width: 760px) {
+      .mgl-modal-grid { grid-template-columns: 1fr; }
+    }
     .expand-icon-btn {
       display: inline-flex;
       align-items: center;
@@ -2113,7 +2279,7 @@ HERO = f"""
       <div style="border-right:1px solid var(--line);padding:0 24px;padding-top:2px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
           <div style="display:flex;align-items:center;gap:6px;">
-            <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume{_info_icon("Compact view shows the last 3 months (2 months ago, last month, current month) of all new leads by created date, excluding any lead tagged 'instantly' (Instantly.ai cold-email leads). The expand icon opens a separate popout: MGL-source leads only, every month back to May 2026. The MGL badge is always scoped to the current month, not a rolling window.")}</div>
+            <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume{_info_icon("Compact view shows the last 3 months (2 months ago, last month, current month) of all new leads by created date, excluding any lead tagged 'instantly' (Instantly.ai cold-email leads). The expand icon opens a separate popout: MGL-source leads only, every month back to May 2026, plus the last 4 weeks (Mon–Sun). The MGL badge is always scoped to the current month, not a rolling window.")}</div>
             <button class="expand-icon-btn" onclick="openMonthlyModal()" title="View full month-by-month history" aria-label="Expand Monthly Volume">⤢</button>
           </div>
           <span class="mgl-pill" style="font-size:0.56rem;padding:2px 7px;white-space:nowrap;">MGL&nbsp;{cur_month_mgl}&nbsp;·&nbsp;{cur_month_mgl_pct}%&nbsp;·&nbsp;{cur_month_label}</span>
@@ -2411,7 +2577,7 @@ GRANOLA_SECTION = f"""
 GLOSSARY_TERMS = [
     ("This Week / Last Week", "New leads (opportunities created), Monday-Sunday, excluding any lead tagged 'instantly' (Instantly.ai cold-email tool). WoW badge compares this week's count to last week's."),
     ("MGL CPL", "Meta ad spend divided by MGL-source leads for the selected period (7D/30D/90D toggle). The delta badge compares to the immediately preceding period of equal length; hidden for 90D since spend history only goes back 90 days. Lower is better."),
-    ("Monthly Volume (bar chart)", "Only the last 3 months (2 months ago, last month, current month) by lead created date, across all pipelines/statuses, excluding leads tagged 'instantly' (Instantly.ai cold-email tool). The MGL badge next to it shows the current month's MGL count and % of that month's total leads shown in this chart (not a rolling window). The expand icon opens a separate full-history popout showing MGL-source leads only, back to May 2026 -- a different slice of data than this compact chart, not the same data zoomed out."),
+    ("Monthly Volume (bar chart)", "Only the last 3 months (2 months ago, last month, current month) by lead created date, across all pipelines/statuses, excluding leads tagged 'instantly' (Instantly.ai cold-email tool). The MGL badge next to it shows the current month's MGL count and % of that month's total leads shown in this chart (not a rolling window). The expand icon opens a separate popout showing MGL-source leads only -- by month back to May 2026, and by week (Mon–Sun) for the last 4 weeks -- a different slice of data than this compact chart, not the same data zoomed out."),
     ("Daily Performance table (Spend/Clicks/CPC/Leads/Conv%/CPL)", "Meta ad spend, link clicks, cost-per-click, MGL leads, lead conversion rate, and cost per MGL lead, one row per day. Excludes today (spend/clicks are incomplete until the day closes out). Use the date-range picker to view any custom window back to 90 days."),
     ("Lead Sources — MGL / SGL / Other", "Essentially all-time within the Sales Pipeline: every opportunity ever won or lost, plus any currently open at New Lead stage or beyond. MGL = Marketing Generated Lead, SGL = Sales Generated Lead."),
     ("Call Quality (Great Fit / Potential / Poor Fit / Unscored)", "Quality score set on the contact record, shown for opportunities at Discovery Call stage or beyond, broken out by source (MGL/SGL/Other)."),
@@ -2450,13 +2616,41 @@ GLOSSARY_MODAL = f"""
 
 MONTHLY_MODAL = """
   <div id="monthlyOverlay" onclick="if(event.target===this)closeMonthlyModal()">
-    <div class="glossary-modal" style="max-width:820px;">
+    <div class="glossary-modal" style="max-width:1080px;">
       <div class="glossary-modal-header">
-        <span class="glossary-modal-title">MGL Volume — Full History</span>
+        <span class="glossary-modal-title">MGL Volume — Monthly &amp; Weekly</span>
         <button class="glossary-close" onclick="closeMonthlyModal()">&times;</button>
       </div>
-      <div class="glossary-sub">MGL-source leads by month, since May 2026 (by lead created date)</div>
-      <div style="position:relative;height:380px;"><canvas id="chartMonthlyFull"></canvas></div>
+      <div class="glossary-sub">MGL-source leads by lead created date. The current month / week is still in progress.</div>
+      <div class="mgl-modal-grid">
+        <div class="mgl-modal-panel">
+          <div class="mgl-modal-label"><span class="mgl-modal-tag monthly">Monthly</span>Since May 2026 · faded bar = current month</div>
+          <div style="position:relative;height:340px;"><canvas id="chartMonthlyFull"></canvas></div>
+        </div>
+        <div class="mgl-modal-panel weekly">
+          <div class="mgl-modal-label"><span class="mgl-modal-tag weekly">Weekly</span>Last 4 weeks · Mon–Sun · dashed = this week</div>
+          <div style="position:relative;height:262px;"><canvas id="chartWeeklyMgl"></canvas></div>
+          <div id="weeklyWowRow" class="wow-row"></div>
+        </div>
+      </div>
+
+      <div class="roll-section">
+        <div class="roll-head">
+          <span class="mgl-modal-tag rolling">4-Week Rolling</span>
+          <span class="roll-sub">Trailing 4 complete weeks (Mon–Sun), recalculated each week. Smooths out single-week noise &mdash; use this to judge the trend. Faint bars/dots = the individual weeks.</span>
+        </div>
+        <div id="rollTiles" class="roll-tiles"></div>
+        <div class="mgl-modal-grid" style="grid-template-columns:1fr 1fr;">
+          <div class="mgl-modal-panel">
+            <div class="mgl-modal-label">Avg MGL per week</div>
+            <div style="position:relative;height:260px;"><canvas id="chartRollMgl"></canvas></div>
+          </div>
+          <div class="mgl-modal-panel">
+            <div class="mgl-modal-label">CPL &middot; 4 weeks' spend &divide; 4 weeks' MGL &middot; lower is better</div>
+            <div style="position:relative;height:260px;"><canvas id="chartRollCpl"></canvas></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 """
@@ -2603,6 +2797,8 @@ DATA_SCRIPT = f"""
     const MONTH_LABELS    = {json.dumps([month2_label, month1_label, cur_month_label])};
     const MONTH_DATA      = {json.dumps([month2_count, month1_count, cur_month_count])};
     const MONTHLY_FULL     = {json.dumps(monthly_full)};
+    const WEEKLY_MGL_4     = {json.dumps(weekly_mgl_4)};
+    const ROLLING_MGL      = {json.dumps(rolling_mgl)};
     const META_LABELS     = {json.dumps(meta_labels)};
     const META_SPEND      = {json.dumps(meta_spends)};
     const SOURCE_LABELS      = {json.dumps(source_chart_labels)};
@@ -2902,10 +3098,170 @@ CHARTS_SCRIPT = """
           },
           plugins: [monthlyDataLabels],
         });
+        // Weekly = lime line (vs. the blue monthly bars) so the two read as
+        // different views at a glance. Last segment dashed = in-progress week.
+        const wkCounts = WEEKLY_MGL_4.map(w => w.count);
+        const wkLast   = wkCounts.length - 1;
+        const weeklyPointLabels = {
+          id: "weeklyPointLabels",
+          afterDatasetsDraw(chart) {
+            const ctx = chart.ctx;
+            chart.getDatasetMeta(0).data.forEach((pt, idx) => {
+              ctx.save();
+              ctx.fillStyle    = "#F5F5F7";
+              ctx.font         = '700 13px "Saira", system-ui, sans-serif';
+              ctx.textAlign    = "center";
+              ctx.textBaseline = "bottom";
+              ctx.fillText(wkCounts[idx], pt.x, pt.y - 10);
+              ctx.restore();
+            });
+          }
+        };
+        new Chart(document.getElementById("chartWeeklyMgl"), {
+          type: "line",
+          data: {
+            labels: WEEKLY_MGL_4.map(w => w.label),
+            datasets: [{
+              data:                 wkCounts,
+              borderColor:          "#C8FF01",
+              backgroundColor:      "rgba(200,255,1,0.10)",
+              fill:                 true,
+              tension:              0.3,
+              borderWidth:          3,
+              pointRadius:          5,
+              pointHoverRadius:     7,
+              pointBackgroundColor: wkCounts.map((_, i) => i === wkLast ? "#262630" : "#C8FF01"),
+              pointBorderColor:     "#C8FF01",
+              pointBorderWidth:     2,
+              segment: { borderDash: s => s.p1DataIndex === wkLast ? [6, 5] : undefined },
+            }],
+          },
+          options: {
+            responsive:          true,
+            maintainAspectRatio: false,
+            layout: { padding: { top: 28, left: 12, right: 12 } },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                displayColors: false,
+                callbacks: {
+                  title: items => `Week of ${items[0].label}${items[0].dataIndex === wkLast ? " (so far)" : ""}`,
+                  label: ctx => ` ${ctx.parsed.y} MGL leads`,
+                },
+              },
+            },
+            scales: {
+              x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 12 } } },
+              y: { display: false, beginAtZero: true },
+            },
+          },
+          plugins: [weeklyPointLabels],
+        });
+
+        // WoW chips under each week: absolute + % change vs. the prior week.
+        // First week has no prior in view; current week is flagged as partial.
+        document.getElementById("weeklyWowRow").innerHTML = WEEKLY_MGL_4.map((w, i) => {
+          if (i === 0) {
+            return `<div class="wow-chip"><div class="wow-chip-val" style="color:var(--text-mute);">—</div><div class="wow-chip-sub">WoW</div></div>`;
+          }
+          const prev  = wkCounts[i - 1];
+          const diff  = w.count - prev;
+          const pct   = prev ? Math.round(diff / prev * 100) : null;
+          const sign  = diff > 0 ? "+" : "";
+          const color = i === wkLast ? "var(--text-mute)" : (diff >= 0 ? "var(--hero)" : "#FF5C5C");
+          const pctTxt = pct === null ? "" : ` · ${sign}${pct}%`;
+          return `<div class="wow-chip"><div class="wow-chip-val" style="color:${color};">${sign}${diff}${pctTxt}</div><div class="wow-chip-sub">${i === wkLast ? "WoW · so far" : "WoW"}</div></div>`;
+        }).join("");
+
+        buildRollingSection();
       } else {
         chartMonthlyFull.resize();
       }
     }
+    // ── 4-week rolling MGL + CPL (popout, below the monthly/weekly charts) ──
+    // Tiles compare the latest 4 weeks to the 4 weeks before them (no
+    // overlap). Charts: faint per-week values behind the rolling line.
+    function buildRollingSection() {
+      const pts = ROLLING_MGL.filter(r => r.avg_mgl !== null);
+      if (!pts.length) return;
+      const cur   = pts[pts.length - 1];
+      const prior = pts.length > ROLL_WEEKS_JS ? pts[pts.length - 1 - ROLL_WEEKS_JS] : null;
+      const tile = (val, lbl, curV, priorV, lowerIsBetter, fmt) => {
+        let delta = "";
+        if (priorV) {
+          const pct  = Math.round((curV - priorV) / priorV * 100);
+          const good = lowerIsBetter ? pct < 0 : pct > 0;
+          const col  = pct === 0 ? "var(--text-mute)" : (good ? "var(--hero)" : "#FF5C5C");
+          delta = `<span class="roll-tile-delta" style="color:${col};">${pct > 0 ? "+" : ""}${pct}%</span>`
+                + `<span class="roll-tile-lbl">vs prior 4 wks (${fmt(priorV)})</span>`;
+        }
+        return `<div class="roll-tile"><span class="roll-tile-val" style="color:#FFB547;">${val}</span>`
+             + `<span class="roll-tile-lbl">${lbl}</span>${delta}</div>`;
+      };
+      const money = v => `$${Math.round(v)}`;
+      document.getElementById("rollTiles").innerHTML =
+          tile(cur.avg_mgl.toFixed(1), `MGL / week · 4 wks to ${cur.label}`, cur.avg_mgl, prior && prior.avg_mgl, false, v => v.toFixed(1))
+        + tile(money(cur.cpl), `CPL · 4 wks to ${cur.label}`, cur.cpl, prior && prior.cpl, true, money);
+
+      const labels = ROLLING_MGL.map(r => r.label);
+      const rollOpts = (unit, fmt) => ({
+        responsive:          true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 10 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            displayColors: false,
+            callbacks: {
+              title: items => `Week of ${items[0].label}`,
+              label: ctx => ctx.parsed.y === null ? null
+                : ` ${ctx.dataset.label}: ${fmt(ctx.parsed.y)}${unit}`,
+            },
+          },
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#9A9AA5", font: { size: 11 } } },
+          y: { beginAtZero: true, grid: { color: "rgba(255,255,255,0.05)" },
+               ticks: { color: "#6E6E78", font: { size: 10 }, callback: v => fmt(v) } },
+        },
+      });
+      const rollLine = (label, data) => ({
+        type: "line", label, data,
+        borderColor: "#FFB547", backgroundColor: "#FFB547",
+        borderWidth: 3, tension: 0.3, pointRadius: 3, pointHoverRadius: 6,
+        spanGaps: false, order: 0,
+      });
+
+      new Chart(document.getElementById("chartRollMgl"), {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            rollLine("4-wk avg", ROLLING_MGL.map(r => r.avg_mgl)),
+            { type: "bar", label: "Week", data: ROLLING_MGL.map(r => r.week_mgl),
+              backgroundColor: "rgba(255,255,255,0.10)", borderRadius: 4,
+              barPercentage: 0.7, categoryPercentage: 0.7, order: 1 },
+          ],
+        },
+        options: rollOpts(" MGL", v => (Math.round(v * 10) / 10).toString()),
+      });
+
+      new Chart(document.getElementById("chartRollCpl"), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            rollLine("4-wk CPL", ROLLING_MGL.map(r => r.cpl)),
+            { type: "line", label: "Week CPL", data: ROLLING_MGL.map(r => r.week_cpl),
+              showLine: false, pointRadius: 4, pointHoverRadius: 6,
+              pointBackgroundColor: "rgba(255,255,255,0.22)", pointBorderWidth: 0, order: 1 },
+          ],
+        },
+        options: rollOpts("", v => `$${Math.round(v)}`),
+      });
+    }
+    const ROLL_WEEKS_JS = 4;
+
     function closeMonthlyModal() {
       document.getElementById("monthlyOverlay").classList.remove("open");
     }
