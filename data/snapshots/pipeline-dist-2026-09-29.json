@@ -3,15 +3,15 @@
   "stages": [
     {
       "name": "New Lead",
-      "count": 62
+      "count": 63
     },
     {
       "name": "Discovery call set",
-      "count": 49
+      "count": 46
     },
     {
       "name": "Discovery Call",
-      "count": 35
+      "count": 39
     },
     {
       "name": "Strategy Call",
@@ -19,7 +19,7 @@
     },
     {
       "name": "Proposal Sent",
-      "count": 24
+      "count": 25
     },
     {
       "name": "Closing Call",
@@ -34,7 +34,7 @@
       "count": 55
     }
   ],
-  "total_open": 271,
+  "total_open": 274,
   "source": {
     "labels": [
       "MGL",
@@ -42,10 +42,10 @@
       "Other - Referrals"
     ],
     "data": [
-      219,
+      221,
       16,
-      85
+      86
     ],
-    "total": 320
+    "total": 323
   }
 }
