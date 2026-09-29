@@ -1,8 +1,16 @@
 {
   "date": "2026-09-29",
   "opps": {
+    "QjTWRzqplFdWetEFDeLZ": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "LTAgZ8vArIBLFlqTVl2a": {
+      "stage": "New Lead",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
     "gCh9D97WKSSRS8Ow1Beb": {
-      "stage": "Discovery Call",
+      "stage": "Proposal Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "DTuzU3y9rywNMxRqcggr": {
@@ -26,7 +34,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "y1cOx3PkFgD1ILyQwHuE": {
-      "stage": "Discovery call set",
+      "stage": "Discovery Call",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "sdCf01DG1Kr3Q4KRYRxf": {
@@ -50,7 +58,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "ddQWf7439QQFIiQeN8oD": {
-      "stage": "Discovery Call",
+      "stage": "Proposal Sent",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "XEdHS9c6KJExi2qef5jn": {
@@ -62,7 +70,7 @@
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "RCa4YgfzZDgnpsoSLxYV": {
-      "stage": "New Lead",
+      "stage": "Discovery Call",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "6kImgysJIgjYG2nK2RZ7": {
@@ -98,7 +106,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "ujkqHDTqittuIhzrRItQ": {
-      "stage": "Discovery Call",
+      "stage": "Reactivation Queue - no call booked",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "M5d9iaLnHwslx7v7s84L": {
@@ -136,10 +144,6 @@
     "Ey31s7Hi2SyYpf5i12Z1": {
       "stage": "New Lead",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
-    },
-    "50o5qtyMrTQY1ek6SXzY": {
-      "stage": "Discovery Call",
-      "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "Qi3sAhjkYMbpSS4atVoF": {
       "stage": "Discovery call set",
@@ -381,10 +385,6 @@
       "stage": "Agreement Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
-    "kpr36cTNNzugm83ffcCF": {
-      "stage": "Agreement Sent",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
     "nLBFlRTjDCf4xmnHJgk1": {
       "stage": "Closing Call",
       "owner": "kNU1jv4vrjjoehHNhlne"
@@ -615,14 +615,6 @@
     },
     "5rggaUHe3KCE2xMYJXnK": {
       "stage": "New Lead",
-      "owner": "kNU1jv4vrjjoehHNhlne"
-    },
-    "iukFjsPwenGW79QOFpvm": {
-      "stage": "Closing Call",
-      "owner": "kNU1jv4vrjjoehHNhlne"
-    },
-    "H3btMt8eTxDwqsq4MGn1": {
-      "stage": "Closing Call",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "rKs6IZHkIYjmlFBnjYQk": {
