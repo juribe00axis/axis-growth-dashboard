@@ -7,11 +7,11 @@
     },
     {
       "name": "Discovery call set",
-      "count": 48
+      "count": 45
     },
     {
       "name": "Discovery Call",
-      "count": 35
+      "count": 39
     },
     {
       "name": "Strategy Call",
@@ -19,22 +19,22 @@
     },
     {
       "name": "Proposal Sent",
-      "count": 24
+      "count": 23
     },
     {
       "name": "Closing Call",
-      "count": 21
+      "count": 22
     },
     {
       "name": "Agreement Sent",
-      "count": 23
+      "count": 24
     },
     {
       "name": "Reactivation Queue - no call booked",
       "count": 57
     }
   ],
-  "total_open": 278,
+  "total_open": 280,
   "source": {
     "labels": [
       "MGL",
@@ -44,8 +44,8 @@
     "data": [
       226,
       16,
-      86
+      88
     ],
-    "total": 328
+    "total": 330
   }
 }
