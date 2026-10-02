@@ -1,6 +1,10 @@
 {
   "date": "2026-10-02",
   "opps": {
+    "MAuzgoLBagaFumwSGmDD": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
     "cxt7F9fkjYa08zZR4USA": {
       "stage": "Discovery Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
@@ -142,7 +146,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "AGXw5bIwxMgfWDACfy6w": {
-      "stage": "Discovery Call",
+      "stage": "Proposal Sent",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "WajhpAXG8mYmjnaZtpsk": {
@@ -154,7 +158,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "pkp0NAUI5bcOKfpEj3w7": {
-      "stage": "Discovery Call",
+      "stage": "Strategy Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "hOKYJYUjgeJ9pKaYwpwP": {
