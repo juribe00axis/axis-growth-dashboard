@@ -11,15 +11,15 @@
     },
     {
       "name": "Discovery Call",
-      "count": 40
+      "count": 41
     },
     {
       "name": "Strategy Call",
-      "count": 6
+      "count": 5
     },
     {
       "name": "Proposal Sent",
-      "count": 22
+      "count": 24
     },
     {
       "name": "Closing Call",
@@ -34,7 +34,7 @@
       "count": 56
     }
   ],
-  "total_open": 297,
+  "total_open": 299,
   "source": {
     "labels": [
       "MGL",
@@ -42,10 +42,10 @@
       "Other - Referrals"
     ],
     "data": [
-      245,
+      246,
       16,
-      88
+      89
     ],
-    "total": 349
+    "total": 351
   }
 }
