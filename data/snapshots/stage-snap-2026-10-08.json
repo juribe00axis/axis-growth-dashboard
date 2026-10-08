@@ -1,13 +1,25 @@
 {
   "date": "2026-10-08",
   "opps": {
+    "b4KtbswblvWrpg9xDIaR": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "Y7mktRj9Rjr3E1VwTais": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "RM2D9cv93r1ujgZp16gr": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
     "zdfMVvIp2VMfvN7zMNCx": {
       "stage": "Discovery call set",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "TDJY28zKk7dhIYXmd7TI": {
-      "stage": "Discovery call set",
-      "owner": "unassigned"
+      "stage": "Discovery Call",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "HYKr3gSVHhvIxgeBOtVA": {
       "stage": "Discovery call set",
@@ -61,10 +73,6 @@
       "stage": "Discovery Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
-    "mPI4J2Kp1ymFemmaHKFs": {
-      "stage": "Discovery Call",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
     "h7EkOP4f2XvCmAV5VZBk": {
       "stage": "Discovery Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
@@ -74,7 +82,7 @@
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "qsE2J78QSB1IovxVq4TP": {
-      "stage": "Discovery call set",
+      "stage": "New Lead",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "pOLwXfSVJqf2TaxQitsl": {
@@ -159,7 +167,7 @@
     },
     "zg6dRSatm01b5snRuiDn": {
       "stage": "Discovery call set",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
+      "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "qJFdduDI3033KfuLG1Jz": {
       "stage": "New Lead",
@@ -210,7 +218,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "sdCf01DG1Kr3Q4KRYRxf": {
-      "stage": "Proposal Sent",
+      "stage": "Agreement Sent",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "0BJQChwHi3G6X3T0DDq4": {
@@ -346,7 +354,7 @@
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "myOIs46wx4AqV5Mp3aRO": {
-      "stage": "Discovery call set",
+      "stage": "Discovery Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "ZvQvsHL0sF3P5iIyt7BO": {
@@ -559,10 +567,6 @@
     },
     "EpcRZdK6Ut6Y3ppv59bH": {
       "stage": "New Lead",
-      "owner": "Xeprp2GjJCDQFoJV4jqS"
-    },
-    "Y6MbQZY7WmMi2G39tPVq": {
-      "stage": "Agreement Sent",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "C4za9BExRL5wUO2EVwz9": {
