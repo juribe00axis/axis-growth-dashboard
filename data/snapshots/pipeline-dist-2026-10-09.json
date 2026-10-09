@@ -15,7 +15,7 @@
     },
     {
       "name": "Strategy Call",
-      "count": 5
+      "count": 6
     },
     {
       "name": "Proposal Sent",
@@ -23,7 +23,7 @@
     },
     {
       "name": "Closing Call",
-      "count": 24
+      "count": 23
     },
     {
       "name": "Agreement Sent",
@@ -42,10 +42,10 @@
       "Other - Referrals"
     ],
     "data": [
-      253,
+      252,
       16,
-      86
+      88
     ],
-    "total": 355
+    "total": 356
   }
 }
