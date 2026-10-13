@@ -34,7 +34,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "KDxBimvNgHbxe8tDNeEf": {
-      "stage": "Discovery call set",
+      "stage": "Discovery Call",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "In2Duk8rb4SjZMrPqDzt": {
@@ -70,7 +70,7 @@
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "5IWqgJ2mLenZxSmKFiml": {
-      "stage": "Discovery call set",
+      "stage": "New Lead",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "6H1iY2rUz462kGY7dYCU": {
@@ -658,7 +658,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "iNBMqxOtswbYPMk1pJVn": {
-      "stage": "Discovery Call",
+      "stage": "Strategy Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "hVmKEKxfonaWVuJNyyk0": {
@@ -764,10 +764,6 @@
     "O5Z9etx1d5q72Bi184fh": {
       "stage": "Proposal Sent",
       "owner": "kNU1jv4vrjjoehHNhlne"
-    },
-    "wsRzjAhgKu90CEPz00Ls": {
-      "stage": "Proposal Sent",
-      "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "zDpLC6qlP0QZTDydvIxV": {
       "stage": "Reactivation Queue - no call booked",
