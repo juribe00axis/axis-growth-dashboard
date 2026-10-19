@@ -1,6 +1,10 @@
 {
   "date": "2026-10-19",
   "opps": {
+    "ObDFo1hpbT466gMl0Ben": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
     "yFNmpNgqSCJxG1SsypiS": {
       "stage": "Discovery call set",
       "owner": "kNU1jv4vrjjoehHNhlne"
@@ -10,7 +14,7 @@
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "jU734xYhFQFDrkakOQYr": {
-      "stage": "Discovery call set",
+      "stage": "New Lead",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "dLEPjOS9hEto9UoDt9ap": {
@@ -50,7 +54,7 @@
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "WhBj8VNNddotbqaBqHWn": {
-      "stage": "Discovery call set",
+      "stage": "Discovery Call",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "j2G6UnaCVS2eWnA2Kkox": {
@@ -85,16 +89,12 @@
       "stage": "Discovery Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
-    "JsH3qLEUNjR3pQqxBB5C": {
-      "stage": "Discovery call set",
-      "owner": "kNU1jv4vrjjoehHNhlne"
-    },
     "kvbyPDEv6CBI4Y8fJehM": {
       "stage": "Discovery Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "9AQTKiDKgPb8ox4WYHps": {
-      "stage": "Discovery call set",
+      "stage": "Discovery Call",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "1yCpVPOL6JX0Yx3Zu9Hi": {
@@ -106,7 +106,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "oLrL4ALx6844wCGJzzG5": {
-      "stage": "Discovery Call",
+      "stage": "Proposal Sent",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "ygxwm2iknozL6IZm5K4e": {
@@ -254,7 +254,7 @@
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "YpJ6zfls1ZgQet9nXJrw": {
-      "stage": "Discovery call set",
+      "stage": "Discovery Call",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "gG6FY4CGPlyXY6nLrmIk": {
@@ -264,10 +264,6 @@
     "LvBauVo5oogEVpGWEI5P": {
       "stage": "Discovery Call",
       "owner": "kNU1jv4vrjjoehHNhlne"
-    },
-    "YmVBfVxMGloglfSSM0S0": {
-      "stage": "Discovery Call",
-      "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "B8LyeVNuZ3PnAtEaVUUE": {
       "stage": "New Lead",
