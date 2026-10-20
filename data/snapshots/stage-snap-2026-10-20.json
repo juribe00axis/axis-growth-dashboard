@@ -1,6 +1,10 @@
 {
   "date": "2026-10-20",
   "opps": {
+    "nZquMZr0NMMbw0tG6GKh": {
+      "stage": "Discovery call set",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
     "mENsgkACzBh8ioB2EX4X": {
       "stage": "Discovery call set",
       "owner": "kNU1jv4vrjjoehHNhlne"
@@ -8,10 +12,6 @@
     "fjxMvVEJH3K7dh4stByr": {
       "stage": "Discovery call set",
       "owner": "kNU1jv4vrjjoehHNhlne"
-    },
-    "ObDFo1hpbT466gMl0Ben": {
-      "stage": "Discovery call set",
-      "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "yFNmpNgqSCJxG1SsypiS": {
       "stage": "Discovery call set",
@@ -34,7 +34,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "TuLTx69dbiy7gII6En6J": {
-      "stage": "Discovery Call",
+      "stage": "Proposal Sent",
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "xT7GJ18nJlN4G7lj0Mmj": {
@@ -170,7 +170,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "1Zywsku1170bUYAMqlOw": {
-      "stage": "Strategy Call",
+      "stage": "Proposal Sent",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "QRMcMhHAV5Y94fTbj0xG": {
@@ -250,7 +250,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "JWoAmkFDBCOaIFYBYdKe": {
-      "stage": "Discovery Call",
+      "stage": "Proposal Sent",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "YpJ6zfls1ZgQet9nXJrw": {
@@ -270,7 +270,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "TLjtg4NZoPcdWX42ermI": {
-      "stage": "Strategy Call",
+      "stage": "Proposal Sent",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "PX8YP2pw64E6Kq3DBaSL": {
@@ -539,10 +539,6 @@
     },
     "Af5uo4hB5CEGMHop90V1": {
       "stage": "New Lead",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
-    "ekJFf68JkI6XSe9wj9hH": {
-      "stage": "Proposal Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "RaKoz33ZHgnjlZcgPtLG": {
@@ -960,10 +956,6 @@
     "ZNkLwflb7Ini36ySn97v": {
       "stage": "Proposal Sent",
       "owner": "kNU1jv4vrjjoehHNhlne"
-    },
-    "7eZ4d22FSCgmozsXwR8o": {
-      "stage": "Agreement Sent",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "Lf99yNlNG029Ro8fqUwq": {
       "stage": "Discovery Call",
