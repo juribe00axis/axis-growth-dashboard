@@ -7,11 +7,11 @@
     },
     {
       "name": "Discovery call set",
-      "count": 63
+      "count": 60
     },
     {
       "name": "Discovery Call",
-      "count": 37
+      "count": 39
     },
     {
       "name": "Strategy Call",
@@ -19,7 +19,7 @@
     },
     {
       "name": "Proposal Sent",
-      "count": 32
+      "count": 33
     },
     {
       "name": "Closing Call",
@@ -42,10 +42,10 @@
       "Other - Referrals"
     ],
     "data": [
-      279,
+      277,
       16,
-      91
+      92
     ],
-    "total": 386
+    "total": 385
   }
 }
