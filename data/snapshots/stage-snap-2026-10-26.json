@@ -1,6 +1,10 @@
 {
   "date": "2026-10-26",
   "opps": {
+    "wlfvyXssby8Ls95WGeWq": {
+      "stage": "Agreement Sent",
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
+    },
     "MpKioe6A3wfTDRUiwA5i": {
       "stage": "Discovery call set",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
@@ -107,11 +111,7 @@
     },
     "aDnjUbTKPeS5KTvoZUvm": {
       "stage": "New Lead",
-      "owner": "Xeprp2GjJCDQFoJV4jqS"
-    },
-    "JjjrxiPKzl6F9fP1Bdkz": {
-      "stage": "Discovery call set",
-      "owner": "Xeprp2GjJCDQFoJV4jqS"
+      "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "o0TzGTb5VH3V3ShOFqsg": {
       "stage": "Discovery call set",
@@ -226,10 +226,6 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "n8vLhLDbWvDybY87Uepw": {
-      "stage": "Agreement Sent",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
-    "2cf7opEd5Z1ls5yDF5UP": {
       "stage": "Agreement Sent",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
