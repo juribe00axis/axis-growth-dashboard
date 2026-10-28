@@ -16,11 +16,19 @@ plain language before running commands.
 - API reference: https://marketplace.gohighlevel.com/docs/
 
 ## Local workflow
-- GitHub Actions auto-builds this dashboard twice a day (8am/4pm EST) and
-  commits daily snapshot files on its own, independent of any computer.
-  Because of this, always run `git pull` before running `build_dashboard.py`
-  locally or starting any edits in this folder — otherwise a local run can
-  create a same-day snapshot file that conflicts with one CI already pushed.
+- The live dashboard (GitHub Pages) is built by GitHub Actions twice a day
+  (8am/4pm Eastern) from `build_dashboard.py` as it is ON GITHUB. CI deploys
+  the HTML straight to Pages and never commits it, so the HTML files in this
+  folder are a local preview only -- a change goes live only once the
+  `build_dashboard.py` edit is pushed (then wait for the next run, or trigger
+  it: `gh workflow run build.yml`).
+- CI does commit one thing back: daily snapshot files in data/snapshots/
+  (bot commits "Auto-update daily snapshots"). They're data only, already
+  used by the live site, and pushing requires having them, so always
+  `git pull --rebase` before committing/pushing. Also pull before running
+  `build_dashboard.py` locally -- a local run writes today's snapshot files,
+  which collide with the ones CI already pushed (if that happens, delete the
+  local untracked copies; CI's are canonical).
 
 ## Standing safety rules (do not override without explicit instruction)
 1. READ-ONLY by default. Only GET requests. Never POST, PUT, PATCH, or
