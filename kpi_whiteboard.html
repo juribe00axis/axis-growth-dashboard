@@ -1,0 +1,3080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AXISKEY — Spend Efficiency Whiteboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #101014;
+    --surface:   #1C1C24;
+    --surface-2: #262630;
+    --hero:      #C8FF01;
+    --text:      #F5F5F7;
+    --text-mute: #9A9AA5;
+    --won:       #C8FF01;
+    --lost:      #FF5C5C;
+    --line:      #2E2E38;
+    --series-1:  #3987e5;  /* SGL */
+    --series-2:  #d95926;  /* Referral */
+    --series-3:  #199e70;  /* MGL */
+    --series-4:  #c98500;  /* Client */
+    --series-other: #6B6B76;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Saira", "Eurostile", system-ui, sans-serif;
+    padding: 32px 40px 80px;
+  }
+  header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 20px;
+  }
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: 0.02em;
+  }
+  .subtitle {
+    color: var(--text-mute);
+    font-size: 0.82rem;
+    max-width: 640px;
+    line-height: 1.5;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--surface-2);
+    color: var(--text-mute);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+  }
+  section {
+    margin-bottom: 36px;
+  }
+  .section-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-mute);
+    margin: 0 0 14px;
+  }
+
+  /* Hero figure */
+  .hero-card {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 24px 28px;
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .hero-value {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--hero);
+    line-height: 1;
+  }
+  .hero-label {
+    font-size: 0.78rem;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .hero-note {
+    color: var(--text-mute);
+    font-size: 0.78rem;
+    flex-basis: 100%;
+  }
+
+  /* Stat tile grid */
+  .tile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+  }
+  .tile {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 16px 18px;
+  }
+  .tile-label {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-mute);
+    margin-bottom: 6px;
+  }
+  .tile-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .tile-value.hero-color { color: var(--hero); }
+  .tile-sub {
+    font-size: 0.68rem;
+    color: var(--text-mute);
+    margin-top: 4px;
+  }
+
+  /* Funnel visual */
+  .funnel-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 12px 0 4px;
+  }
+  .funnel-bar {
+    background: var(--hero);
+    color: #101014;
+    border-radius: 10px;
+    padding: 16px 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    box-sizing: border-box;
+  }
+  .funnel-stage-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .funnel-stage-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .funnel-conv {
+    color: var(--text-mute);
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 6px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .funnel-conv .funnel-conv-pct { color: var(--text); font-size: 0.9rem; }
+
+  /* Small-multiple bar charts */
+  .chart-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .chart-card {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 18px 20px 12px;
+  }
+  .chart-card-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  svg text { font-family: "Saira", system-ui, sans-serif; }
+  .bar-value {
+    fill: var(--text);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .bar-month {
+    fill: var(--text-mute);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .gridline { stroke: var(--line); stroke-width: 1; }
+  .bar-rect { fill: var(--hero); cursor: pointer; }
+  .bar-rect:hover, .bar-rect.hover { fill: #dbff4d; }
+  .bar-hit { fill: transparent; cursor: pointer; }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  th, td {
+    padding: 12px 16px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-size: 0.84rem;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    color: var(--text-mute);
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+  th:first-child, td:first-child { text-align: left; }
+  tr:last-child td { border-bottom: none; }
+  td.hero-color { color: var(--hero); font-weight: 700; }
+
+  /* Simulator */
+  .sim-card {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 24px 26px;
+  }
+  .sim-controls {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 22px;
+  }
+  .control-group { min-width: 220px; flex: 1; }
+  .control-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-mute);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .segmented {
+    display: flex;
+    background: var(--surface-2);
+    border-radius: 10px;
+    padding: 3px;
+    gap: 3px;
+  }
+  .segmented button {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-mute);
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 600;
+    padding: 7px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .segmented button.active {
+    background: var(--hero);
+    color: #101014;
+  }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--hero);
+    height: 4px;
+  }
+  .slider-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--hero);
+    margin-bottom: 8px;
+  }
+  .sim-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .sim-tile {
+    background: var(--surface-2);
+    border-radius: 14px;
+    padding: 14px 16px;
+  }
+  .sim-tile .tile-value { color: var(--hero); }
+  .caveat {
+    color: var(--text-mute);
+    font-size: 0.72rem;
+    line-height: 1.5;
+    margin-top: 14px;
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+
+  /* Line chart */
+  .legend {
+    display: flex;
+    gap: 18px;
+    font-size: 0.72rem;
+    color: var(--text-mute);
+    margin-bottom: 8px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-swatch-line { width: 14px; height: 2px; background: var(--hero); display: inline-block; }
+  .legend-swatch-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-mute); display: inline-block; }
+  .legend-swatch-rect { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .legend-source { margin-bottom: 10px; flex-wrap: wrap; }
+  .seg-hit:hover + .seg-mark, .seg-mark.seg-hover { filter: brightness(1.18); }
+
+  #tooltip {
+    position: fixed;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 0.76rem;
+    pointer-events: none;
+    display: none;
+    z-index: 10;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  #tooltip .tt-value { font-weight: 700; color: var(--text); font-size: 0.86rem; }
+  #tooltip .tt-label { color: var(--text-mute); }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+  .tab-btn {
+    background: var(--surface);
+    color: var(--text-mute);
+    border: 1px solid var(--line);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .tab-btn.active {
+    background: var(--hero);
+    color: #101014;
+    border-color: var(--hero);
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  td.mute { color: var(--text-mute); }
+  td.empty-field { color: var(--text-mute); font-style: italic; }
+  tr.bd-row td { background: rgba(57, 135, 229, 0.16); }
+  tr.bd-row td:first-child { border-left: 3px solid var(--series-1); }
+
+  /* Existing-client won deals (Contact Type = "customer" on the contact).
+     Amber matches --series-4, already the "Client" colour in the source
+     donuts, so the same idea reads the same way across the page. The pill
+     carries the meaning on its own -- colour alone would be lost in print
+     and to anyone who can't distinguish it from the blue BD highlight. */
+  tr.client-row td { background: rgba(201, 133, 0, 0.14); }
+  tr.client-row td:first-child { border-left: 3px solid var(--series-4); }
+  /* Funnel per Rep — compact stacked bars, one per stage */
+  .rf-funnel { display: flex; flex-direction: column; gap: 9px; padding: 6px 0 2px; }
+  /* Stage label sits OUTSIDE the bar: at these counts the later stages are
+     only a few pixels wide, and a label inside the fill gets clipped to a
+     single letter. */
+  .rf-row { display: grid; grid-template-columns: 88px 1fr auto; gap: 9px; align-items: center; }
+  .rf-stage {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    line-height: 1.25;
+  }
+  .rf-track { background: var(--surface-2); border-radius: 5px; height: 20px; overflow: hidden; }
+  .rf-fill { height: 100%; background: var(--hero); border-radius: 5px; min-width: 3px; }
+  .rf-fill.rf-projected { background: repeating-linear-gradient(
+      135deg, rgba(200,255,1,0.9) 0 7px, rgba(200,255,1,0.45) 7px 14px); }
+  .rf-count { font-size: 0.85rem; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 30px; text-align: right; }
+
+  /* Editable projection inputs. Dashed border marks them as adjustable, the
+     same visual language the July/August won-value inputs already use. */
+  .rf-input {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 3px 6px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    width: 58px;
+    -moz-appearance: textfield;
+  }
+  .rf-input::-webkit-outer-spin-button,
+  .rf-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .rf-input:focus { border-style: solid; border-color: var(--hero); outline: none; }
+  .rf-input.rf-touched { border-color: var(--hero); border-style: solid; color: var(--hero); }
+  .rf-input:disabled { opacity: 0.45; border-style: dotted; }
+  .rf-input-suffix { color: var(--text-mute); font-size: 0.75rem; margin-left: 3px; }
+  .rf-cell-proj { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+  .rf-projnum { font-weight: 800; font-variant-numeric: tabular-nums; min-width: 34px; text-align: right; }
+  .rf-scenario-bar {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    margin: 14px 0 4px;
+  }
+  .rf-reset-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text-mute);
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .rf-reset-btn:hover { border-color: var(--hero); color: var(--hero); }
+  .rf-edited-badge {
+    display: none;
+    background: rgba(201, 133, 0, 0.18);
+    border: 1px solid var(--series-4);
+    color: var(--series-4);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .rf-edited-badge.rf-on { display: inline-block; }
+
+  /* ── Funnel per Rep — legibility/comfort pass (2026-09-08) ─────────────────
+     Deliberately quarantined to this one tab so it can be judged against the
+     untouched tabs before going page-wide. Everything here is either scoped
+     under #tab-repfunnel or gated on body.rf-theme, which the tab-switch
+     handler adds only while this panel is showing -- so deleting this block
+     and the one toggle line reverts the experiment completely.
+
+     Measured starting point: the muted grey was already 6.8:1 on the page
+     background and 6.1:1 on cards, both past WCAG AA -- so the fatigue was
+     size and density, not contrast. Sizes go up, the long-form text gets a
+     lighter grey and a capped measure, and the near-black background lifts
+     slightly (bright text on near-black is what makes long reading harsh). */
+  body.rf-theme { background: #16161C; }
+
+  #tab-repfunnel {
+    --rf-surface:   #212129;
+    --rf-text-soft: #B4B4C0;   /* ~9.5:1 on the lifted background */
+  }
+  #tab-repfunnel table,
+  #tab-repfunnel .chart-card { background: var(--rf-surface); }
+
+  /* The tab had no heading at all -- its title was an 11.5px grey label, the
+     same size as a field caption, so the page had nothing to anchor on. */
+  #tab-repfunnel .rf-page-title {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    color: var(--hero);
+    margin-bottom: 20px;
+  }
+
+  #tab-repfunnel .section-title { font-size: 0.78rem; color: var(--rf-text-soft); }
+  /* Capped measure: these ran the full ~1150px, which is roughly double a
+     comfortable line length for text this size. */
+  #tab-repfunnel .subtitle { font-size: 0.88rem; color: var(--rf-text-soft); line-height: 1.55; max-width: 78ch; }
+  #tab-repfunnel .caveat   { font-size: 0.85rem; color: var(--rf-text-soft); line-height: 1.62; max-width: 80ch; }
+  #tab-repfunnel .control-label { font-size: 0.76rem; color: var(--rf-text-soft); }
+  #tab-repfunnel .segmented button { font-size: 0.82rem; padding: 8px 12px; }
+
+  #tab-repfunnel th { font-size: 0.75rem; color: var(--rf-text-soft); padding: 14px 16px; }
+  #tab-repfunnel td { font-size: 0.9rem; padding: 14px 16px; }
+
+  #tab-repfunnel .chart-card-title { font-size: 0.86rem; }
+  /* 88px was sized for 9.3px labels; the wider column keeps "Agreement
+     Signed" on two tidy lines rather than three at the larger size. */
+  #tab-repfunnel .rf-row   { grid-template-columns: 104px 1fr auto; }
+  #tab-repfunnel .rf-stage { font-size: 0.7rem; color: var(--rf-text-soft); }
+  #tab-repfunnel .rf-count { font-size: 0.92rem; }
+  #tab-repfunnel .rf-pct   { font-size: 0.82rem; color: var(--rf-text-soft); }
+  #tab-repfunnel .rf-input { font-size: 0.86rem; width: 64px; padding: 4px 7px; }
+  #tab-repfunnel .rf-input-suffix { font-size: 0.8rem; color: var(--rf-text-soft); }
+  #tab-repfunnel .rf-reset-btn    { font-size: 0.78rem; padding: 7px 14px; }
+  #tab-repfunnel .rf-edited-badge { font-size: 0.7rem; }
+  .rf-pct { color: var(--text-mute); font-weight: 600; font-size: 0.78rem; }
+  td.rf-proj { color: var(--text-mute); }
+  td.rf-proj .rf-projnum { color: var(--text); font-weight: 700; }
+
+  .client-pill {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(201, 133, 0, 0.22);
+    border: 1px solid var(--series-4);
+    color: var(--series-4);
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  input.date-input {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    color-scheme: dark;
+    width: 145px;
+  }
+  input.date-input.input-defaulted {
+    color: var(--text-mute);
+    font-style: italic;
+  }
+  input.value-input {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px dashed var(--line);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: inherit;
+    font-size: 0.84rem;
+    font-variant-numeric: tabular-nums;
+    width: 110px;
+    text-align: right;
+  }
+  input.value-input:focus { border-style: solid; border-color: var(--hero); outline: none; }
+
+  /* SDR Capacity tab */
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .input-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 18px 20px;
+  }
+  .field label {
+    display: block;
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-mute);
+    margin-bottom: 6px;
+  }
+  .field-row { display: flex; gap: 6px; align-items: center; }
+  .field input[type="number"] {
+    width: 100%;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 7px 9px;
+    font-size: 0.92rem;
+    font-family: inherit;
+  }
+  .field input[type="number"]:focus { outline: 1px solid var(--hero); border-color: var(--hero); }
+  .preset-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    color: var(--text-mute);
+    font-family: inherit;
+    font-size: 0.66rem;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .preset-btn.active { border-color: var(--hero); color: var(--hero); }
+  tr.total-row td { font-weight: 700; color: var(--text); }
+  tr.total-row { background: var(--surface-2); }
+  td.role-label { color: var(--text-mute); font-size: 0.8rem; }
+  .hero-box {
+    background: linear-gradient(160deg, var(--surface-2), var(--surface));
+    border: 1px solid var(--hero);
+    border-radius: 18px;
+    padding: 22px 26px;
+  }
+  .hero-box-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: var(--hero);
+    margin-bottom: 14px;
+  }
+  .hero-box-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 18px;
+  }
+  .sdr-hero-num {
+    font-size: 2.4rem;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+  }
+  .hero-box-label {
+    font-size: 0.72rem;
+    color: var(--text-mute);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 6px;
+  }
+  .hero-assumption {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    color: var(--text-mute);
+    font-size: 0.78rem;
+  }
+  .hero-assumption .mono { color: var(--hero); font-weight: 700; }
+  .steps {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 16px 20px;
+    font-size: 0.82rem;
+    line-height: 1.9;
+    color: var(--text-mute);
+  }
+  .steps .step-line { white-space: nowrap; overflow-x: auto; }
+  .steps .step-val { color: var(--text); font-weight: 600; }
+  .steps .step-result { color: var(--hero); font-weight: 700; }
+
+  /* Print / Save-as-PDF: only whichever tab is active prints (tab-panel
+     display rules above already handle that); this drops the tab buttons.
+     One giant custom page (generously tall) instead of Letter/A4 -- so the
+     whole tab prints as a single continuous page with no breaks at all.
+     This also sidesteps the flex/grid clipping bug from before (Chromium's
+     print engine treats flex/grid containers like .funnel-wrap/.chart-row
+     as one atomic block and clips whatever doesn't fit when a page boundary
+     cuts through them) -- with only one page, no boundary ever cuts through
+     anything. Trade-off: if content is shorter than the reserved height
+     you'll get blank space at the bottom; if it's ever taller, the excess
+     spills onto a genuine second page and the clipping risk returns there. */
+  @media print {
+    @page { size: 340mm 1300mm; margin: 12mm; }
+    .tabs { display: none; }
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <div>
+    <h1>AXISKEY — Spend Efficiency Whiteboard</h1>
+    <div class="subtitle">
+      Meta Ads spend vs. GHL leads &amp; signings, live from the same GHL + Meta
+      data as the main dashboard -- this page is generated by the same script,
+      on the same twice-daily refresh. See Overview for month-by-month detail,
+      the simulator for spend projections, and All-Time Won for the full deal
+      list. The July, August and September Sales Report tabs are frozen historical
+      recaps and stay as originally written.
+    </div>
+  </div>
+  <span class="badge">Generated October 31, 2026 at 1:07 PM EDT</span>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="tab-overview">Overview</button>
+  <button class="tab-btn" data-tab="tab-won" id="wonTabBtn">All-Time Won</button>
+  <button class="tab-btn" data-tab="tab-sdr">SDR Capacity</button>
+  <button class="tab-btn" data-tab="tab-july">July Sales Report</button>
+  <button class="tab-btn" data-tab="tab-august">August Sales Report</button>
+  <button class="tab-btn" data-tab="tab-september">September Sales Report</button>
+  <button class="tab-btn" data-tab="tab-repfunnel">Funnel per Rep</button>
+</div>
+<div id="tab-overview" class="tab-panel active">
+
+<section>
+  <div class="hero-card">
+    <div>
+      <div class="hero-value" id="heroCPL">—</div>
+      <div class="hero-label" id="heroCPLLabel">Blended cost per lead</div>
+    </div>
+    <div class="hero-note" id="heroNote"></div>
+  </div>
+
+  <div class="tile-grid">
+    <div class="tile"><div class="tile-label">Total spend</div><div class="tile-value" id="totSpend">—</div></div>
+    <div class="tile"><div class="tile-label">Total leads</div><div class="tile-value" id="totLeads">—</div></div>
+    <div class="tile"><div class="tile-label">Total signings</div><div class="tile-value hero-color" id="totSignings">—</div></div>
+    <div class="tile"><div class="tile-label">Blended CPL (all months)</div><div class="tile-value" id="totCPL">—</div></div>
+    <div class="tile">
+      <div class="tile-label">Blended cost / signing</div>
+      <div class="tile-value" id="totCPS">—</div>
+      <div class="tile-sub" id="totCPSFormula">—</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Blended cost / signing (MGL)</div>
+      <div class="tile-value" id="totCPSMgl">—</div>
+      <div class="tile-sub" id="totCPSMglFormula">—</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Monthly breakdown</div>
+  <div class="subtitle" style="margin-bottom: 14px;">
+    Signings are classified by Agreement Signed date where it's been set on the
+    All-Time Won tab, otherwise by Date Won.
+  </div>
+  <div class="chart-row">
+    <div class="chart-card">
+      <div class="chart-card-title">Meta Spend</div>
+      <svg id="chartSpend" viewBox="0 0 240 160" width="100%"></svg>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">GHL Leads Entered</div>
+      <svg id="chartLeads" viewBox="0 0 240 160" width="100%"></svg>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Signings</div>
+      <svg id="chartSignings" viewBox="0 0 240 160" width="100%"></svg>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Signings by Source</div>
+      <div class="segmented" id="sourceMonthToggle" style="margin-bottom: 10px;"></div>
+      <svg id="chartSourceBreakdown" viewBox="0 0 240 200" width="100%"></svg>
+      <div class="legend legend-source" id="sourceLegend"></div>
+    </div>
+  </div>
+  <div class="chart-row" style="margin-top: 16px;">
+    <div class="chart-card" style="grid-column: 1 / -1;">
+      <div class="chart-card-title">Cost / Signing</div>
+      <div class="segmented" id="cpsToggle" style="margin-bottom: 10px;"></div>
+      <svg id="chartCPS" viewBox="0 0 720 180" width="100%"></svg>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Monthly KPI table</div>
+  <table>
+    <thead>
+      <tr><th>Month</th><th>Spend</th><th>Leads</th><th>Signings</th><th>CPL</th><th>Cost / Signing</th></tr>
+    </thead>
+    <tbody id="kpiTableBody"></tbody>
+  </table>
+</section>
+
+<section>
+  <div class="section-title">Spend → Leads simulator</div>
+  <div class="sim-card">
+    <div class="sim-controls">
+      <div class="control-group">
+        <span class="control-label">CPL / conversion basis</span>
+        <div class="segmented" id="basisToggle"></div>
+      </div>
+      <div class="control-group" style="flex: 2;">
+        <span class="control-label">Monthly ad spend</span>
+        <div class="slider-value" id="spendValue">$0</div>
+        <input type="range" id="spendSlider" min="0" max="15000" step="50" value="6000">
+      </div>
+    </div>
+
+    <div class="sim-results">
+      <div class="sim-tile"><div class="tile-label">Predicted leads</div><div class="tile-value" id="predLeads">—</div></div>
+      <div class="sim-tile"><div class="tile-label">Predicted signings</div><div class="tile-value" id="predSignings">—</div></div>
+      <div class="sim-tile"><div class="tile-label">Predicted cost / signing</div><div class="tile-value" id="predCPS">—</div></div>
+      <div class="sim-tile"><div class="tile-label">CPL used</div><div class="tile-value" id="predCPLUsed">—</div></div>
+    </div>
+
+    <div class="legend">
+      <span class="legend-item"><span class="legend-swatch-line"></span> Projected (selected basis)</span>
+      <span class="legend-item"><span class="legend-swatch-dot"></span> Actual month</span>
+    </div>
+    <svg id="chartSim" viewBox="0 0 800 260" width="100%"></svg>
+
+    <div class="caveat">
+      This is a straight-line projection (leads = spend ÷ CPL; signings = leads × that
+      month's conversion rate) — it assumes the selected month's cost-per-lead holds at
+      other spend levels. It won't hold forever: May's CPL ($24.70 at ~$1.4K spend) was
+      far cheaper than June/July's (~$65–74 at ~$5.7–7.6K spend), so cost-per-lead has
+      already risen once as spend scaled up. Treat this as a rough directional tool, not
+      a guarantee — actual diminishing returns likely kick in at some point past current spend.
+    </div>
+  </div>
+</section>
+
+</div>
+
+<div id="tab-won" class="tab-panel">
+<section>
+  <div class="section-title">All-time won opportunities (AXISKEY, all pipelines)</div>
+  <div class="subtitle" style="margin-bottom: 14px;">
+    "Date Won" is <code>lastStageChangeAt</code> -- when the opportunity entered
+    the Onboarding stage, same basis as the Won bento on the main dashboard.
+    "Agreement Signed" and "Capital Raiser Intent" are live GHL custom fields
+    on the opportunity record, read directly -- no longer editable here; edit
+    them on the opportunity in GHL and they'll appear on the next refresh.
+    "Source" is GHL's standard opportunity source field.
+  </div>
+  <div class="tile-grid" style="margin-bottom: 16px;">
+    <div class="tile">
+      <div class="tile-label">Total Won</div>
+      <div class="tile-value" id="wonTotalAll">—</div>
+      <div class="tile-sub">Everything in the Onboarding stage</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">New Business</div>
+      <div class="tile-value hero-color" id="wonTotalNew">—</div>
+      <div class="tile-sub">Counted in the monthly Sales Reports</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Existing Client</div>
+      <div class="tile-value" id="wonTotalClient" style="color: var(--series-4);">—</div>
+      <div class="tile-sub">Highlighted below, excluded from funnels</div>
+    </div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Date Won</th>
+        <th style="text-align:left;">Deal</th>
+        <th>Value</th>
+        <th style="text-align:left;">Owner</th>
+        <th style="text-align:left;">Source</th>
+        <th>Agreement Signed</th>
+        <th style="text-align:left;">Capital Raiser Intent</th>
+      </tr>
+    </thead>
+    <tbody id="wonTableBody"></tbody>
+  </table>
+  <div class="caveat">
+    GHL's own "Agreement Signed Date" custom field was created 2026-07-23 and
+    was never backfilled on deals won before then -- those show Date Won
+    instead (muted styling) until the field is set in GHL. "Capital Raiser
+    Intent" is populated only where that field was filled in on the
+    opportunity in GHL. "Source" is the deal's own source field as recorded
+    in GHL (including any specific referrer name like "Referral - Diego");
+    blanks reflect missing data on the record, not an extraction issue here.
+    "Won" only includes opportunities *currently* sitting in the Onboarding
+    stage -- a deal that later moves further along the pipeline drops off
+    this list, same as everywhere else on the dashboard that uses this
+    definition. Amber "Existing client" rows are deals whose contact carries
+    GHL's standard Contact Type = "customer" -- expansion or repeat business
+    from an account we already had. They are kept here deliberately (this is
+    the full won ledger) but are excluded from the monthly Sales Report tabs,
+    whose funnels are meant to measure what new marketing and sales activity
+    produced. To change whether a deal counts, set Contact Type on the
+    contact in GHL; only an explicit "customer" excludes it, so a blank value
+    keeps the deal counted as new business.
+  </div>
+</section>
+</div>
+<div id="tab-sdr" class="tab-panel">
+<section>
+  <div class="section-title">SDR Capacity &amp; Lead Target Calculator</div>
+  <div class="subtitle" style="margin-bottom: 16px;">
+    How many marketing contacts you need per month to fully saturate current calling
+    capacity, given a contact→discovery-call conversion rate. Independent of the rest
+    of this page — its own inputs, not tied to GHL/Meta data.
+  </div>
+
+  <div class="segmented" id="scenarioToggle" style="max-width: 420px; margin-bottom: 20px;"></div>
+
+  <div class="section-title">Inputs</div>
+  <div class="input-grid" style="margin-bottom: 24px;">
+    <div class="field">
+      <label for="numSDRs">Number of SDRs</label>
+      <input type="number" id="numSDRs" value="2" min="0" step="1">
+    </div>
+    <div class="field">
+      <label for="callsPerSDR">Calls / SDR / day</label>
+      <input type="number" id="callsPerSDR" value="3" min="0" step="0.5">
+    </div>
+    <div class="field">
+      <label for="numManagers">Sales Managers taking calls</label>
+      <input type="number" id="numManagers" value="1" min="0" step="1">
+    </div>
+    <div class="field">
+      <label for="managerPct">Manager capacity (% of SDR rate)</label>
+      <input type="number" id="managerPct" value="50" min="0" max="500" step="5">
+    </div>
+    <div class="field">
+      <label for="workingDays">Working days / week</label>
+      <input type="number" id="workingDays" value="5" min="1" max="7" step="1">
+    </div>
+    <div class="field">
+      <label for="weeksPerMonth">Weeks / month</label>
+      <div class="field-row">
+        <input type="number" id="weeksPerMonth" value="4.33" min="1" step="0.01">
+        <button type="button" class="preset-btn" id="preset4">4</button>
+        <button type="button" class="preset-btn active" id="preset433">4.33</button>
+      </div>
+    </div>
+    <div class="field">
+      <label for="conversionRate">Contact → discovery call rate (%)</label>
+      <input type="number" id="conversionRate" value="50" min="1" max="100" step="1">
+    </div>
+  </div>
+
+  <div class="section-title">Calling capacity breakdown</div>
+  <table style="margin-bottom: 24px;">
+    <thead>
+      <tr><th>Role</th><th>/ day</th><th>/ week</th><th>/ month</th></tr>
+    </thead>
+    <tbody id="capacityBody"></tbody>
+  </table>
+
+  <div class="hero-box" style="margin-bottom: 24px;">
+    <div class="hero-box-title">Leads to Generate</div>
+    <div class="hero-box-row">
+      <div>
+        <div class="sdr-hero-num mono" id="targetMonth">—</div>
+        <div class="hero-box-label">contacts / month</div>
+      </div>
+      <div>
+        <div class="sdr-hero-num mono" id="targetWeek">—</div>
+        <div class="hero-box-label">contacts / week</div>
+      </div>
+      <div>
+        <div class="sdr-hero-num mono" id="targetDay">—</div>
+        <div class="hero-box-label">contacts / working day</div>
+      </div>
+    </div>
+    <div class="hero-assumption">
+      Assumes a <span class="mono" id="assumedRate">—</span> contact → discovery-call conversion rate.
+      Change it above to see how the target moves.
+    </div>
+  </div>
+
+  <div class="section-title">Calculation steps</div>
+  <div class="steps" id="stepsBody"></div>
+</section>
+</div>
+<div id="tab-july" class="tab-panel">
+<div style="font-size: 2rem; font-weight: 800; letter-spacing: 0.01em; color: var(--hero); margin-bottom: 22px;">
+  July 2026 Sales Report
+</div>
+<section>
+  <div class="section-title">Sales Updates</div>
+  <div style="background: var(--surface); border-radius: 14px; padding: 18px 22px; color: var(--text); font-size: 0.86rem; line-height: 1.6; margin-bottom: 28px;">
+    On July 29, Meta ad spend jumped from an average of $218/day to $497/day — a 128% increase — following
+    a budget increase made that day. Spend held at this elevated level through the rest of the month.
+  </div>
+</section>
+
+<section>
+  <div class="section-title">July at a Glance</div>
+  <div class="tile-grid">
+    <div class="tile"><div class="tile-label">Total Spend</div><div class="tile-value">$7,588.77</div></div>
+    <div class="tile"><div class="tile-label">MGL Leads</div><div class="tile-value hero-color">63</div></div>
+    <div class="tile"><div class="tile-label">MGL CPL</div><div class="tile-value">$120.46</div></div>
+    <div class="tile"><div class="tile-label">Discovery Calls</div><div class="tile-value">63</div></div>
+    <div class="tile"><div class="tile-label">Deals Won</div><div class="tile-value hero-color">13</div></div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Funnel — Leads to Won</div>
+  <div class="funnel-wrap">
+    <div class="funnel-bar" style="width:100%;max-width:560px;">
+      <span class="funnel-stage-label">Total Leads (July)</span>
+      <span class="funnel-stage-value">99</span>
+    </div>
+    <div class="funnel-conv">↓ <span class="funnel-conv-pct">83.8%</span> (83 of 99) to Discovery Call</div>
+    <div class="funnel-bar" style="width:84%;max-width:470px;">
+      <span class="funnel-stage-label">Discovery Calls Booked</span>
+      <span class="funnel-stage-value">83</span>
+    </div>
+    <div class="funnel-conv">↓ <span class="funnel-conv-pct">15.7%</span> (13 of 83) to Won</div>
+    <div class="funnel-bar" style="width:40%;max-width:225px;">
+      <span class="funnel-stage-label">Won Deals</span>
+      <span class="funnel-stage-value">13</span>
+    </div>
+  </div>
+  <div style="display:flex;align-items:baseline;gap:10px;justify-content:center;margin-top:18px;">
+    <div style="font-size:1.8rem;font-weight:800;color:var(--hero);line-height:1;">13.1%</div>
+    <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);">Lead &rarr; Won</div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Deal Source Distribution — July</div>
+  <div class="chart-row" style="grid-template-columns: 1fr 1fr;">
+    <div class="chart-card">
+      <div class="chart-card-title">Leads by Source</div>
+      <svg id="chartJulyLeadsSource" viewBox="0 0 240 200" width="100%"></svg>
+      <div class="legend legend-source" id="julyLeadsLegend"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Won Deals by Source</div>
+      <svg id="chartJulyWonSource" viewBox="0 0 240 200" width="100%"></svg>
+      <div class="legend legend-source" id="julyWonLegend"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Won Deals — Month over Month</div>
+  <div class="chart-row" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabel0">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValue0">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDelta0">won deals</div>
+    </div>
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabel1">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValue1">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDelta1">won deals</div>
+    </div>
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabel2">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValue2">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDelta2">won deals</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Won Deals — July</div>
+  <div class="tile-grid" style="margin-bottom: 16px;">
+    <div class="tile"><div class="tile-label">Broker Dealer Deals</div><div class="tile-value hero-color">3 of 13</div></div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="text-align:left;">Deal</th>
+        <th>Value</th>
+        <th style="text-align:left;">Capital Raiser Intent</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="text-align:left;">Altitude Capital Partners GP LLC</td>
+        <td><input type="text" class="value-input" data-id="gfWnkv7v3nnVvSLaYlbH" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Doug Beasley - BD</td>
+        <td><input type="text" class="value-input" data-id="zhH9NbSez7WGLOjkfCCY" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Bob Weissman</td>
+        <td><input type="text" class="value-input" data-id="zYAbC9cELbUYk1b9lBGb" placeholder="$"></td>
+        <td style="text-align:left;" class="empty-field">—</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Sierra Vale Capital</td>
+        <td><input type="text" class="value-input" data-id="d4YbtFMqmCjOb5ZFM6yL" placeholder="$"></td>
+        <td style="text-align:left;" class="empty-field">—</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Amazing Hospitality Group</td>
+        <td><input type="text" class="value-input" data-id="LAq3RBwfvJ07CDjLA03Z" placeholder="$"></td>
+        <td style="text-align:left;">Issuer Team</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Skygate Growth Strategies</td>
+        <td><input type="text" class="value-input" data-id="bP0hWoW5hV2ae6mLVLZp" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr class="bd-row">
+        <td style="text-align:left;">RAS Technologies</td>
+        <td><input type="text" class="value-input" data-id="7VvPSdUyrFl9caGcISZM" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Fincera Series 1</td>
+        <td><input type="text" class="value-input" data-id="lAG77KU7lPgP8493GJQC" placeholder="$"></td>
+        <td style="text-align:left;">Issuer Team</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Orlando Surf Park Fund I, LP</td>
+        <td><input type="text" class="value-input" data-id="LuJiEk7swQFH39k10XEz" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr class="bd-row">
+        <td style="text-align:left;">IPC - Reg D</td>
+        <td><input type="text" class="value-input" data-id="Rc2HLIgjqoNJwDvUlZ0i" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Teaching Mens Fashion</td>
+        <td><input type="text" class="value-input" data-id="kQVDEhI1zN4hKJyOfNWW" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr class="bd-row">
+        <td style="text-align:left;">Clever Capital Fund</td>
+        <td><input type="text" class="value-input" data-id="m46wiNn9Uvht1sqxVGhL" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Baymahni</td>
+        <td><input type="text" class="value-input" data-id="RM0racM0bT8M4dY5I2LU" placeholder="$"></td>
+        <td style="text-align:left;" class="empty-field">—</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="section-title">Notes</div>
+  <div class="caveat" style="margin-top: 0; border-top: none; padding-top: 0;">
+    <strong style="color: var(--text);">July at a Glance —</strong> MGL Leads/CPL match the fully-reviewed
+    Leads by Source donut below (source in MGL/FORM/"Meta Survey - Capital Raising", plus the
+    manually-resolved contact-level and booking-artifact cases from the 2026-08-03 review), created-date in
+    July, "Test Lead Axiskey" dummy record excluded -- 63 of 99 real leads. Discovery Calls = unique prospects
+    with a Discovery Call appointment dated in July, deduped across mirrored calendar bookings; excludes 7
+    events on Alex Zinny's Personal Calendar that were mis-tagged to a rep's own contact record instead of the
+    real prospect (2 of which were clearly internal meetings, not prospect calls). Deals Won = opportunities
+    marked won with a Date Won in July, matching the All-Time Won tab.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Funnel —</strong> Overall Leads → Won: 13.1% (13 of 99). Total Leads
+    matches the fully-reviewed Leads by Source donut (99, "Test Lead Axiskey" dummy record excluded). Bar
+    widths are for visual taper only, not exact area-proportional to volume. "Discovery Calls Booked" here is
+    total call volume (85 deduped calendar events, minus 2 clearly-internal meetings misfiled on the Discovery
+    Call calendar) -- not the same as the "Discovery Calls" tile above, which counts 63 unique prospects
+    reached (a lead getting 2 calls via reschedule counts once there, twice here). These are period counts,
+    not a strict single cohort: "Discovery Calls Booked" and "Won Deals" can include contacts whose lead
+    entered the pipeline in an earlier month, so these conversion rates are directional, not a precise
+    same-cohort conversion rate.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Deal Source Distribution —</strong> Same channel buckets as the
+    Overview tab's Signings by Source chart (SGL/Referral/MGL/Client/Other), "Referral - &lt;name&gt;"
+    variants folded into one Referral slice. Leads by Source falls back to the contact's own "Source" custom
+    field when the deal's own source is blank, treats any "AxisKey Discovery Call"-style value (a
+    booking-calendar artifact, not a real source) as MGL, and treats a bare referrer name (e.g. "Kirt", "Rob
+    Saracco") as Referral. Fully manually reviewed 2026-08-03 -- every lead resolved to a real channel except
+    "Test Lead Axiskey", a dummy test record excluded entirely, leaving 99 -- the same total used in the
+    funnel and MGL Leads tile above. Won Deals by Source updates live if you edit an Agreement Signed date on
+    the All-Time Won tab in a way that moves a deal into or out of July; Teaching Mens Fashion's source was
+    backfilled on the contact record 2026-08-03.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Won Deals — Month over Month —</strong> Same May/June/July won-deal
+    counts as the Overview tab's Signings bar chart, classified by Agreement Signed date where set, otherwise
+    Date Won; updates live from the same edits. % badge is growth vs. the prior month; May has none since
+    there's no April data in this system.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Won Deals —</strong> Blue-highlighted rows (RAS Technologies, Clever
+    Capital Fund, IPC - Reg D) are the deals confirmed as exclusively Broker Dealer -- a manual call, not
+    derived from the Capital Raiser Intent field: IPC's field was actually blank until confirmed manually,
+    while 5 other deals show "Broker Dealer" in that field but aren't exclusively BD engagements. Rows ordered
+    by Date Won, matching the All-Time Won tab. Value is a live input, typed directly into the browser -- it
+    auto-saves to this browser's localStorage on change, so it survives a normal refresh of this same file.
+    It will NOT carry over to a different browser, a different device, or if browsing data for this file's
+    location gets cleared, and file:// pages can behave inconsistently across browsers for local storage --
+    so for anything you can't afford to retype, copy the entered values back into this HTML file's
+    &lt;input value="..."&gt; attributes as a permanent backup.
+  </div>
+</section>
+</div>
+<div id="tab-august" class="tab-panel">
+<div style="font-size: 2rem; font-weight: 800; letter-spacing: 0.01em; color: var(--hero); margin-bottom: 22px;">
+  August 2026 Sales Report
+</div>
+<section>
+  <div class="section-title">Sales Updates</div>
+  <div style="background: var(--surface); border-radius: 14px; padding: 18px 22px; color: var(--text); font-size: 0.86rem; line-height: 1.6; margin-bottom: 28px;">
+    No single budget event this month -- Meta spend stayed steady in the $350-650/day range throughout August,
+    unlike July's mid-month jump. The story instead is scale: leads more than doubled from July (200 vs. 99,
+    +102%) as spend roughly doubled alongside it ($15,674.88 vs. $7,588.77, +107%) to sustain the volume. On a
+    new-business basis August closed 9 deals (4 further win(s) came from accounts we
+    already had and are excluded throughout -- see Notes), so New Lead &rarr; Won conversion landed at
+    4.3% against July's 13.1%: volume scaled up faster than the pipeline converted it.
+  </div>
+</section>
+
+<section>
+  <div class="section-title">August at a Glance</div>
+  <div class="tile-grid">
+    <div class="tile">
+      <div class="tile-label">Total Spend</div>
+      <div class="tile-value">$15,674.88</div>
+      <div class="tile-sub">vs Jul: <span class="hero-color">+106.6%</span></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">MGL Leads</div>
+      <div class="tile-value hero-color">157</div>
+      <div class="tile-sub">vs Jul: <span class="hero-color">+149.2%</span></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">MGL CPL</div>
+      <div class="tile-value">$99.84</div>
+      <div class="tile-sub">vs Jul: <span class="hero-color">-17.1%</span></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Discovery Calls</div>
+      <div class="tile-value">123</div>
+      <div class="tile-sub">vs Jul: +48.2%<sup>*</sup></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Deals Won</div>
+      <div class="tile-value hero-color">9</div>
+      <div class="tile-sub">vs Jul: <span class="hero-color">-25.0%</span></div>
+    </div>
+  </div>
+  <div style="font-size: 0.68rem; color: var(--text-mute); margin-top: 10px;">
+    * Not a like-for-like comparison -- see Notes below.
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Funnel — Leads to Won</div>
+  <div class="funnel-wrap">
+    <div class="funnel-bar" style="width:100%;max-width:560px;">
+      <span class="funnel-stage-label">New Leads (August)</span>
+      <span class="funnel-stage-value">208</span>
+    </div>
+    <div class="funnel-conv">↓ <span class="funnel-conv-pct">59.1%</span> (123 of 208) to Discovery Call</div>
+    <div class="funnel-bar" style="width:59%;max-width:358px;">
+      <span class="funnel-stage-label">Discovery Calls Booked</span>
+      <span class="funnel-stage-value">123</span>
+    </div>
+    <div class="funnel-conv">↓ <span class="funnel-conv-pct">36.6%</span> (45 of 123) to Strategy Call</div>
+    <div class="funnel-bar" style="width:22%;max-width:280px;">
+      <span class="funnel-stage-label">Strategy Calls Held</span>
+      <span class="funnel-stage-value">45</span>
+    </div>
+    <div class="funnel-conv">↓ <span class="funnel-conv-pct">20.0%</span> (9 of 45) to Won</div>
+    <div class="funnel-bar" style="width:8%;max-width:225px;">
+      <span class="funnel-stage-label">Won Deals</span>
+      <span class="funnel-stage-value">9</span>
+    </div>
+  </div>
+  <div style="display:flex;align-items:baseline;gap:10px;justify-content:center;margin-top:18px;">
+    <div style="font-size:1.8rem;font-weight:800;color:var(--hero);line-height:1;">4.3%</div>
+    <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);">New Lead &rarr; Won</div>
+  </div>
+  <div style="text-align:center;margin-top:6px;font-size:0.7rem;color:var(--text-mute);">vs. July's 13.1% (13 of 99) -- not directly comparable, see Notes</div>
+</section>
+
+<section>
+  <div class="section-title">Deal Source Distribution — August</div>
+  <div class="chart-row" style="grid-template-columns: 1fr 1fr;">
+    <div class="chart-card">
+      <div class="chart-card-title">Leads by Source</div>
+      <svg id="chartAugustLeadsSource" viewBox="0 0 240 200" width="100%"></svg>
+      <div class="legend legend-source" id="augustLeadsLegend"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Won Deals by Source</div>
+      <svg id="chartAugustWonSource" viewBox="0 0 240 200" width="100%"></svg>
+      <div class="legend legend-source" id="augustWonLegend"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Won Deals — Month over Month</div>
+  <div class="chart-row" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabelA0">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValueA0">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDeltaA0">won deals</div>
+    </div>
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabelA1">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValueA1">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDeltaA1">won deals</div>
+    </div>
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabelA2">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValueA2">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDeltaA2">won deals</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Won Deals — August</div>
+  <div class="tile-grid" style="margin-bottom: 16px;">
+    <div class="tile">
+      <div class="tile-label">Broker Dealer Deals</div>
+      <div class="tile-value hero-color">8 of 9</div>
+      <div class="tile-sub">Field value only, not manually confirmed</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Existing-Client Deals Excluded</div>
+      <div class="tile-value">4</div>
+      <div class="tile-sub">Not counted anywhere on this tab</div>
+    </div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="text-align:left;">Deal</th>
+        <th>Value</th>
+        <th style="text-align:left;">Capital Raiser Intent</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="text-align:left;">Hydrogel</td>
+        <td><input type="text" class="value-input" data-id="xv2Ir8uAnKPZ2gMi87dW" value="2500" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Teaching Mens Fashion</td>
+        <td><input type="text" class="value-input" data-id="kQVDEhI1zN4hKJyOfNWW" value="6000" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">GBMC - Growth I</td>
+        <td><input type="text" class="value-input" data-id="zbmJ39Yascx3WlUOeFkR" value="4000" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">StorageBlue</td>
+        <td><input type="text" class="value-input" data-id="zU6BlKIc78KP9ZIp4LLi" value="6000" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">ATS Systems, Inc</td>
+        <td><input type="text" class="value-input" data-id="22g4Ta7mINpk8z8ZfWFt" value="5640" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Avid Realty/Shapiro Capital - Reg A</td>
+        <td><input type="text" class="value-input" data-id="znLRCruhsdeDXzNwqBWu" value="6000" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Avid Realty/Shapiro Capital - Reg D</td>
+        <td><input type="text" class="value-input" data-id="PGioTPEnRPtokkjCe5aS" value="6000" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">26N Partners SPV I LLC</td>
+        <td><input type="text" class="value-input" data-id="AY60rZrr0ABzlY9IUhnq" value="2000" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">AI Force, Inc.</td>
+        <td><input type="text" class="value-input" data-id="fFmTPxuoCGcRhfHQAYw7" value="6500" placeholder="$"></td>
+        <td style="text-align:left;">Issuer Team</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="section-title">Notes</div>
+  <div class="caveat" style="margin-top: 0; border-top: none; padding-top: 0;">
+    <strong style="color: var(--text);">August at a Glance —</strong> Total Leads (200) is every opportunity
+    created in August across all pipelines, same population the live Overview tab's Leads chart already uses.
+    MGL Leads (157) and the Leads by Source donut below come from re-classifying all 200 of those opportunities
+    live via the GHL API, applying the same channel rules July's manual review used: source in MGL/FORM/"Meta
+    Survey - Capital Raising", any "AxisKey ... Discovery Call"-style value treated as a booking-calendar
+    artifact (MGL), then falling back to the contact's "mgl"/"client" tags and finally the contact-level
+    "Source" custom field when the deal's own source is blank. No dummy test-lead record turned up in August
+    (unlike July's one exclusion). Discovery Calls (123) is NOT the same methodology as July's -- it's read
+    live from GHL's "Date Entered" stage-tracking custom field (the same field the main dashboard's Funnel
+    Conversion card uses), which only started being populated reliably 2026-07-27. That means it fully covers
+    August but only the last few days of July, which is exactly why July needed a manual calendar-appointment
+    pull instead. Treat the "vs Jul" change on this tile as directional only, not a clean comparison. Deals Won
+    (9) counts NEW-BUSINESS deals only -- 4 August deal(s) whose contact carries GHL's
+    standard Contact Type = "customer" are excluded from every figure on this tab, since expansion revenue from
+    an account we already had wasn't produced by this month's funnel. Those deals still appear on the All-Time
+    Won tab, highlighted. Excluded from August: Signature Capital, Signature Capital - Accounting, SkyGate InvestorSecure, Skygate - Investor Ops Personnel . The Deals Won "vs Jul" change
+    compares new business against new business (12 in July once its own existing-client deal is
+    taken out, vs. the 13 total on the July tab).
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Funnel —</strong> Every stage here (New Leads, Discovery Calls,
+    Strategy Calls, Won) is now read from the same live field-movement source as the main dashboard's Funnel
+    Conversion card -- the "Date Entered" custom fields on each opportunity (FIELD_DATE_STAGES), not the
+    "opportunity created" count used for July's Total Leads (99) or for this tab's own "August at a Glance"
+    tile. New Leads (August) = 208 opportunities that entered the New Lead stage in August per that
+    field, which is why it differs from the 200-opportunities-created figure quoted elsewhere on this page --
+    the two are different populations by design. Strategy Call is a new stage, not shown on July's funnel,
+    because the Date-Entered fields only became reliable dashboard-wide on 2026-07-27 -- a July count would
+    have covered only the last few days of that month. Overall New Lead → Won: 4.3%
+    (9 of 208), vs. July's 13.1% (13 of 99) -- not a like-for-like comparison given the
+    methodology change, shown for rough orientation only. The Won bar counts new business only (4
+    existing-client deal(s) excluded, see the note above), and buckets each deal by its Agreement Signed date
+    where set, otherwise Date Won -- the same "effective date" the Month-over-Month cards and the Overview tab's
+    Signings chart use, so a deal lands in the same month everywhere on this page. Bar widths are for visual
+    taper only, not exact area-proportional to volume. Same caveat as July applies: these are period counts,
+    not a strict single cohort, so directional rather than a precise same-cohort conversion rate.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Deal Source Distribution —</strong> Same channel buckets as the
+    Overview tab's Signings by Source chart and July's donut (SGL/Referral/MGL/Client/Other), "Referral -
+    &lt;name&gt;" variants folded into one Referral slice. Leads by Source classification method described
+    above (August at a Glance note) -- done via a live API pull and the same rule-set July applied by hand,
+    not spot-checked contact-by-contact the way July's 2026-08-03 review was, so treat edge cases (the 13-lead
+    Other bucket: 5 are "Instantly" cold-email sourced, 8 have no source signal anywhere on the record) as
+    approximate. Won Deals by Source is fully live, same as July's.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Won Deals — Month over Month —</strong> June/July/August NEW-BUSINESS
+    won-deal counts (existing-client deals excluded, same as the rest of this tab -- so they can run below the
+    Overview tab's Signings chart, which counts every deal), classified by Agreement Signed date where set,
+    otherwise Date Won. % badge is growth vs. the prior month.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Won Deals —</strong> New-business deals only: any deal whose contact
+    has Contact Type = "customer" is left out of this table and every count on this tab
+    (4 excluded for August). No row is highlighted as "exclusively Broker Dealer" yet --
+    July's blue-highlight rows were a manual call, cross-checked deal by deal, and that review hasn't been
+    done for August. Capital Raiser Intent is shown as recorded on the field (8 of 9
+    August deals show "Broker Dealer," but per July's own finding that field alone overstates exclusively-BD
+    engagements -- July's notes flagged 5 of its own "Broker Dealer"-tagged deals as not actually exclusive BD
+    engagements). This table is generated live from the same filtered list the funnel counts (it was a frozen
+    hand-written block until 2026-09-08, by which point it had drifted one deal out of sync), ordered by
+    Agreement Signed date where set, otherwise Date Won. Value inputs are pre-filled from the live
+    monetaryValue on each opportunity but stay editable -- same browser-localStorage autosave as the July tab,
+    sharing the same storage key, so edits here follow the same "won't carry across browsers/devices" caveat
+    spelled out on the July tab.
+  </div>
+</section>
+</div>
+<div id="tab-september" class="tab-panel">
+<div style="font-size: 2rem; font-weight: 800; letter-spacing: 0.01em; color: var(--hero); margin-bottom: 22px;">
+  September 2026 Sales Report
+</div>
+<section>
+  <div class="section-title">Sales Updates</div>
+  <div style="background: var(--surface); border-radius: 14px; padding: 18px 22px; color: var(--text); font-size: 0.86rem; line-height: 1.6; margin-bottom: 28px;">
+    Spend held roughly flat in September ($15,023.04 vs. $15,674.88, -4.2%), but
+    lead volume softened: 163 opportunities created vs. 189 in August
+    (-13.8%), 146 of them MGL (-3.9%), with MGL cost per lead essentially flat at
+    $102.90 (-0.2%). The sharper drop was further down: Discovery Calls fell to 82 from
+    August's 123 (-33.3%), while Strategy Calls held up (40 vs. 45).
+    On a new-business basis September closed 8 deals (2 further win(s) came from
+    accounts we already had and are excluded throughout -- see Notes), putting New Lead &rarr; Won at
+    4.8% vs. August's 4.3%.
+  </div>
+</section>
+
+<section>
+  <div class="section-title">September at a Glance</div>
+  <div class="tile-grid">
+    <div class="tile">
+      <div class="tile-label">Total Spend</div>
+      <div class="tile-value">$15,023.04</div>
+      <div class="tile-sub">vs Aug: <span class="hero-color">-4.2%</span></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">MGL Leads</div>
+      <div class="tile-value hero-color">146</div>
+      <div class="tile-sub">vs Aug: <span class="hero-color">-3.9%</span><sup>*</sup></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">MGL CPL</div>
+      <div class="tile-value">$102.90</div>
+      <div class="tile-sub">vs Aug: <span class="hero-color">-0.2%</span><sup>*</sup></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Discovery Calls</div>
+      <div class="tile-value">82</div>
+      <div class="tile-sub">vs Aug: <span class="hero-color">-33.3%</span></div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Deals Won</div>
+      <div class="tile-value hero-color">8</div>
+      <div class="tile-sub">vs Aug: <span class="hero-color">-11.1%</span></div>
+    </div>
+  </div>
+  <div style="font-size: 0.68rem; color: var(--text-mute); margin-top: 10px;">
+    * Compared against a same-day re-pull of August (152 MGL), not the August tab's frozen 157 -- see Notes below.
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Funnel — Leads to Won</div>
+  <div class="funnel-wrap">
+    <div class="funnel-bar" style="width:100%;max-width:560px;">
+      <span class="funnel-stage-label">New Leads (September)</span>
+      <span class="funnel-stage-value">167</span>
+    </div>
+    <div class="funnel-conv">↓ <span class="funnel-conv-pct">49.1%</span> (82 of 167) to Discovery Call</div>
+    <div class="funnel-bar" style="width:49%;max-width:358px;">
+      <span class="funnel-stage-label">Discovery Calls Booked</span>
+      <span class="funnel-stage-value">82</span>
+    </div>
+    <div class="funnel-conv">↓ <span class="funnel-conv-pct">48.8%</span> (40 of 82) to Strategy Call</div>
+    <div class="funnel-bar" style="width:24%;max-width:280px;">
+      <span class="funnel-stage-label">Strategy Calls Held</span>
+      <span class="funnel-stage-value">40</span>
+    </div>
+    <div class="funnel-conv">↓ <span class="funnel-conv-pct">20.0%</span> (8 of 40) to Won</div>
+    <div class="funnel-bar" style="width:8%;max-width:225px;">
+      <span class="funnel-stage-label">Won Deals</span>
+      <span class="funnel-stage-value">8</span>
+    </div>
+  </div>
+  <div style="display:flex;align-items:baseline;gap:10px;justify-content:center;margin-top:18px;">
+    <div style="font-size:1.8rem;font-weight:800;color:var(--hero);line-height:1;">4.8%</div>
+    <div style="font-size:0.7rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-mute);">New Lead &rarr; Won</div>
+  </div>
+  <div style="text-align:center;margin-top:6px;font-size:0.7rem;color:var(--text-mute);">vs. August's 4.3% (9 of 208) -- same methodology, like-for-like</div>
+</section>
+
+<section>
+  <div class="section-title">Deal Source Distribution — September</div>
+  <div class="chart-row" style="grid-template-columns: 1fr 1fr;">
+    <div class="chart-card">
+      <div class="chart-card-title">Leads by Source</div>
+      <svg id="chartSeptemberLeadsSource" viewBox="0 0 240 200" width="100%"></svg>
+      <div class="legend legend-source" id="septemberLeadsLegend"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title">Won Deals by Source</div>
+      <svg id="chartSeptemberWonSource" viewBox="0 0 240 200" width="100%"></svg>
+      <div class="legend legend-source" id="septemberWonLegend"></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Won Deals — Month over Month</div>
+  <div class="chart-row" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabelS0">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValueS0">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDeltaS0">won deals</div>
+    </div>
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabelS1">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValueS1">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDeltaS1">won deals</div>
+    </div>
+    <div class="chart-card" style="text-align:center;">
+      <div class="chart-card-title" id="momLabelS2">—</div>
+      <div style="font-size:2.2rem;font-weight:800;color:var(--hero);line-height:1;margin:14px 0 6px;" id="momValueS2">—</div>
+      <div style="font-size:0.68rem;color:var(--text-mute);" id="momDeltaS2">won deals</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-title">Won Deals — September</div>
+  <div class="tile-grid" style="margin-bottom: 16px;">
+    <div class="tile">
+      <div class="tile-label">Broker Dealer Deals</div>
+      <div class="tile-value hero-color">2 of 8</div>
+      <div class="tile-sub">Field value only, not manually confirmed</div>
+    </div>
+    <div class="tile">
+      <div class="tile-label">Existing-Client Deals Excluded</div>
+      <div class="tile-value">2</div>
+      <div class="tile-sub">Not counted anywhere on this tab</div>
+    </div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="text-align:left;">Deal</th>
+        <th>Value</th>
+        <th style="text-align:left;">Capital Raiser Intent</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="text-align:left;">26N Invest Secure</td>
+        <td><input type="text" class="value-input" data-id="npfB7XfgXQmHfdOr2kvb" value="250" placeholder="$"></td>
+        <td style="text-align:left;" class="empty-field">—</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Hydrogel - Reg CF</td>
+        <td><input type="text" class="value-input" data-id="7hGqODpscsBHoDgS0gEo" value="2500" placeholder="$"></td>
+        <td style="text-align:left;" class="empty-field">—</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">USA Funding - BD</td>
+        <td><input type="text" class="value-input" data-id="C7DM2hai8Ao5PJhBj11y" value="0" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">James Di Bartolo</td>
+        <td><input type="text" class="value-input" data-id="aUASzB7p3xxnlQ0weKwe" value="500" placeholder="$"></td>
+        <td style="text-align:left;" class="empty-field">—</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">GuideTime</td>
+        <td><input type="text" class="value-input" data-id="o2B35trhQSk7ZQJDyqLE" value="6000" placeholder="$"></td>
+        <td style="text-align:left;">Broker Dealer</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Nitro Fund</td>
+        <td><input type="text" class="value-input" data-id="ucZSmU0Gs1TF2OKwhb9v" value="8200" placeholder="$"></td>
+        <td style="text-align:left;" class="empty-field">—</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Xura 506c</td>
+        <td><input type="text" class="value-input" data-id="WxWHeUhvfrYaoh86Zgc6" value="6000" placeholder="$"></td>
+        <td style="text-align:left;" class="empty-field">—</td>
+      </tr>
+      <tr>
+        <td style="text-align:left;">Iron Gate Capital Partners LLC</td>
+        <td><input type="text" class="value-input" data-id="hdW0418XFAeDGHsWTTN9" value="4000" placeholder="$"></td>
+        <td style="text-align:left;" class="empty-field">—</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="section-title">Notes</div>
+  <div class="caveat" style="margin-top: 0; border-top: none; padding-top: 0;">
+    <strong style="color: var(--text);">September at a Glance —</strong> Spend, Discovery Calls and Deals Won
+    are live. MGL Leads (146) and the Leads by Source donut come from a one-off live
+    classification of all 163 September-created opportunities (pulled 2026-10-28) using the
+    exact rule-set the August tab describes -- source in MGL/FORM/"Meta Survey - Capital Raising" or an
+    "AxisKey ... Discovery Call" booking artifact, then the contact's "mgl"/"client" tags, then the
+    contact-level "Source" custom field. Those figures are frozen. The same classifier re-run on August that
+    day returned 189 opportunities / 152 MGL rather than the August
+    tab's 200 / 157 -- roughly 11 August records have been deleted or merged in GHL since that tab was built
+    -- so the MGL and CPL "vs Aug" deltas compare against the re-pull to stay like-for-like. Deals Won
+    (8) counts NEW-BUSINESS deals only; 2 September deal(s) whose contact has
+    Contact Type = "customer" are excluded from every figure on this tab and still appear, highlighted, on
+    the All-Time Won tab. Excluded from September: Skygate Growth Strategies II LLC, Townbridge Income Strategy.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Funnel —</strong> Same live field-movement source as August's funnel
+    and the main dashboard's Funnel Conversion card (the "Date Entered" custom fields, FIELD_DATE_STAGES), so
+    unlike the July→August comparison this one IS like-for-like. New Leads (September) = 167
+    opportunities that entered the New Lead stage in September, a different population from the
+    163 opportunities created. Won buckets each deal by Agreement Signed date where set,
+    otherwise Date Won, same as the Month-over-Month cards and the Overview Signings chart. Period counts,
+    not a single cohort -- directional rather than a precise same-cohort conversion rate.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Deal Source Distribution —</strong> Same channel buckets as the
+    August and July donuts. Leads by Source is frozen from the 2026-10-28 classification (Other = 2
+    opportunities with no source signal anywhere on the record); Won Deals by Source is live.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Won Deals — Month over Month —</strong> July/August/September
+    NEW-BUSINESS won-deal counts (existing-client deals excluded, same as the rest of this tab -- so they can
+    run below the Overview tab's Signings chart, which counts every deal), by Agreement Signed date where
+    set, otherwise Date Won. % badge is growth vs. the prior month.
+  </div>
+  <div class="caveat">
+    <strong style="color: var(--text);">Won Deals —</strong> New-business deals only, generated live from
+    the same filtered list the funnel counts. No row is highlighted as "exclusively Broker Dealer" --
+    Capital Raiser Intent is shown as recorded (2 of 8 show "Broker Dealer"), and per
+    July's finding that field alone overstates exclusively-BD engagements. Value inputs are pre-filled from
+    each opportunity's live monetaryValue and stay editable, saved in this browser only (same storage as the
+    July and August tabs).
+  </div>
+</section>
+</div>
+<div id="tab-repfunnel" class="tab-panel">
+<div class="rf-page-title">Funnel per Rep</div>
+<section>
+  <div class="section-title">Stage conversion by owner</div>
+  <div class="subtitle" style="margin-bottom: 18px;">
+    Stage entries per rep from GHL's "Date Entered" custom fields -- the same
+    field-movement source as the main dashboard's Funnel Conversion card, just
+    split by owner. Compares the last complete month against the current
+    month-to-date, plus a run-rate projection of where the current month lands
+    if the present pace holds.
+  </div>
+
+  <div class="sim-controls" style="margin-bottom: 20px;">
+    <div class="control-group">
+      <span class="control-label">Rep</span>
+      <div class="segmented" id="rfRepToggle"></div>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Conversion basis</span>
+      <div class="segmented" id="rfModeToggle">
+        <button data-mode="step" class="active">Step over step</button>
+        <button data-mode="newlead">vs. New Lead</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="rfModeNote" class="subtitle" style="margin-bottom: 14px;"></div>
+
+  <div class="rf-scenario-bar">
+    <span class="rf-edited-badge" id="rfEditedBadge">What-if scenario — edited</span>
+    <button class="rf-reset-btn" id="rfResetBtn">Reset to run rate</button>
+    <span class="subtitle" style="margin: 0;">
+      The projected column's New Lead volume and every conversion rate are editable —
+      change one and the rest of the column recalculates.
+    </span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="text-align:left;">Stage</th>
+        <th id="rfHeadPrior">—</th>
+        <th id="rfHeadCurrent">—</th>
+        <th id="rfHeadProjected">—</th>
+      </tr>
+    </thead>
+    <tbody id="rfTableBody"></tbody>
+  </table>
+
+  <div class="chart-row" style="grid-template-columns: repeat(3, 1fr); margin-top: 22px;">
+    <div class="chart-card">
+      <div class="chart-card-title" id="rfFunnelTitlePrior">—</div>
+      <div class="rf-funnel" id="rfFunnelPrior"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title" id="rfFunnelTitleCurrent">—</div>
+      <div class="rf-funnel" id="rfFunnelCurrent"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-card-title" id="rfFunnelTitleProjected">—</div>
+      <div class="rf-funnel" id="rfFunnelProjected"></div>
+    </div>
+  </div>
+
+  <div class="caveat" id="rfProjectionNote"></div>
+  <div class="caveat">
+    <strong style="color: var(--text);">How to read this —</strong> Every stage is
+    tallied independently for the month its own Date-Entered field falls in; there
+    is no per-opportunity join back to New Lead. Because deals take real time to
+    move stage to stage, a month's later-stage counts are mostly fed by leads that
+    entered in earlier months, so these are period activity ratios rather than
+    true same-cohort conversion rates -- the same caveat that applies to the main
+    dashboard's Funnel Conversion card. The "All" selection counts every stage
+    entry including deals owned by someone outside the tracked rep list or left
+    unassigned, so the individual reps can sum to less than All. Per-rep months
+    often rest on single-digit counts, where one deal swings a percentage by tens
+    of points -- read movement at this granularity as noise unless it is large and
+    sustained.
+  </div>
+</section>
+</div>
+
+<div id="tooltip"></div>
+
+<script>
+const MONTHS = ["2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10"];
+const MONTH_LABEL = {"2026-05": "May", "2026-06": "Jun", "2026-07": "Jul", "2026-08": "Aug", "2026-09": "Sep", "2026-10": "Oct"};
+const CURRENT_MONTH_KEY = "2026-10";
+const LEADS_BY_MONTH = {"2026-05": 56, "2026-06": 80, "2026-07": 97, "2026-08": 189, "2026-09": 163, "2026-10": 176};
+const SPEND_BY_MONTH = {"2026-05": 1383.09, "2026-06": 5695.72, "2026-07": 7588.77, "2026-08": 15674.88, "2026-09": 15023.04, "2026-10": 16578.78};
+const WON_BY_MONTH = {"2026-10": 22, "2026-09": 11, "2026-08": 13, "2026-07": 12, "2026-06": 5, "2026-05": 3};
+const MGL_WON_BY_MONTH = {"2026-10": 14, "2026-09": 3, "2026-08": 5, "2026-06": 2, "2026-05": 1};
+// New-business won deals per month (existing clients out, effective-date
+// basis) -- what the August/September tabs' MoM cards count.
+const NEW_WON_BY_MONTH = {"2026-10": 22, "2026-09": 8, "2026-08": 9, "2026-07": 12, "2026-06": 5, "2026-05": 2};
+const ALLTIME = {
+  spend: 61944.28, won: 66, mglWon: 25,
+  cps: 938.5496969696969, cpsMgl: 2477.7712,
+};
+const WON = [{"id": "wlfvyXssby8Ls95WGeWq", "date_won": "2026-10-30", "name": "Rock Solid Capital", "value": 1750.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-10-29", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "ddQWf7439QQFIiQeN8oD", "date_won": "2026-10-30", "name": "Warrior Equity", "value": 6000.0, "owner": "Joncarlo Tamayo", "source": "MGL", "agreement_signed": "2026-10-30", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "zdfMVvIp2VMfvN7zMNCx", "date_won": "2026-10-27", "name": "Enchanted Garden", "value": 6000.0, "owner": "Joncarlo Tamayo", "source": "MGL", "agreement_signed": "2026-10-26", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "A0esLrNGtT4f2DLiXLvC", "date_won": "2026-10-27", "name": "Ryan Tongga", "value": 6000.0, "owner": "Joncarlo Tamayo", "source": "SGL", "agreement_signed": "2026-10-27", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "gHh9j7yM1s7nkePApiim", "date_won": "2026-10-27", "name": "True Alert", "value": 6000.0, "owner": "Joncarlo Tamayo", "source": "MGL", "agreement_signed": "2026-10-26", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "2cf7opEd5Z1ls5yDF5UP", "date_won": "2026-10-26", "name": "Powerchar - Reg D", "value": 6000.0, "owner": "Stormer Santana", "source": "Referral - Andy Corn", "agreement_signed": "2026-10-26", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "myeNeAwLU0kYCDylnMpZ", "date_won": "2026-10-22", "name": "Biohacked", "value": 31500.0, "owner": "Stormer Santana", "source": "Client", "agreement_signed": "2026-10-22", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "dKHzg52vk92rFkbTepZr", "date_won": "2026-10-22", "name": "ICON 1031", "value": 5640.0, "owner": "Stormer Santana", "source": "MGL", "agreement_signed": "2026-10-21", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "Y2EsV9K06l3PPy4rcMzL", "date_won": "2026-10-20", "name": "VBX - DIrect Invest 3", "value": 0.0, "owner": "Cole Lytle", "source": "MGL", "agreement_signed": "2026-10-16", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "gi9SOe67OyB1x7OiFcyB", "date_won": "2026-10-20", "name": "VBX - Direct Invest 2", "value": 0.0, "owner": "Cole Lytle", "source": "MGL", "agreement_signed": "2026-10-16", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "Gc5L5r09dw6w9bSpT1ZW", "date_won": "2026-10-20", "name": "VBX - Direct Invest 1", "value": 0.0, "owner": "Cole Lytle", "source": "MGL", "agreement_signed": "2026-10-16", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "WuhC3P1kalxRL3t1czqM", "date_won": "2026-10-18", "name": "South Plains Petroleum", "value": 5640.0, "owner": "Stormer Santana", "source": "MGL", "agreement_signed": "2026-10-16", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "sdCf01DG1Kr3Q4KRYRxf", "date_won": "2026-10-16", "name": "Flowtex Energy", "value": 5640.0, "owner": "Cole Lytle", "source": "MGL", "agreement_signed": "2026-10-12", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "DmWh1R2oYRrCGuCfFBJ4", "date_won": "2026-10-16", "name": "Keary Foster", "value": 750.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-10-16", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "59XN8FZy9z7y2IZPAtDv", "date_won": "2026-10-16", "name": "Vbx funds", "value": 5640.0, "owner": "Cole Lytle", "source": "MGL", "agreement_signed": "2026-10-16", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "wsRzjAhgKu90CEPz00Ls", "date_won": "2026-10-16", "name": "Nexgen Capital Partners - Advisory Services ", "value": 0.0, "owner": "Cole Lytle", "source": "MGL", "agreement_signed": "2026-10-13", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "XEdHS9c6KJExi2qef5jn", "date_won": "2026-10-15", "name": "Bridgefund", "value": 6000.0, "owner": "Joncarlo Tamayo", "source": "MGL", "agreement_signed": "2026-10-15", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "qIinqWvNYl93NE3BuMZv", "date_won": "2026-10-09", "name": "Xura Reg A", "value": 4500.0, "owner": "Stormer Santana", "source": "SGL", "agreement_signed": "2026-10-09", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "UPEroYnCCWCqMkqGSj3n", "date_won": "2026-10-08", "name": "Iron Gate Invest Secure", "value": 500.0, "owner": "Stormer Santana", "source": "Client", "agreement_signed": "2026-10-08", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "Y6MbQZY7WmMi2G39tPVq", "date_won": "2026-10-08", "name": "Rhodium45 R&D Corp", "value": 5640.0, "owner": "Cole Lytle", "source": "MGL", "agreement_signed": "2026-10-08", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "qzonaKAZ2VE590fHh6FV", "date_won": "2026-10-02", "name": "DP Value Partners", "value": 4000.0, "owner": "Joncarlo Tamayo", "source": "MGL", "agreement_signed": "2026-10-02", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "UOzfQpvKK7TPxy7ldOG0", "date_won": "2026-10-02", "name": "Cornerstone Summit Fund", "value": 4500.0, "owner": "Stormer Santana", "source": "SGL", "agreement_signed": "2026-10-01", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "kpr36cTNNzugm83ffcCF", "date_won": "2026-09-29", "name": "Skygate Growth Strategies II LLC", "value": 2500.0, "owner": "Stormer Santana", "source": "Client", "agreement_signed": "2026-09-29", "capital_raiser_intent": "Broker Dealer", "contact_type": "customer", "existing_client": true}, {"id": "hdW0418XFAeDGHsWTTN9", "date_won": "2026-09-25", "name": "Iron Gate Capital Partners LLC", "value": 4000.0, "owner": "Stormer Santana", "source": "Client", "agreement_signed": "2026-09-24", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "WxWHeUhvfrYaoh86Zgc6", "date_won": "2026-09-21", "name": "Xura 506c", "value": 6000.0, "owner": "Stormer Santana", "source": "SGL", "agreement_signed": "2026-09-18", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "ucZSmU0Gs1TF2OKwhb9v", "date_won": "2026-09-17", "name": "Nitro Fund", "value": 8200.0, "owner": "Stormer Santana", "source": "Referral - Henryk", "agreement_signed": "2026-09-17", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "o2B35trhQSk7ZQJDyqLE", "date_won": "2026-09-15", "name": "GuideTime", "value": 6000.0, "owner": "Joncarlo Tamayo", "source": "MGL", "agreement_signed": "2026-09-15", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "mmGyFT4U8WMFqeKRJE96", "date_won": "2026-09-15", "name": "Townbridge Income Strategy", "value": 3000.0, "owner": "Jose Antonio Uribe", "source": "", "agreement_signed": null, "capital_raiser_intent": null, "contact_type": "customer", "existing_client": true}, {"id": "C7DM2hai8Ao5PJhBj11y", "date_won": "2026-09-11", "name": "USA Funding - BD", "value": 0.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-09-11", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "aUASzB7p3xxnlQ0weKwe", "date_won": "2026-09-11", "name": "James Di Bartolo", "value": 500.0, "owner": "Stormer Santana", "source": "FORM", "agreement_signed": "2026-09-11", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "7hGqODpscsBHoDgS0gEo", "date_won": "2026-09-10", "name": "Hydrogel - Reg CF", "value": 2500.0, "owner": "Stormer Santana", "source": "Fundraising Discussion", "agreement_signed": "2026-09-10", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "npfB7XfgXQmHfdOr2kvb", "date_won": "2026-09-08", "name": "26N Invest Secure", "value": 250.0, "owner": "Stormer Santana", "source": "Meta Survey - Capital Raising", "agreement_signed": "2026-09-08", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "bVWyrIaWP0jIQbs8tqjy", "date_won": "2026-09-01", "name": "Skygate - Investor Ops Personnel ", "value": 4800.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-08-27", "capital_raiser_intent": null, "contact_type": "customer", "existing_client": true}, {"id": "klhJSCVj8ziA5T18miPw", "date_won": "2026-08-31", "name": "Signature Capital", "value": 0.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-08-28", "capital_raiser_intent": "Broker Dealer", "contact_type": "customer", "existing_client": true}, {"id": "hzugsmLnYOAPyj52Jimj", "date_won": "2026-08-25", "name": "SkyGate InvestorSecure", "value": 400.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-08-25", "capital_raiser_intent": null, "contact_type": "customer", "existing_client": true}, {"id": "AY60rZrr0ABzlY9IUhnq", "date_won": "2026-08-20", "name": "26N Partners SPV I LLC", "value": 2000.0, "owner": "Stormer Santana", "source": "Meta Survey - Capital Raising", "agreement_signed": "2026-08-18", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "fFmTPxuoCGcRhfHQAYw7", "date_won": "2026-08-20", "name": "AI Force, Inc.", "value": 6500.0, "owner": "Joncarlo Tamayo", "source": "MGL", "agreement_signed": "2026-08-20", "capital_raiser_intent": "Issuer Team", "contact_type": "lead", "existing_client": false}, {"id": "znLRCruhsdeDXzNwqBWu", "date_won": "2026-08-17", "name": "Avid Realty/Shapiro Capital - Reg A", "value": 6000.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-08-14", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "PGioTPEnRPtokkjCe5aS", "date_won": "2026-08-17", "name": "Avid Realty/Shapiro Capital - Reg D", "value": 6000.0, "owner": "Stormer Santana", "source": "MGL", "agreement_signed": "2026-08-14", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "hxHOoBEDITuwmeZEv1rg", "date_won": "2026-08-14", "name": "Signature Capital - Accounting", "value": 0.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-08-14", "capital_raiser_intent": null, "contact_type": "customer", "existing_client": true}, {"id": "22g4Ta7mINpk8z8ZfWFt", "date_won": "2026-08-12", "name": "ATS Systems, Inc", "value": 5640.0, "owner": "Stormer Santana", "source": "MGL", "agreement_signed": "2026-08-11", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "zbmJ39Yascx3WlUOeFkR", "date_won": "2026-08-07", "name": "GBMC - Growth I", "value": 4000.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-08-07", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "zU6BlKIc78KP9ZIp4LLi", "date_won": "2026-08-07", "name": "StorageBlue", "value": 6000.0, "owner": "Stormer Santana", "source": "Rob Saracco", "agreement_signed": "2026-08-07", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "kQVDEhI1zN4hKJyOfNWW", "date_won": "2026-08-06", "name": "Teaching Mens Fashion", "value": 6000.0, "owner": "Stormer Santana", "source": "Referral - Joe", "agreement_signed": "2026-08-06", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "xv2Ir8uAnKPZ2gMi87dW", "date_won": "2026-08-05", "name": "Hydrogel", "value": 2500.0, "owner": "Stormer Santana", "source": "MGL", "agreement_signed": "2026-08-04", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "RM0racM0bT8M4dY5I2LU", "date_won": "2026-08-02", "name": "Baymahni", "value": 6147.0, "owner": "Stormer Santana", "source": "Referral - Brandon LaPera", "agreement_signed": "2026-07-31", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "m46wiNn9Uvht1sqxVGhL", "date_won": "2026-07-31", "name": "Clever Capital Fund", "value": 0.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-07-31", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "LuJiEk7swQFH39k10XEz", "date_won": "2026-07-30", "name": "Orlando Surf Park Fund I, LP", "value": 0.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-07-28", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "Rc2HLIgjqoNJwDvUlZ0i", "date_won": "2026-07-28", "name": "IPC - Reg D", "value": 0.0, "owner": "Stormer Santana", "source": "", "agreement_signed": "2026-07-28", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "lAG77KU7lPgP8493GJQC", "date_won": "2026-07-28", "name": "Fincera Series 1", "value": 500.0, "owner": "Stormer Santana", "source": "David Allen", "agreement_signed": "2026-07-28", "capital_raiser_intent": "Issuer Team", "contact_type": "lead", "existing_client": false}, {"id": "LAq3RBwfvJ07CDjLA03Z", "date_won": "2026-07-23", "name": "Amazing Hospitality Group", "value": 6495.0, "owner": "Stormer Santana", "source": "Referral - Kirt", "agreement_signed": "2026-07-23", "capital_raiser_intent": "Issuer Team", "contact_type": "lead", "existing_client": false}, {"id": "bP0hWoW5hV2ae6mLVLZp", "date_won": "2026-07-21", "name": "Skygate Growth Strategies", "value": 6000.0, "owner": "Stormer Santana", "source": "client", "agreement_signed": "2026-07-21", "capital_raiser_intent": "Broker Dealer", "contact_type": "customer", "existing_client": true}, {"id": "gfWnkv7v3nnVvSLaYlbH", "date_won": "2026-07-17", "name": "Altitude Capital Partners GP LLC", "value": 5400.0, "owner": "Stormer Santana", "source": "Referral - Kirt", "agreement_signed": "2026-07-16", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "d4YbtFMqmCjOb5ZFM6yL", "date_won": "2026-07-16", "name": "Sierra Vale Capital", "value": 2000.0, "owner": "Stormer Santana", "source": "Referral - Diego", "agreement_signed": "2026-07-16", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "zYAbC9cELbUYk1b9lBGb", "date_won": "2026-07-15", "name": "Bob Weissman", "value": 0.0, "owner": "Stormer Santana", "source": "Referral", "agreement_signed": "2026-07-15", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "7VvPSdUyrFl9caGcISZM", "date_won": "2026-07-13", "name": "RAS Technologies", "value": 5000.0, "owner": "Stormer Santana", "source": "SGL", "agreement_signed": "2026-07-13", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "zhH9NbSez7WGLOjkfCCY", "date_won": "2026-07-09", "name": "Doug Beasley - BD", "value": 0.0, "owner": "Stormer Santana", "source": "client", "agreement_signed": "2026-07-09", "capital_raiser_intent": "Broker Dealer", "contact_type": "lead", "existing_client": false}, {"id": "YcOGlbw6O5lESe9AIsOs", "date_won": "2026-07-01", "name": "Ascent Capital Partners", "value": 0.0, "owner": "Stormer Santana", "source": "client", "agreement_signed": "2026-07-01", "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "NkTQc2R1ncjsWbegoNQR", "date_won": "2026-06-18", "name": "Jet World Championship", "value": 0.0, "owner": "Stormer Santana", "source": "Referral - Roy", "agreement_signed": null, "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "EYFAwsR8Oq2FhT49nh6N", "date_won": "2026-06-10", "name": "Careverse Ai", "value": 4500.0, "owner": "Stormer Santana", "source": "MGL", "agreement_signed": null, "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "2GEa0Bxt6DjnHHnBRojD", "date_won": "2026-06-10", "name": "Lowery Company", "value": 6000.0, "owner": "Stormer Santana", "source": "MGL", "agreement_signed": null, "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "pTND16qIVM3mkGIW4wOk", "date_won": "2026-06-08", "name": "Wellness District", "value": 1250.0, "owner": "Stormer Santana", "source": "SGL", "agreement_signed": null, "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "n9ZnfYhFUn0EugB35VHB", "date_won": "2026-06-02", "name": "James Pope", "value": 5000.0, "owner": "Stormer Santana", "source": "Referral - Mike Verdun", "agreement_signed": null, "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "RKdnREBdnzVYC6F5W9JC", "date_won": "2026-05-21", "name": "Doug Beasley", "value": 6565.0, "owner": "Stormer Santana", "source": "MGL", "agreement_signed": null, "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "VLbLJc49elKZmWmWuJVw", "date_won": "2026-05-15", "name": "Croxdale", "value": 6000.0, "owner": "Stormer Santana", "source": "SGL", "agreement_signed": null, "capital_raiser_intent": null, "contact_type": "lead", "existing_client": false}, {"id": "YS9mcv2LlbSZPHJ08rTM", "date_won": "2026-05-11", "name": "Marvyn Budd", "value": 5000.0, "owner": "Stormer Santana", "source": "Referral - Dennis Murphy", "agreement_signed": null, "capital_raiser_intent": null, "contact_type": "customer", "existing_client": true}];
+// Fixed anchors for the frozen July/August tabs -- always mean July/August
+// 2026, not a rolling "Nth month" -- so they stay correct no matter how many
+// months MONTHS grows to cover. JULY_LEADS_BY_SOURCE / AUGUST_LEADS_BY_SOURCE
+// (also frozen, no live equivalent for a per-lead source breakdown) are
+// declared in WHITEBOARD_LOGIC_SCRIPT alongside the rest of the donut-
+// drawing code.
+const JULY_KEY = "2026-07";
+const AUGUST_KEY = "2026-08";
+const SEPTEMBER_KEY = "2026-09";
+// Funnel per Rep tab (6e5) -- rep → month → stage → count, plus the month
+// labels / business-day run-rate multiplier that drive the projection column.
+const REP_FUNNEL = {"All": {"2026-09": {"New Lead": 167, "Discovery Call": 82, "Strategy Call": 40, "Proposal Sent": 53, "Agreement Signed": 9}, "2026-10": {"New Lead": 176, "Discovery Call": 83, "Strategy Call": 43, "Proposal Sent": 43, "Agreement Signed": 22}}, "Stormer": {"2026-09": {"New Lead": 43, "Discovery Call": 24, "Strategy Call": 17, "Proposal Sent": 16, "Agreement Signed": 8}, "2026-10": {"New Lead": 28, "Discovery Call": 12, "Strategy Call": 9, "Proposal Sent": 12, "Agreement Signed": 9}}, "Alex": {"2026-09": {"New Lead": 7, "Discovery Call": 7, "Strategy Call": 2, "Proposal Sent": 0, "Agreement Signed": 0}, "2026-10": {"New Lead": 0, "Discovery Call": 0, "Strategy Call": 0, "Proposal Sent": 0, "Agreement Signed": 0}}, "Joncarlo": {"2026-09": {"New Lead": 63, "Discovery Call": 21, "Strategy Call": 5, "Proposal Sent": 21, "Agreement Signed": 1}, "2026-10": {"New Lead": 79, "Discovery Call": 29, "Strategy Call": 8, "Proposal Sent": 8, "Agreement Signed": 6}}, "Cole": {"2026-09": {"New Lead": 51, "Discovery Call": 29, "Strategy Call": 15, "Proposal Sent": 15, "Agreement Signed": 0}, "2026-10": {"New Lead": 69, "Discovery Call": 42, "Strategy Call": 26, "Proposal Sent": 23, "Agreement Signed": 7}}};
+const REP_FUNNEL_META = {"reps": ["All", "Stormer", "Alex", "Joncarlo", "Cole"], "stages": ["New Lead", "Discovery Call", "Strategy Call", "Proposal Sent", "Agreement Signed"], "priorKey": "2026-09", "currentKey": "2026-10", "priorLabel": "September 2026", "currentLabel": "October 2026", "bdElapsed": 22, "bdTotal": 22, "factor": 1.0, "asOf": "2026-10-31"};
+</script>
+
+<script>
+function fmtMoney(n) {
+  return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+}
+function fmtMoney2(n) {
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+
+function effectiveDate(w) { return w.agreement_signed || w.date_won; }
+
+function computeSigningsByMonth(months = MONTHS) {
+  const counts = {};
+  months.forEach(m => { counts[m] = 0; });
+  WON.forEach(w => {
+    const m = effectiveDate(w).slice(0, 7);
+    if (m !== undefined && counts.hasOwnProperty(m)) counts[m] += 1;
+  });
+  return counts;
+}
+
+
+// ── Derived per-month + totals (all months, May through current) ──────────
+let derived = {}, totals = {}, recent = {}, recentMonths = [], BASIS = {}, BASIS_LABEL = {};
+
+function recomputeDerived() {
+  const signingsByMonth = computeSigningsByMonth();
+  const sourceByMonth = computeSourceByMonth();
+  derived = {};
+  MONTHS.forEach(m => {
+    const spend = SPEND_BY_MONTH[m] || 0;
+    const leads = LEADS_BY_MONTH[m] || 0;
+    const signings = signingsByMonth[m] || 0;
+    const mglSignings = (sourceByMonth[m] || {}).MGL || 0;
+    derived[m] = {
+      spend, leads, signings, mglSignings,
+      cpl:    leads > 0 ? spend / leads : 0,
+      cps:    signings > 0 ? spend / signings : 0,
+      cpsMgl: mglSignings > 0 ? spend / mglSignings : 0,
+      conv:   leads > 0 ? signings / leads : 0,
+    };
+  });
+
+  totals = MONTHS.reduce((acc, m) => {
+    acc.spend += derived[m].spend;
+    acc.leads += derived[m].leads;
+    acc.signings += derived[m].signings;
+    return acc;
+  }, { spend: 0, leads: 0, signings: 0 });
+  totals.cpl = totals.leads > 0 ? totals.spend / totals.leads : 0;
+  totals.cps = totals.signings > 0 ? totals.spend / totals.signings : 0;
+
+  // "Recent" = last 2 COMPLETE months (excludes the current in-progress
+  // month) -- used for the hero CPL and the simulator's default basis, same
+  // intent as this file's original Jun+Jul basis right after July closed.
+  const completeMonths = MONTHS.filter(m => m !== CURRENT_MONTH_KEY);
+  recentMonths = completeMonths.slice(-2);
+  recent = recentMonths.reduce((acc, m) => {
+    acc.spend += derived[m].spend;
+    acc.leads += derived[m].leads;
+    acc.signings += derived[m].signings;
+    return acc;
+  }, { spend: 0, leads: 0, signings: 0 });
+  recent.cpl = recent.leads > 0 ? recent.spend / recent.leads : 0;
+  recent.cps = recent.signings > 0 ? recent.spend / recent.signings : 0;
+  recent.conv = recent.leads > 0 ? recent.signings / recent.leads : 0;
+
+  BASIS = {};
+  BASIS_LABEL = {};
+  MONTHS.forEach(m => {
+    BASIS[m] = { cpl: derived[m].cpl, conv: derived[m].conv };
+    BASIS_LABEL[m] = MONTH_LABEL[m];
+  });
+  BASIS["recent"] = { cpl: recent.cpl, conv: recent.conv };
+  BASIS_LABEL["recent"] = recentMonths.map(m => MONTH_LABEL[m]).join("+");
+}
+
+// ── Render Overview (hero, tiles, table, bar charts) ───────────────────────
+function renderOverview() {
+  document.getElementById("heroCPL").textContent = fmtMoney2(recent.cpl);
+  document.getElementById("heroCPLLabel").textContent = `Blended cost per lead (${BASIS_LABEL["recent"]})`;
+  document.getElementById("heroNote").textContent =
+    `Based on ${recent.leads} leads from ${fmtMoney(recent.spend)} of spend across ${recentMonths.map(m => MONTH_LABEL[m]).join(" + ")}.`;
+  document.getElementById("totSpend").textContent = fmtMoney(totals.spend);
+  document.getElementById("totLeads").textContent = totals.leads.toLocaleString();
+  document.getElementById("totSignings").textContent = totals.signings.toLocaleString();
+  document.getElementById("totCPL").textContent = fmtMoney2(totals.cpl);
+  document.getElementById("totCPS").textContent = fmtMoney(ALLTIME.cps);
+  document.getElementById("totCPSFormula").textContent =
+    `${fmtMoney2(ALLTIME.spend)} spend since Apr 2026 ÷ ${ALLTIME.won} won`;
+  document.getElementById("totCPSMgl").textContent = fmtMoney(ALLTIME.cpsMgl);
+  document.getElementById("totCPSMglFormula").textContent =
+    `${fmtMoney2(ALLTIME.spend)} spend since Apr 2026 ÷ ${ALLTIME.mglWon} MGL won`;
+
+  const tbody = document.getElementById("kpiTableBody");
+  tbody.innerHTML = "";
+  MONTHS.forEach(m => {
+    const d = derived[m];
+    const tr = document.createElement("tr");
+    const label = MONTH_LABEL[m] + (m === CURRENT_MONTH_KEY ? " (MTD)" : "");
+    const cells = [
+      label,
+      fmtMoney2(d.spend),
+      d.leads.toLocaleString(),
+      d.signings.toLocaleString(),
+      d.leads > 0 ? fmtMoney2(d.cpl) : "—",
+      d.signings > 0 ? fmtMoney(d.cps) : "—",
+    ];
+    cells.forEach((c, i) => {
+      const td = document.createElement("td");
+      td.textContent = c;
+      if (i === 3) td.className = "hero-color";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  drawBarChart("chartSpend", "spend", v => fmtMoney(v), "Spend");
+  drawBarChart("chartLeads", "leads", v => v.toLocaleString(), "Leads");
+  drawBarChart("chartSignings", "signings", v => v.toLocaleString(), "Signings");
+  drawSourceChart();
+  drawCPSChart();
+
+  // July/August tabs' "Won Deals — Month over Month" mini-cards -- each a
+  // fixed 3-month historical view (not a rolling window) ending on that
+  // tab's own month, since each tab is specifically about one month.
+  // idSuffix "" -> momLabel0/1/2 (July tab, unchanged ids); "A" -> momLabelA0/
+  // A1/A2 (August tab); "S" -> momLabelS0/S1/S2 (September tab).
+  // countFor defaults to every signing (July's frozen tab predates the
+  // existing-client rule); August/September pass the new-business series so
+  // the cards match their own funnel and Deals Won tile.
+  const allSignings = m => derived[m].signings;
+  const newBusiness = m => NEW_WON_BY_MONTH[m] || 0;
+  function renderMoMCards(idSuffix, monthKeys, countFor = allSignings) {
+    monthKeys.forEach((m, i) => {
+      const val = countFor(m);
+      document.getElementById(`momLabel${idSuffix}${i}`).textContent = MONTH_LABEL[m];
+      document.getElementById(`momValue${idSuffix}${i}`).textContent = val;
+      const deltaEl = document.getElementById(`momDelta${idSuffix}${i}`);
+      const idx = MONTHS.indexOf(m);
+      const prevMonth = idx > 0 ? MONTHS[idx - 1] : null;
+      const prevVal = prevMonth ? countFor(prevMonth) : null;
+      if (prevVal) {
+        const pct = Math.round((val - prevVal) / prevVal * 100);
+        deltaEl.innerHTML = `won deals &middot; <span style="color:var(--hero);font-weight:700;">${pct >= 0 ? "+" : ""}${pct}%</span>`;
+      } else {
+        deltaEl.textContent = "won deals";
+      }
+    });
+  }
+  renderMoMCards("", MONTHS.slice(0, 3));
+  renderMoMCards("A", MONTHS.slice(1, 4), newBusiness);
+  renderMoMCards("S", MONTHS.slice(2, 5), newBusiness);
+
+  drawGenericDonut("chartJulyLeadsSource", "julyLeadsLegend", JULY_LEADS_BY_SOURCE, "leads");
+  drawGenericDonut("chartJulyWonSource", "julyWonLegend", computeSourceByMonth()[JULY_KEY] || {}, "won");
+  drawGenericDonut("chartAugustLeadsSource", "augustLeadsLegend", AUGUST_LEADS_BY_SOURCE, "leads");
+  drawGenericDonut("chartAugustWonSource", "augustWonLegend", computeSourceByMonth()[AUGUST_KEY] || {}, "won");
+  drawGenericDonut("chartSeptemberLeadsSource", "septemberLeadsLegend", SEPTEMBER_LEADS_BY_SOURCE, "leads");
+  drawGenericDonut("chartSeptemberWonSource", "septemberWonLegend", computeSourceByMonth()[SEPTEMBER_KEY] || {}, "won");
+}
+
+// ── Signings by source (stacked bar) ───────────────────────────────────────
+// "Referral - <name>" variants fold into one "Referral" channel — the
+// specific referrer isn't a channel distinction for this chart (still visible
+// per-deal on the All-Time Won tab).
+const CHANNELS = [
+  { key: "SGL",      label: "SGL",      color: "var(--series-1)" },
+  { key: "Referral", label: "Referral", color: "var(--series-2)" },
+  { key: "MGL",      label: "MGL",      color: "var(--series-3)" },
+  { key: "client",   label: "Client",   color: "var(--series-4)" },
+];
+const OTHER_CHANNEL = { key: "Other", label: "Other", color: "var(--series-other)" };
+
+// Bare referrer names (no "Referral - " prefix) that should still count as
+// Referral -- found reviewing July's Other bucket 2026-08-03 (e.g. Fincera
+// Series 1's source is literally "David Allen", a person, not a category).
+const REFERRAL_NAME_HINTS = ["kirt", "rob saracco", "david allen"];
+
+function sourceChannel(source) {
+  if (!source) return "Other";
+  if (source.startsWith("Referral")) return "Referral";
+  if (source === "SGL") return "SGL";
+  if (source === "MGL") return "MGL";
+  if (source === "client") return "client";
+  const lower = source.toLowerCase();
+  if (REFERRAL_NAME_HINTS.some(n => lower.includes(n))) return "Referral";
+  return "Other";
+}
+
+function computeSourceByMonth(months = MONTHS) {
+  const result = {};
+  months.forEach(m => { result[m] = {}; });
+  WON.forEach(w => {
+    const m = effectiveDate(w).slice(0, 7);
+    if (!m || !result.hasOwnProperty(m)) return;
+    const ch = sourceChannel(w.source);
+    result[m][ch] = (result[m][ch] || 0) + 1;
+  });
+  return result;
+}
+
+// legend built once — channel set/order is fixed regardless of data
+const sourceLegendEl = document.getElementById("sourceLegend");
+CHANNELS.concat([OTHER_CHANNEL]).forEach(ch => {
+  const item = document.createElement("span");
+  item.className = "legend-item";
+  const swatch = document.createElement("span");
+  swatch.className = "legend-swatch-rect";
+  swatch.style.background = ch.color;
+  const label = document.createElement("span");
+  label.textContent = ch.label;
+  item.appendChild(swatch);
+  item.appendChild(label);
+  sourceLegendEl.appendChild(item);
+});
+
+// month selector for the pie (built once; "All" combines May–Jul)
+let sourceMonthSelection = "All";
+const sourceMonthToggle = document.getElementById("sourceMonthToggle");
+["All", ...MONTHS].forEach(key => {
+  const btn = document.createElement("button");
+  btn.textContent = key === "All" ? "All" : MONTH_LABEL[key];
+  btn.style.fontSize = "0.68rem";
+  btn.style.padding = "6px 8px";
+  if (key === sourceMonthSelection) btn.classList.add("active");
+  btn.addEventListener("click", () => {
+    sourceMonthSelection = key;
+    [...sourceMonthToggle.children].forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    drawSourceChart();
+  });
+  sourceMonthToggle.appendChild(btn);
+});
+
+function polarPoint(cx, cy, r, angleDeg) {
+  const rad = (angleDeg - 90) * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function donutSlicePath(cx, cy, rOuter, rInner, startAngle, endAngle) {
+  const startOuter = polarPoint(cx, cy, rOuter, endAngle);
+  const endOuter = polarPoint(cx, cy, rOuter, startAngle);
+  const startInner = polarPoint(cx, cy, rInner, endAngle);
+  const endInner = polarPoint(cx, cy, rInner, startAngle);
+  const largeArc = endAngle - startAngle > 180 ? "1" : "0";
+  return `M${startOuter.x},${startOuter.y} A${rOuter},${rOuter} 0 ${largeArc} 0 ${endOuter.x},${endOuter.y} `
+    + `L${endInner.x},${endInner.y} A${rInner},${rInner} 0 ${largeArc} 1 ${startInner.x},${startInner.y} Z`;
+}
+
+// ── Generic donut (July/August Leads/Won-by-source) — reuses CHANNELS/donutSlicePath
+const JULY_LEADS_BY_SOURCE = { MGL: 63, SGL: 13, Referral: 16, client: 7, Other: 0 };
+const AUGUST_LEADS_BY_SOURCE = { MGL: 157, SGL: 18, Referral: 6, client: 6, Other: 13 };
+const SEPTEMBER_LEADS_BY_SOURCE = { MGL: 146, SGL: 8, Referral: 4, client: 3, Other: 2 };
+
+function buildChannelLegend(containerId) {
+  const box = document.getElementById(containerId);
+  CHANNELS.concat([OTHER_CHANNEL]).forEach(ch => {
+    const item = document.createElement("span");
+    item.className = "legend-item";
+    const swatch = document.createElement("span");
+    swatch.className = "legend-swatch-rect";
+    swatch.style.background = ch.color;
+    const label = document.createElement("span");
+    label.textContent = ch.label;
+    item.appendChild(swatch);
+    item.appendChild(label);
+    box.appendChild(item);
+  });
+}
+buildChannelLegend("julyLeadsLegend");
+buildChannelLegend("julyWonLegend");
+buildChannelLegend("augustLeadsLegend");
+buildChannelLegend("augustWonLegend");
+buildChannelLegend("septemberLeadsLegend");
+buildChannelLegend("septemberWonLegend");
+
+function drawGenericDonut(svgId, legendId, data, centerLabel) {
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = "";
+  const total = Object.values(data).reduce((a, b) => a + b, 0);
+  const cx = 120, cy = 92, rOuter = 66, rInner = 38;
+
+  const centerVal = el("text", { x: cx, y: cy - 2, "text-anchor": "middle", class: "bar-value" });
+  centerVal.style.fontSize = "20px";
+  centerVal.textContent = total;
+  const centerLbl = el("text", { x: cx, y: cy + 14, "text-anchor": "middle", class: "bar-month" });
+  centerLbl.textContent = centerLabel;
+
+  if (total === 0) {
+    svg.appendChild(el("circle", { cx, cy, r: rOuter, fill: "none", stroke: "var(--line)", "stroke-width": 1 }));
+    svg.appendChild(centerVal);
+    svg.appendChild(centerLbl);
+    return;
+  }
+
+  const orderedKeys = CHANNELS.map(c => c.key).concat([OTHER_CHANNEL.key]).filter(k => data[k] > 0);
+  let angle = 0;
+  const GAP_DEG = orderedKeys.length > 1 ? 2 : 0;
+
+  orderedKeys.forEach(key => {
+    const val = data[key];
+    const chDef = CHANNELS.find(c => c.key === key) || OTHER_CHANNEL;
+    const sweep = (val / total) * 360;
+    const startAngle = angle + GAP_DEG / 2;
+    const endAngle = angle + sweep - GAP_DEG / 2;
+
+    const mark = el("path", {
+      d: donutSlicePath(cx, cy, rOuter, rInner, startAngle, endAngle),
+      fill: chDef.color, class: "seg-mark"
+    });
+    svg.appendChild(mark);
+    mark.addEventListener("pointerenter", () => mark.classList.add("seg-hover"));
+    mark.addEventListener("pointerleave", () => { mark.classList.remove("seg-hover"); hideTooltip(); });
+    mark.addEventListener("pointermove", (e) => {
+      const pct = Math.round((val / total) * 100);
+      showTooltip(e.clientX, e.clientY, [[chDef.label, `${val} (${pct}%)`]]);
+    });
+    mark.style.cursor = "pointer";
+
+    angle += sweep;
+  });
+
+  svg.appendChild(centerVal);
+  svg.appendChild(centerLbl);
+}
+
+
+function drawSourceChart() {
+  const svg = document.getElementById("chartSourceBreakdown");
+  svg.innerHTML = "";
+  const byMonth = computeSourceByMonth();
+
+  let data;
+  if (sourceMonthSelection === "All") {
+    data = {};
+    MONTHS.forEach(m => {
+      Object.entries(byMonth[m]).forEach(([k, v]) => { data[k] = (data[k] || 0) + v; });
+    });
+  } else {
+    data = byMonth[sourceMonthSelection];
+  }
+
+  const total = Object.values(data).reduce((a, b) => a + b, 0);
+  const cx = 120, cy = 92, rOuter = 66, rInner = 38;
+
+  const centerVal = el("text", { x: cx, y: cy - 2, "text-anchor": "middle", class: "bar-value" });
+  centerVal.style.fontSize = "20px";
+  centerVal.textContent = total;
+  const centerLabel = el("text", { x: cx, y: cy + 14, "text-anchor": "middle", class: "bar-month" });
+  centerLabel.textContent = "signings";
+
+  if (total === 0) {
+    svg.appendChild(el("circle", { cx, cy, r: rOuter, fill: "none", stroke: "var(--line)", "stroke-width": 1 }));
+    svg.appendChild(centerVal);
+    svg.appendChild(centerLabel);
+    return;
+  }
+
+  const orderedKeys = CHANNELS.map(c => c.key).concat([OTHER_CHANNEL.key]).filter(k => data[k] > 0);
+  let angle = 0;
+  const GAP_DEG = orderedKeys.length > 1 ? 2 : 0;
+
+  orderedKeys.forEach(key => {
+    const val = data[key];
+    const chDef = CHANNELS.find(c => c.key === key) || OTHER_CHANNEL;
+    const sweep = (val / total) * 360;
+    const startAngle = angle + GAP_DEG / 2;
+    const endAngle = angle + sweep - GAP_DEG / 2;
+
+    const mark = el("path", {
+      d: donutSlicePath(cx, cy, rOuter, rInner, startAngle, endAngle),
+      fill: chDef.color, class: "seg-mark"
+    });
+    svg.appendChild(mark);
+
+    mark.addEventListener("pointerenter", () => mark.classList.add("seg-hover"));
+    mark.addEventListener("pointerleave", () => { mark.classList.remove("seg-hover"); hideTooltip(); });
+    mark.addEventListener("pointermove", (e) => {
+      const pct = Math.round((val / total) * 100);
+      showTooltip(e.clientX, e.clientY, [[chDef.label, `${val} (${pct}%)`]]);
+    });
+    mark.style.cursor = "pointer";
+
+    angle += sweep;
+  });
+
+  svg.appendChild(centerVal);
+  svg.appendChild(centerLabel);
+}
+
+
+// ── Tooltip helper ────────────────────────────────────────────────────────
+const tooltip = document.getElementById("tooltip");
+function showTooltip(x, y, rows) {
+  tooltip.innerHTML = "";
+  rows.forEach(([label, value]) => {
+    const row = document.createElement("div");
+    const vSpan = document.createElement("span");
+    vSpan.className = "tt-value";
+    vSpan.textContent = value;
+    const lSpan = document.createElement("span");
+    lSpan.className = "tt-label";
+    lSpan.textContent = " " + label;
+    row.appendChild(vSpan);
+    row.appendChild(lSpan);
+    tooltip.appendChild(row);
+  });
+  tooltip.style.display = "block";
+  tooltip.style.left = (x + 14) + "px";
+  tooltip.style.top = (y + 14) + "px";
+}
+function hideTooltip() { tooltip.style.display = "none"; }
+
+
+// ── Small-multiple bar chart builder ──────────────────────────────────────
+const SVG_NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs) {
+  const e = document.createElementNS(SVG_NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+
+function drawBarChart(svgId, key, formatter, tooltipLabel) {
+  const svg = document.getElementById(svgId);
+  svg.innerHTML = "";
+  const W = 240, H = 160, padTop = 14, padBottom = 26, padSide = 16;
+  const plotH = H - padTop - padBottom;
+  const maxVal = Math.max(...MONTHS.map(m => derived[m][key])) * 1.15;
+  const barW = 24, gap = (W - padSide * 2 - barW * MONTHS.length) / (MONTHS.length - 1 + 1.5);
+
+  // gridline (baseline)
+  svg.appendChild(el("line", {
+    x1: padSide, x2: W - padSide, y1: H - padBottom, y2: H - padBottom,
+    class: "gridline"
+  }));
+
+  MONTHS.forEach((m, i) => {
+    const val = derived[m][key];
+    const barH = (val / maxVal) * plotH;
+    const x = padSide + i * (barW + gap) + gap / 2;
+    const y = H - padBottom - barH;
+
+    const rect = el("rect", {
+      x, y, width: barW, height: barH, rx: 4,
+      class: "bar-rect"
+    });
+    svg.appendChild(rect);
+
+    // value label above bar
+    const label = el("text", {
+      x: x + barW / 2, y: y - 6, "text-anchor": "middle", class: "bar-value"
+    });
+    label.textContent = formatter(val);
+    svg.appendChild(label);
+
+    // month label
+    const monthLabel = el("text", {
+      x: x + barW / 2, y: H - 8, "text-anchor": "middle", class: "bar-month"
+    });
+    monthLabel.textContent = MONTH_LABEL[m];
+    svg.appendChild(monthLabel);
+
+    // hit target
+    const hit = el("rect", {
+      x: x - 4, y: padTop, width: barW + 8, height: H - padTop - padBottom,
+      class: "bar-hit"
+    });
+    hit.addEventListener("pointerenter", () => rect.classList.add("hover"));
+    hit.addEventListener("pointerleave", () => { rect.classList.remove("hover"); hideTooltip(); });
+    hit.addEventListener("pointermove", (e) => {
+      showTooltip(e.clientX, e.clientY, [[tooltipLabel, formatter(val)], ["Month", MONTH_LABEL[m]]]);
+    });
+    svg.appendChild(hit);
+  });
+}
+
+
+// ── Cost / Signing toggle chart — Overall vs. MGL ──────────────────────────
+// Toggled rather than shown together -- Overall and MGL sit on very
+// different scales, so sharing one axis flattens the Overall line. Each
+// selection gets its own y-axis. A month with 0 signings for a series is
+// skipped (cost/signing is undefined at zero) rather than plotted as 0.
+const CPS_SERIES = {
+  Overall: { key: "cps",    color: "var(--hero)",     signingsKey: "signings",    signingsLabel: "Signings" },
+  MGL:     { key: "cpsMgl", color: "var(--series-3)", signingsKey: "mglSignings", signingsLabel: "MGL signings" },
+};
+let cpsSelection = "Overall";
+
+const cpsToggle = document.getElementById("cpsToggle");
+Object.keys(CPS_SERIES).forEach(key => {
+  const btn = document.createElement("button");
+  btn.textContent = key;
+  if (key === cpsSelection) btn.classList.add("active");
+  btn.addEventListener("click", () => {
+    cpsSelection = key;
+    [...cpsToggle.children].forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    drawCPSChart();
+  });
+  cpsToggle.appendChild(btn);
+});
+
+function drawCPSChart() {
+  const svg = document.getElementById("chartCPS");
+  svg.innerHTML = "";
+  const { key, color, signingsKey, signingsLabel } = CPS_SERIES[cpsSelection];
+  const W = 720, H = 180, padT = 18, padB = 30, padL = 60, padR = 20;
+  const x = i => padL + (i / (MONTHS.length - 1)) * (W - padL - padR);
+  const yMax = Math.max(...MONTHS.map(m => derived[m][key]), 1) * 1.15;
+  const y = v => H - padB - (v / yMax) * (H - padT - padB);
+
+  const ticks = 4;
+  for (let i = 0; i <= ticks; i++) {
+    const val = (yMax / ticks) * i;
+    const ty = y(val);
+    svg.appendChild(el("line", { x1: padL, x2: W - padR, y1: ty, y2: ty, class: "gridline" }));
+    const t = el("text", { x: padL - 8, y: ty + 4, "text-anchor": "end", class: "bar-month" });
+    t.textContent = fmtMoney(val);
+    svg.appendChild(t);
+  }
+
+  MONTHS.forEach((m, i) => {
+    const t = el("text", { x: x(i), y: H - 8, "text-anchor": "middle", class: "bar-month" });
+    t.textContent = MONTH_LABEL[m] + (m === CURRENT_MONTH_KEY ? "*" : "");
+    svg.appendChild(t);
+  });
+
+  const pts = MONTHS.map((m, i) => ({ m, i, val: derived[m][key] })).filter(p => p.val > 0);
+  if (pts.length >= 2) {
+    const d = pts.map((p, idx) => `${idx === 0 ? "M" : "L"}${x(p.i)},${y(p.val)}`).join(" ");
+    svg.appendChild(el("path", { d, fill: "none", stroke: color, "stroke-width": 2, "stroke-linecap": "round" }));
+  }
+  pts.forEach(p => {
+    const cx = x(p.i), cy = y(p.val);
+    svg.appendChild(el("circle", { cx, cy, r: 6, fill: "var(--surface)" }));
+    svg.appendChild(el("circle", { cx, cy, r: 4, fill: color }));
+    const hit = el("circle", { cx, cy, r: 14, fill: "transparent", style: "cursor:pointer" });
+    hit.addEventListener("pointermove", (e) => {
+      showTooltip(e.clientX, e.clientY, [
+        [p.m === CURRENT_MONTH_KEY ? `${MONTH_LABEL[p.m]} (month to date)` : MONTH_LABEL[p.m], fmtMoney(p.val)],
+        [signingsLabel, derived[p.m][signingsKey]],
+      ]);
+    });
+    hit.addEventListener("pointerleave", hideTooltip);
+    svg.appendChild(hit);
+  });
+}
+
+// ── Initial compute + render (Overview depends on WON, so this must run
+// before the basis toggle reads BASIS's keys) ──────────────────────────────
+recomputeDerived();
+renderOverview();
+
+// ── Simulator ─────────────────────────────────────────────────────────────
+let currentBasis = "recent";
+
+const basisToggle = document.getElementById("basisToggle");
+Object.keys(BASIS).forEach(key => {
+  const btn = document.createElement("button");
+  btn.textContent = BASIS_LABEL[key];
+  if (key === currentBasis) btn.classList.add("active");
+  btn.addEventListener("click", () => {
+    currentBasis = key;
+    [...basisToggle.children].forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    updateSim();
+    drawSimChart();
+  });
+  basisToggle.appendChild(btn);
+});
+
+const spendSlider = document.getElementById("spendSlider");
+const spendValueEl = document.getElementById("spendValue");
+
+function updateSim() {
+  const spend = Number(spendSlider.value);
+  const basis = BASIS[currentBasis];
+  const leads = basis.cpl > 0 ? spend / basis.cpl : 0;
+  const signings = leads * basis.conv;
+  const cps = signings > 0 ? spend / signings : 0;
+
+  spendValueEl.textContent = fmtMoney(spend);
+  document.getElementById("predLeads").textContent = leads.toFixed(1);
+  document.getElementById("predSignings").textContent = signings.toFixed(1);
+  document.getElementById("predCPS").textContent = signings > 0 ? fmtMoney(cps) : "—";
+  document.getElementById("predCPLUsed").textContent = fmtMoney2(basis.cpl);
+  drawMarker();
+}
+
+// ── Simulator line chart ──────────────────────────────────────────────────
+const simSvg = document.getElementById("chartSim");
+const SIM_W = 800, SIM_H = 260, SIM_PAD_L = 50, SIM_PAD_R = 20, SIM_PAD_T = 16, SIM_PAD_B = 34;
+const SIM_MAX_SPEND = 15000;
+
+function simX(spend) {
+  return SIM_PAD_L + (spend / SIM_MAX_SPEND) * (SIM_W - SIM_PAD_L - SIM_PAD_R);
+}
+function simY(leads, maxLeads) {
+  return SIM_H - SIM_PAD_B - (leads / maxLeads) * (SIM_H - SIM_PAD_T - SIM_PAD_B);
+}
+
+let markerGroup = null;
+
+function drawSimChart() {
+  simSvg.innerHTML = "";
+  const basis = BASIS[currentBasis];
+  const maxLeadsOnLine = SIM_MAX_SPEND / basis.cpl;
+  const maxActualLeads = Math.max(...MONTHS.map(m => derived[m].leads));
+  const maxLeads = Math.max(maxLeadsOnLine, maxActualLeads) * 1.1;
+
+  // gridlines (y-axis ticks)
+  const ticks = 4;
+  for (let i = 0; i <= ticks; i++) {
+    const val = (maxLeads / ticks) * i;
+    const y = simY(val, maxLeads);
+    simSvg.appendChild(el("line", { x1: SIM_PAD_L, x2: SIM_W - SIM_PAD_R, y1: y, y2: y, class: "gridline" }));
+    const t = el("text", { x: SIM_PAD_L - 8, y: y + 4, "text-anchor": "end", class: "bar-month" });
+    t.textContent = Math.round(val);
+    simSvg.appendChild(t);
+  }
+  // x-axis label ticks
+  [0, 5000, 10000, 15000].forEach(v => {
+    const x = simX(v);
+    const t = el("text", { x, y: SIM_H - 10, "text-anchor": "middle", class: "bar-month" });
+    t.textContent = "$" + (v / 1000) + "K";
+    simSvg.appendChild(t);
+  });
+
+  // projected line
+  const x0 = simX(0), y0 = simY(0, maxLeads);
+  const x1 = simX(SIM_MAX_SPEND), y1 = simY(maxLeadsOnLine, maxLeads);
+  simSvg.appendChild(el("line", {
+    x1: x0, y1: y0, x2: x1, y2: y1,
+    stroke: "var(--hero)", "stroke-width": 2, "stroke-linecap": "round"
+  }));
+
+  // actual month dots
+  MONTHS.forEach(m => {
+    const d = derived[m];
+    const cx = simX(d.spend), cy = simY(d.leads, maxLeads);
+    const ring = el("circle", { cx, cy, r: 6, fill: "var(--surface)" });
+    const dot = el("circle", { cx, cy, r: 4, fill: "var(--text-mute)" });
+    simSvg.appendChild(ring);
+    simSvg.appendChild(dot);
+
+    const hit = el("circle", { cx, cy, r: 14, fill: "transparent", style: "cursor:pointer" });
+    hit.addEventListener("pointermove", (e) => {
+      showTooltip(e.clientX, e.clientY, [
+        [MONTH_LABEL[m], `${fmtMoney(d.spend)} spend`],
+        ["Leads", d.leads], ["Signings", d.signings], ["CPL", fmtMoney2(d.cpl)]
+      ]);
+    });
+    hit.addEventListener("pointerleave", hideTooltip);
+    simSvg.appendChild(hit);
+  });
+
+  // hover crosshair across whole chart
+  const hitArea = el("rect", {
+    x: SIM_PAD_L, y: SIM_PAD_T, width: SIM_W - SIM_PAD_L - SIM_PAD_R, height: SIM_H - SIM_PAD_T - SIM_PAD_B,
+    fill: "transparent", style: "cursor:crosshair"
+  });
+  hitArea.addEventListener("pointermove", (e) => {
+    const rect = simSvg.getBoundingClientRect();
+    const scaleX = SIM_W / rect.width;
+    const svgX = (e.clientX - rect.left) * scaleX;
+    const spend = Math.max(0, Math.min(SIM_MAX_SPEND, ((svgX - SIM_PAD_L) / (SIM_W - SIM_PAD_L - SIM_PAD_R)) * SIM_MAX_SPEND));
+    const leads = spend / basis.cpl;
+    showTooltip(e.clientX, e.clientY, [
+      [`at ${fmtMoney(spend)} spend`, `${leads.toFixed(1)} leads`]
+    ]);
+  });
+  hitArea.addEventListener("pointerleave", hideTooltip);
+  simSvg.appendChild(hitArea);
+
+  markerGroup = el("g", {});
+  simSvg.appendChild(markerGroup);
+  drawMarker();
+}
+
+function drawMarker() {
+  if (!markerGroup) return;
+  markerGroup.innerHTML = "";
+  const spend = Number(spendSlider.value);
+  const basis = BASIS[currentBasis];
+  const maxLeadsOnLine = SIM_MAX_SPEND / basis.cpl;
+  const maxActualLeads = Math.max(...MONTHS.map(m => derived[m].leads));
+  const maxLeads = Math.max(maxLeadsOnLine, maxActualLeads) * 1.1;
+  const leads = spend / basis.cpl;
+  const x = simX(spend), y = simY(leads, maxLeads);
+
+  markerGroup.appendChild(el("line", {
+    x1: x, x2: x, y1: SIM_PAD_T, y2: SIM_H - SIM_PAD_B,
+    stroke: "var(--text-mute)", "stroke-width": 1, "stroke-dasharray": "3,3"
+  }));
+  const ring = el("circle", { cx: x, cy: y, r: 7, fill: "var(--surface)" });
+  const dot = el("circle", { cx: x, cy: y, r: 5, fill: "var(--hero)" });
+  markerGroup.appendChild(ring);
+  markerGroup.appendChild(dot);
+}
+
+
+spendSlider.addEventListener("input", updateSim);
+
+updateSim();
+drawSimChart();
+
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab).classList.add("active");
+    // Funnel per Rep runs a lifted background while it's the visible panel --
+    // the only part of its legibility pass that can't live inside the panel's
+    // own selector, since the background belongs to <body>. Remove this line
+    // and the body.rf-theme rule together to revert it.
+    document.body.classList.toggle("rf-theme", btn.dataset.tab === "tab-repfunnel");
+  });
+});
+
+
+// ── All-time won list (live from GHL -- Agreement Signed / Capital Raiser
+// Intent are read-only display now; edit them on the opportunity in GHL) ──
+function renderWonTable() {
+  const wonBody = document.getElementById("wonTableBody");
+  wonBody.innerHTML = "";
+  WON.forEach(w => {
+    const tr = document.createElement("tr");
+    // Existing-client deals stay on this list (it's the full ledger) but are
+    // flagged, since they're excluded from the monthly Sales Report tabs.
+    if (w.existing_client) tr.className = "client-row";
+
+    const dateTd = document.createElement("td");
+    dateTd.textContent = w.date_won;
+    tr.appendChild(dateTd);
+
+    const nameTd = document.createElement("td");
+    nameTd.style.textAlign = "left";
+    nameTd.textContent = w.name;
+    if (w.existing_client) {
+      const pill = document.createElement("span");
+      pill.className = "client-pill";
+      pill.textContent = "Existing client";
+      pill.title = "Contact Type is \"customer\" in GHL — expansion revenue from an account we already had. Excluded from the monthly Sales Report funnels.";
+      nameTd.appendChild(pill);
+    }
+    tr.appendChild(nameTd);
+
+    const valueTd = document.createElement("td");
+    valueTd.textContent = fmtMoney2(w.value);
+    tr.appendChild(valueTd);
+
+    const ownerTd = document.createElement("td");
+    ownerTd.style.textAlign = "left";
+    ownerTd.textContent = w.owner;
+    tr.appendChild(ownerTd);
+
+    const sourceTd = document.createElement("td");
+    sourceTd.style.textAlign = "left";
+    if (w.source) {
+      sourceTd.textContent = w.source;
+    } else {
+      sourceTd.textContent = "—";
+      sourceTd.className = "empty-field";
+    }
+    tr.appendChild(sourceTd);
+
+    const agreementTd = document.createElement("td");
+    if (w.agreement_signed) {
+      agreementTd.textContent = w.agreement_signed;
+    } else {
+      agreementTd.textContent = w.date_won;
+      agreementTd.className = "empty-field";
+      agreementTd.title = "Not set on the opportunity in GHL yet -- showing Date Won as a default.";
+    }
+    tr.appendChild(agreementTd);
+
+    const intentTd = document.createElement("td");
+    intentTd.style.textAlign = "left";
+    if (w.capital_raiser_intent) {
+      intentTd.textContent = w.capital_raiser_intent;
+    } else {
+      intentTd.textContent = "—";
+      intentTd.className = "empty-field";
+    }
+    tr.appendChild(intentTd);
+
+    wonBody.appendChild(tr);
+  });
+}
+// ── Funnel per Rep tab ──────────────────────────────────────────────────────
+// Three columns over the same stage list: last complete month (final),
+// current month-to-date, and a business-day run-rate projection of the
+// current month. Percentages follow the selected basis -- either the stage
+// directly above (step over step) or that column's own New Lead count.
+let rfRep  = REP_FUNNEL_META.reps[0];
+let rfMode = "step";
+
+function rfProject(count) {
+  return Math.round(count * REP_FUNNEL_META.factor);
+}
+
+function rfCounts(rep, monthKey) {
+  return (REP_FUNNEL[rep] || {})[monthKey] || {};
+}
+
+function rfColumnValues(rep, which) {
+  const stages = REP_FUNNEL_META.stages;
+  const key = which === "prior" ? REP_FUNNEL_META.priorKey : REP_FUNNEL_META.currentKey;
+  const c = rfCounts(rep, key);
+  return stages.map(s => c[s] || 0);
+}
+
+// ── Projection as an editable scenario ──────────────────────────────────────
+// The projected column is a chained model: a New Lead volume, then one
+// conversion rate per stage. Left untouched, both default to the observed
+// run rate, so the column opens showing exactly the straight-line projection
+// and nothing else. Editing any input re-runs the chain below it.
+//
+// Edits are held per (rep × basis) because a percentage means a different
+// thing in each basis -- switching either selector shows that combination's
+// own scenario rather than silently reinterpreting the numbers. Nothing is
+// persisted: a reload always returns to the live run rate, so a stale
+// what-if can never be mistaken for real data later.
+const rfEdits = {};
+function rfEditState() {
+  const k = rfRep + "|" + rfMode;
+  if (!rfEdits[k]) {
+    rfEdits[k] = { base: null, pct: REP_FUNNEL_META.stages.map(() => null) };
+  }
+  return rfEdits[k];
+}
+
+function rfDefaultBase() {
+  const mtd = rfCounts(rfRep, REP_FUNNEL_META.currentKey);
+  return rfProject(mtd[REP_FUNNEL_META.stages[0]] || 0);
+}
+
+// The run-rate conversion for a stage == its month-to-date conversion, since
+// every stage is scaled by the same factor.
+function rfDefaultPct(i) {
+  const stages = REP_FUNNEL_META.stages;
+  const mtd = rfCounts(rfRep, REP_FUNNEL_META.currentKey);
+  const num = mtd[stages[i]] || 0;
+  const den = rfMode === "newlead" ? (mtd[stages[0]] || 0) : (mtd[stages[i - 1]] || 0);
+  return den ? num / den * 100 : null;   // null = undefined conversion
+}
+
+function rfProjectedValues() {
+  const stages = REP_FUNNEL_META.stages;
+  const st = rfEditState();
+  const mtd = rfCounts(rfRep, REP_FUNNEL_META.currentKey);
+  const out = [st.base !== null ? st.base : rfDefaultBase()];
+  for (let i = 1; i < stages.length; i++) {
+    const pct = st.pct[i] !== null ? st.pct[i] : rfDefaultPct(i);
+    if (pct === null) {
+      // No conversion is definable (the stage above has no month-to-date
+      // activity to divide by). Fall back to this stage's own run rate so
+      // real activity is never hidden behind a chained zero.
+      out.push(rfProject(mtd[stages[i]] || 0));
+    } else {
+      const den = rfMode === "newlead" ? out[0] : out[i - 1];
+      out.push(Math.round(den * pct / 100));
+    }
+  }
+  return out;
+}
+
+function rfIsEdited() {
+  const st = rfEditState();
+  return st.base !== null || st.pct.some(p => p !== null);
+}
+
+function rfDenominator(values, i) {
+  return rfMode === "newlead" ? values[0] : values[i - 1];
+}
+
+function rfPctText(values, i) {
+  if (i === 0) return "";
+  const denom = rfDenominator(values, i);
+  if (!denom || !values[i]) return "";
+  return ` (${Math.round(values[i] / denom * 100)}%)`;
+}
+
+function rfRenderTable() {
+  const stages = REP_FUNNEL_META.stages;
+  const cols = {
+    prior:     rfColumnValues(rfRep, "prior"),
+    current:   rfColumnValues(rfRep, "current"),
+    projected: rfProjectedValues(),
+  };
+  const st = rfEditState();
+  const body = document.getElementById("rfTableBody");
+  body.innerHTML = "";
+  stages.forEach((stage, i) => {
+    const tr = document.createElement("tr");
+
+    const stageTd = document.createElement("td");
+    stageTd.style.textAlign = "left";
+    stageTd.textContent = stage;
+    tr.appendChild(stageTd);
+
+    ["prior", "current"].forEach(which => {
+      const td = document.createElement("td");
+      const vals = cols[which];
+      if (!vals[i]) {
+        td.textContent = "\u2014";
+        td.className = "empty-field";
+      } else {
+        td.appendChild(rfTextSpan(vals[i], ""));
+        const pct = rfPctText(vals, i);
+        if (pct) td.appendChild(rfTextSpan(pct, "rf-pct"));
+      }
+      tr.appendChild(td);
+    });
+
+    // Projected cell: computed count + the editable driver behind it. Row 0
+    // takes the New Lead volume itself; every row below takes a conversion %.
+    const projTd = document.createElement("td");
+    projTd.className = "rf-proj";
+    const wrap = document.createElement("div");
+    wrap.className = "rf-cell-proj";
+
+    if (i === 0) {
+      const input = rfMakeInput(cols.projected[0], st.base !== null, v => {
+        st.base = v;
+        rfAfterEdit();
+      });
+      input.title = "Projected New Lead volume for the month. Defaults to the month-to-date run rate.";
+      wrap.appendChild(input);
+    } else {
+      const num = rfTextSpan(cols.projected[i], "rf-projnum");
+      wrap.appendChild(num);
+      const defPct = rfDefaultPct(i);
+      const shown = st.pct[i] !== null ? st.pct[i] : defPct;
+      if (shown === null) {
+        // Undefined conversion -- disabled input, count shown is the raw run
+        // rate for this stage (see rfProjectedValues).
+        const dis = document.createElement("input");
+        dis.className = "rf-input";
+        dis.type = "text";
+        dis.value = "\u2014";
+        dis.disabled = true;
+        dis.title = "No conversion can be computed: the stage above has no month-to-date activity to divide by. Showing this stage's own run rate instead.";
+        wrap.appendChild(dis);
+      } else {
+        const input = rfMakeInput(Math.round(shown * 10) / 10, st.pct[i] !== null, v => {
+          st.pct[i] = v;
+          rfAfterEdit();
+        });
+        input.title = rfMode === "newlead"
+          ? "% of projected New Leads that reach " + stage
+          : "% of projected " + stages[i - 1] + " that reach " + stage;
+        wrap.appendChild(input);
+      }
+      wrap.appendChild(rfTextSpan("%", "rf-input-suffix"));
+    }
+
+    projTd.appendChild(wrap);
+    tr.appendChild(projTd);
+    body.appendChild(tr);
+  });
+
+  document.getElementById("rfEditedBadge").className =
+    "rf-edited-badge" + (rfIsEdited() ? " rf-on" : "");
+
+  rfRenderFunnel("rfFunnelPrior", cols.prior, false);
+  rfRenderFunnel("rfFunnelCurrent", cols.current, false);
+  rfRenderFunnel("rfFunnelProjected", cols.projected, true);
+}
+
+function rfTextSpan(text, cls) {
+  const el = document.createElement("span");
+  if (cls) el.className = cls;
+  el.textContent = text;
+  return el;
+}
+
+function rfMakeInput(value, touched, onCommit) {
+  const input = document.createElement("input");
+  input.className = "rf-input" + (touched ? " rf-touched" : "");
+  input.type = "number";
+  input.min = "0";
+  input.step = "1";
+  input.value = value;
+  const commit = () => {
+    const raw = parseFloat(input.value);
+    // Blank or nonsense reverts to the run-rate default rather than sticking
+    // at zero, so clearing a field is an undo instead of a silent edit.
+    onCommit(isNaN(raw) || raw < 0 ? null : raw);
+  };
+  input.addEventListener("input", commit);
+  input.addEventListener("change", commit);
+  return input;
+}
+
+// Re-render, then put the caret back where it was -- rebuilding the tbody
+// destroys the focused input, which would otherwise eject the cursor after
+// every keystroke.
+function rfAfterEdit() {
+  const active = document.activeElement;
+  const cellIndex = active && active.closest ? rfInputIndex(active) : -1;
+  rfRenderTable();
+  if (cellIndex >= 0) {
+    const rows = document.getElementById("rfTableBody").querySelectorAll("tr");
+    if (rows[cellIndex]) {
+      const next = rows[cellIndex].querySelector("input:not([disabled])");
+      if (next) { next.focus(); next.select && next.select(); }
+    }
+  }
+}
+
+function rfInputIndex(el) {
+  const rows = Array.from(document.getElementById("rfTableBody").querySelectorAll("tr"));
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].contains(el)) return i;
+  }
+  return -1;
+}
+
+function rfRenderFunnel(elId, values, isProjected) {
+  const host = document.getElementById(elId);
+  host.innerHTML = "";
+  const max = Math.max(...values, 1);
+  REP_FUNNEL_META.stages.forEach((stage, i) => {
+    const row = document.createElement("div");
+    row.className = "rf-row";
+
+    const stageEl = document.createElement("div");
+    stageEl.className = "rf-stage";
+    stageEl.textContent = stage;
+    row.appendChild(stageEl);
+
+    const track = document.createElement("div");
+    track.className = "rf-track";
+    const fill = document.createElement("div");
+    fill.className = "rf-fill" + (isProjected ? " rf-projected" : "");
+    // Zero stays a hairline rather than vanishing, so the stage is still
+    // visibly present in the funnel instead of looking omitted.
+    fill.style.width = values[i] ? Math.max(values[i] / max * 100, 2) + "%" : "3px";
+    track.appendChild(fill);
+    row.appendChild(track);
+
+    const count = document.createElement("div");
+    count.className = "rf-count";
+    count.textContent = values[i];
+    row.appendChild(count);
+
+    host.appendChild(row);
+  });
+}
+
+function rfRenderNotes() {
+  document.getElementById("rfModeNote").textContent = rfMode === "newlead"
+    ? "Each row's % is of that column's own New Lead count -- how far a new lead gets through the pipeline."
+    : "Each row's % is of the stage directly above it in the same column -- the step-over-step drop-off.";
+
+  const m = REP_FUNNEL_META;
+  document.getElementById("rfProjectionNote").innerHTML =
+    '<strong style="color: var(--text);">Projection —</strong> ' + m.currentLabel +
+    " is projected by scaling each stage's month-to-date count by " +
+    "<strong>&times;" + m.factor.toFixed(2) + "</strong> (" + m.bdTotal +
+    " business days in the month &divide; " + m.bdElapsed + " elapsed as of " + m.asOf +
+    "). Business days rather than calendar days, since stage entries are overwhelmingly " +
+    "weekday events. Untouched, every conversion rate in that column equals the " +
+    "month-to-date rate, so the default projection is a straight-line run rate: it " +
+    "assumes the rest of the month looks like the part already observed, and is least " +
+    "reliable early in the month and on reps with low volume. The New Lead volume and " +
+    "each conversion rate are editable -- overwrite any of them to model a what-if and " +
+    "the stages below recalculate from it. Edits are held per rep and per conversion " +
+    "basis, are never saved, and reset to the live run rate on reload.";
+}
+
+function rfRender() {
+  const m = REP_FUNNEL_META;
+  document.getElementById("rfHeadPrior").textContent     = m.priorLabel + " (final)";
+  document.getElementById("rfHeadCurrent").textContent   = m.currentLabel + " (to date)";
+  document.getElementById("rfHeadProjected").textContent = m.currentLabel + " (projected)";
+  document.getElementById("rfFunnelTitlePrior").textContent     = m.priorLabel + " — final";
+  document.getElementById("rfFunnelTitleCurrent").textContent   = m.currentLabel + " — to date";
+  document.getElementById("rfFunnelTitleProjected").textContent = m.currentLabel + " — projected";
+  rfRenderTable();
+  rfRenderNotes();
+}
+
+(function rfInit() {
+  const repToggle = document.getElementById("rfRepToggle");
+  REP_FUNNEL_META.reps.forEach((rep, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = rep;
+    if (i === 0) btn.className = "active";
+    btn.addEventListener("click", () => {
+      rfRep = rep;
+      repToggle.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      rfRenderTable();
+    });
+    repToggle.appendChild(btn);
+  });
+
+  document.getElementById("rfModeToggle").querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      rfMode = btn.dataset.mode;
+      document.getElementById("rfModeToggle").querySelectorAll("button")
+        .forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      rfRenderTable();
+      rfRenderNotes();
+    });
+  });
+
+  // Clears only the current rep × basis scenario -- the one on screen.
+  document.getElementById("rfResetBtn").addEventListener("click", () => {
+    const st = rfEditState();
+    st.base = null;
+    st.pct = REP_FUNNEL_META.stages.map(() => null);
+    rfRenderTable();
+  });
+
+  rfRender();
+})();
+
+renderWonTable();
+const WON_CLIENT_COUNT = WON.filter(w => w.existing_client).length;
+document.getElementById("wonTotalAll").textContent    = WON.length;
+document.getElementById("wonTotalNew").textContent    = WON.length - WON_CLIENT_COUNT;
+document.getElementById("wonTotalClient").textContent = WON_CLIENT_COUNT;
+document.getElementById("wonTabBtn").textContent = `All-Time Won (${WON.length})`;
+
+// ── July Sales Report — Won Deals Value (editable, saved in this browser) ──
+const JULY_VALUE_STORAGE_KEY = "axiskey_kpi_whiteboard_july_won_values";
+function loadJulyValueOverrides() {
+  try { return JSON.parse(localStorage.getItem(JULY_VALUE_STORAGE_KEY) || "{}"); } catch (e) { return {}; }
+}
+function saveJulyValueOverride(id, val) {
+  const o = loadJulyValueOverrides();
+  o[id] = val;
+  localStorage.setItem(JULY_VALUE_STORAGE_KEY, JSON.stringify(o));
+}
+const savedJulyValues = loadJulyValueOverrides();
+document.querySelectorAll(".value-input").forEach(input => {
+  const id = input.dataset.id;
+  if (savedJulyValues[id] !== undefined) input.value = savedJulyValues[id];
+  input.addEventListener("change", () => saveJulyValueOverride(id, input.value));
+});
+
+
+// ── SDR Capacity & Lead Target Calculator ──────────────────────────────────
+(function () {
+  const $ = id => document.getElementById(id);
+
+  const sdrInputs = {
+    numSDRs: $("numSDRs"),
+    callsPerSDR: $("callsPerSDR"),
+    numManagers: $("numManagers"),
+    managerPct: $("managerPct"),
+    workingDays: $("workingDays"),
+    weeksPerMonth: $("weeksPerMonth"),
+    conversionRate: $("conversionRate"),
+  };
+
+  let scenario = "target"; // "target" (raw math) | "conservative" (floors capacity/day)
+
+  const scenarioToggle = $("scenarioToggle");
+  [
+    { key: "target", label: "Target (raw math)" },
+    { key: "conservative", label: "Conservative (rounds down capacity)" },
+  ].forEach(opt => {
+    const btn = document.createElement("button");
+    btn.textContent = opt.label;
+    if (opt.key === scenario) btn.classList.add("active");
+    btn.addEventListener("click", () => {
+      scenario = opt.key;
+      [...scenarioToggle.children].forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      sdrRecalc();
+    });
+    scenarioToggle.appendChild(btn);
+  });
+
+  $("preset4").addEventListener("click", () => {
+    sdrInputs.weeksPerMonth.value = 4;
+    $("preset4").classList.add("active");
+    $("preset433").classList.remove("active");
+    sdrRecalc();
+  });
+  $("preset433").addEventListener("click", () => {
+    sdrInputs.weeksPerMonth.value = 4.33;
+    $("preset433").classList.add("active");
+    $("preset4").classList.remove("active");
+    sdrRecalc();
+  });
+  sdrInputs.weeksPerMonth.addEventListener("input", () => {
+    const v = Number(sdrInputs.weeksPerMonth.value);
+    $("preset4").classList.toggle("active", v === 4);
+    $("preset433").classList.toggle("active", Math.abs(v - 4.33) < 0.001);
+  });
+
+  function fmtCalls(n) { return Math.round(n).toLocaleString("en-US"); }
+  function fmtContacts(n) { return Math.ceil(n).toLocaleString("en-US"); }
+  function fmtRaw(n, decimals = 2) { return n.toLocaleString("en-US", { maximumFractionDigits: decimals }); }
+
+  function sdrRecalc() {
+    const numSDRs = Math.max(0, Number(sdrInputs.numSDRs.value) || 0);
+    const callsPerSDRRaw = Math.max(0, Number(sdrInputs.callsPerSDR.value) || 0);
+    const numManagers = Math.max(0, Number(sdrInputs.numManagers.value) || 0);
+    const managerPct = Math.max(0, Number(sdrInputs.managerPct.value) || 0);
+    const workingDays = Math.max(1, Number(sdrInputs.workingDays.value) || 1);
+    const weeksPerMonth = Math.max(1, Number(sdrInputs.weeksPerMonth.value) || 1);
+    const conversionRate = Math.min(100, Math.max(0.01, Number(sdrInputs.conversionRate.value) || 0.01));
+
+    const perSDRDayRaw = callsPerSDRRaw;
+    const perSDRDay = scenario === "conservative" ? Math.floor(perSDRDayRaw) : perSDRDayRaw;
+
+    const managerDayRaw = numManagers * (callsPerSDRRaw * (managerPct / 100));
+    const managerDay = scenario === "conservative" ? Math.floor(managerDayRaw) : managerDayRaw;
+
+    const sdrRoleDay = numSDRs * perSDRDay;
+    const totalDay = sdrRoleDay + managerDay;
+    const totalWeek = totalDay * workingDays;
+    const totalMonth = totalWeek * weeksPerMonth;
+
+    const conv = conversionRate / 100;
+    const contactsMonth = totalMonth / conv;
+    const contactsWeek = totalWeek / conv;
+    const contactsDay = totalDay / conv;
+
+    const tbody = $("capacityBody");
+    tbody.innerHTML = "";
+
+    function addRow(label, day, week, month, isTotal, muted) {
+      const tr = document.createElement("tr");
+      if (isTotal) tr.className = "total-row";
+      const labelTd = document.createElement("td");
+      labelTd.textContent = label;
+      if (muted) labelTd.className = "role-label";
+      tr.appendChild(labelTd);
+      [day, week, month].forEach(v => {
+        const td = document.createElement("td");
+        td.className = "mono";
+        td.textContent = fmtCalls(v);
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    }
+
+    for (let i = 1; i <= numSDRs; i++) {
+      addRow(`SDR ${i}`, perSDRDay, perSDRDay * workingDays, perSDRDay * workingDays * weeksPerMonth, false, true);
+    }
+    if (numManagers > 0) {
+      addRow("Sales Manager (combined)", managerDay, managerDay * workingDays, managerDay * workingDays * weeksPerMonth, false, true);
+    }
+    addRow("Total calls", totalDay, totalWeek, totalMonth, true, false);
+
+    $("targetMonth").textContent = fmtContacts(contactsMonth);
+    $("targetWeek").textContent = fmtContacts(contactsWeek);
+    $("targetDay").textContent = fmtContacts(contactsDay);
+    $("assumedRate").textContent = conversionRate + "%";
+
+    const steps = $("stepsBody");
+    steps.innerHTML = "";
+    const lines = [
+      `Calls/day per SDR role = ${numSDRs} SDR${numSDRs === 1 ? "" : "s"} × ${fmtRaw(perSDRDay)} calls/day${scenario === "conservative" ? " (floored)" : ""} = <span class="step-val">${fmtRaw(sdrRoleDay)}</span>`,
+      `Calls/day for Sales Manager = ${numManagers} manager${numManagers === 1 ? "" : "s"} × (${fmtRaw(callsPerSDRRaw)} × ${managerPct}%)${scenario === "conservative" ? " (floored)" : ""} = <span class="step-val">${fmtRaw(managerDay)}</span>`,
+      `Total calls/day = ${fmtRaw(sdrRoleDay)} + ${fmtRaw(managerDay)} = <span class="step-val">${fmtRaw(totalDay)}</span> → rounded: <span class="step-result">${fmtCalls(totalDay)}</span>`,
+      `Total calls/week = ${fmtRaw(totalDay)} × ${workingDays} working days = <span class="step-val">${fmtRaw(totalWeek)}</span> → rounded: <span class="step-result">${fmtCalls(totalWeek)}</span>`,
+      `Total calls/month = ${fmtRaw(totalWeek)} × ${weeksPerMonth} weeks = <span class="step-val">${fmtRaw(totalMonth)}</span> → rounded: <span class="step-result">${fmtCalls(totalMonth)}</span>`,
+      `Required contacts/month = ${fmtRaw(totalMonth)} ÷ ${conversionRate}% = <span class="step-result">${fmtContacts(contactsMonth)}</span> (rounded up)`,
+      `Required contacts/week = ${fmtRaw(totalWeek)} ÷ ${conversionRate}% = <span class="step-result">${fmtContacts(contactsWeek)}</span> (rounded up)`,
+      `Required contacts/working day = ${fmtRaw(totalDay)} ÷ ${conversionRate}% = <span class="step-result">${fmtContacts(contactsDay)}</span> (rounded up)`,
+    ];
+    lines.forEach(line => {
+      const div = document.createElement("div");
+      div.className = "step-line";
+      div.innerHTML = line;
+      steps.appendChild(div);
+    });
+  }
+
+  Object.values(sdrInputs).forEach(inp => inp.addEventListener("input", sdrRecalc));
+  sdrRecalc();
+})();
+
+</script>
+
+</body>
+</html>
