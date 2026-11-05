@@ -5012,6 +5012,11 @@ WHITEBOARD_BODY_WON = """
       <div class="tile-value" id="wonTotalClient" style="color: var(--series-4);">—</div>
       <div class="tile-sub">Highlighted below, excluded from funnels</div>
     </div>
+    <div class="tile">
+      <div class="tile-label">Offerings</div>
+      <div class="tile-value" id="wonTotalOfferings">—</div>
+      <div class="tile-sub" id="wonOfferingsSub">Services Hired = Offering or Fully Vertical</div>
+    </div>
   </div>
   <div class="won-filters">
     <label>Month <select id="wonFilterMonth"></select></label>
@@ -7140,6 +7145,13 @@ function renderWonTable() {
     return true;
   });
   document.getElementById("wonFilterCount").textContent = `Showing ${shown.length} of ${WON.length}`;
+  // Offerings tile follows the Month filter only (not the Services filter):
+  // a deal counts when Services Hired includes Offering or Fully Vertical.
+  const inMonth = WON.filter(w => !fMonth || effectiveDate(w).slice(0, 7) === fMonth);
+  document.getElementById("wonTotalOfferings").textContent =
+    inMonth.filter(w => (w.service || []).some(sv => sv === "Offering" || sv === "Fully Vertical")).length;
+  document.getElementById("wonOfferingsSub").textContent =
+    (fMonth ? wonMonthSel.options[wonMonthSel.selectedIndex].text : "All months") + " \u00b7 Offering or Fully Vertical";
   shown.forEach(w => {
     const tr = document.createElement("tr");
     // Existing-client deals stay on this list (it's the full ledger) but are
