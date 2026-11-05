@@ -21,7 +21,8 @@ plain language before running commands.
   the HTML straight to Pages and never commits it, so the HTML files in this
   folder are a local preview only -- a change goes live only once the
   `build_dashboard.py` edit is pushed (then wait for the next run, or trigger
-  it: `gh workflow run build.yml`).
+  it from GitHub: Actions tab → "Build Dashboard" → "Run workflow"; the `gh`
+  CLI isn't installed on this machine).
 - CI does commit one thing back: daily snapshot files in data/snapshots/
   (bot commits "Auto-update daily snapshots"). They're data only, already
   used by the live site, and pushing requires having them, so always
@@ -29,6 +30,17 @@ plain language before running commands.
   `build_dashboard.py` locally -- a local run writes today's snapshot files,
   which collide with the ones CI already pushed (if that happens, delete the
   local untracked copies; CI's are canonical).
+
+## Every-run checks
+- **All Time Won source -- refresh on every run.** Each time
+  `build_dashboard.py` is run (or the dashboard is rebuilt/reviewed), re-read
+  the source of every all-time won deal fresh from GHL's opportunity-level
+  `source` field (the live `/opportunities/search` pull); never reuse a
+  cached or hand-typed value. Opportunity-level source is the chosen
+  standard for this dashboard (decided 2026-10-29). Won deals with a blank
+  source should be listed in the run summary so they can be fixed in GHL.
+  This is read-only: fixing a source means editing it in GHL, not writing it
+  back via the API.
 
 ## Standing safety rules (do not override without explicit instruction)
 1. READ-ONLY by default. Only GET requests. Never POST, PUT, PATCH, or
