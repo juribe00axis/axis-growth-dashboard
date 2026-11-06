@@ -1,9 +1,25 @@
 {
   "date": "2026-11-06",
   "opps": {
+    "QzJoDxC6glC1qHI8roPk": {
+      "stage": "Discovery Call",
+      "owner": "unassigned"
+    },
+    "pqvKJoZoUpvDP3wUGtTp": {
+      "stage": "Discovery call set",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "vEQt1P50YjGbISqbNnKw": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "op1J828Y854H0zXkrgtB": {
+      "stage": "Discovery call set",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
     "sxUyh6fHW6t3gaGHbwfu": {
       "stage": "Discovery call set",
-      "owner": "unassigned"
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "wVviuWWfIU06Sis0nuex": {
       "stage": "New Lead",
@@ -106,7 +122,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "HHJUkEwTd1lev5NDFWqh": {
-      "stage": "Discovery Call",
+      "stage": "Strategy Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "FPbudtADtK7IK4QYc08O": {
@@ -174,7 +190,7 @@
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "DICwk1wdJbvxX47rD5KX": {
-      "stage": "Discovery Call",
+      "stage": "Strategy Call",
       "owner": "mMOdJLXRcIhuzcgsHx3M"
     },
     "aJglFOhsm83xqEs6nxKv": {
