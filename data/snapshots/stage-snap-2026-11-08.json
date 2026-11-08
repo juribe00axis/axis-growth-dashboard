@@ -1,6 +1,10 @@
 {
   "date": "2026-11-08",
   "opps": {
+    "bHn9m5OvXNmf9ebLnYvd": {
+      "stage": "Discovery call set",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
     "B4e6XZXo8reRTK5thksD": {
       "stage": "Discovery call set",
       "owner": "kNU1jv4vrjjoehHNhlne"
@@ -90,7 +94,7 @@
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "cBUfxEHOmmUMS8yd6w2J": {
-      "stage": "Closing Call",
+      "stage": "Agreement Sent",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "OBF2lOaVgPw5Xnbsxpwp": {
@@ -519,10 +523,6 @@
     },
     "g1wc48DW2cSjgWpnN1cy": {
       "stage": "Discovery call set",
-      "owner": "Xeprp2GjJCDQFoJV4jqS"
-    },
-    "dg4apu3RhYF1JxceeakE": {
-      "stage": "Closing Call",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "JOH4fzWTl2zg62ri7SUM": {
@@ -1038,7 +1038,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "jRx7W4Wb0CPAPlZ5NIx5": {
-      "stage": "Closing Call",
+      "stage": "Agreement Sent",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "HDo3gHY1MpSFyiN57RQt": {

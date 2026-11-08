@@ -7,7 +7,7 @@
     },
     {
       "name": "Discovery call set",
-      "count": 99
+      "count": 100
     },
     {
       "name": "Discovery Call",
@@ -23,11 +23,11 @@
     },
     {
       "name": "Closing Call",
-      "count": 29
+      "count": 26
     },
     {
       "name": "Agreement Sent",
-      "count": 21
+      "count": 23
     },
     {
       "name": "Reactivation Queue - no call booked",
