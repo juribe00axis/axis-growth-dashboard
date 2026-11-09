@@ -734,6 +734,21 @@ mgl_14d = sum(
 )
 mgl_14d_pct = round(mgl_14d / total_14d * 100) if total_14d else 0
 
+# ── FROZEN weekly MGL results, from the week of Oct 12 2026 onward ───────────
+# Hard-typed on 2026-11-09 so these weeks survive the rolling windows (the
+# 8-week buckets and the 90-day Meta spend window both eventually drop old
+# weeks) and can't shift if GHL leads are later edited or deleted. Keyed by the
+# week's Monday. mgl = MGL leads created Mon-Sun; spend = Meta spend that week;
+# avg_mgl / cpl = the 4-week rolling point that ENDS on that week (as computed
+# when frozen). Weeks after the last entry here stay live. To freeze another
+# completed week, append it here with its final numbers.
+FROZEN_WEEKS = {
+    "2026-10-12": {"mgl": 34, "spend": 3527.53, "avg_mgl": 32.2, "cpl": 107.88},
+    "2026-10-19": {"mgl": 42, "spend": 3844.16, "avg_mgl": 35.2, "cpl": 101.68},
+    "2026-10-26": {"mgl": 35, "spend": 5032.69, "avg_mgl": 34.8, "cpl": 114.15},
+    "2026-11-02": {"mgl": 44, "spend": 4228.32, "avg_mgl": 38.8, "cpl": 107.31},
+}
+
 # Weekly MGL counts — last 8 weeks (Mon–Sun buckets)
 NUM_WEEKS  = 8
 week_buckets = []
@@ -752,12 +767,27 @@ for opp in mgl_opps:
             bucket["count"] += 1
             break
 
+for b in week_buckets:
+    _fz = FROZEN_WEEKS.get(b["start"].strftime("%Y-%m-%d"))
+    if _fz:
+        b["count"] = _fz["mgl"]
+
 mgl_week_labels = [b["label"] for b in week_buckets]
 mgl_week_data   = [b["count"] for b in week_buckets]
 
-# Last 4 weeks (incl. the current partial week) for the Monthly Volume popout's
+# Weeks since the first frozen one (incl. the current partial week) for the Monthly Volume popout's
 # weekly chart -- same Mon–Sun MGL buckets as above, just the tail end.
-weekly_mgl_4 = [{"label": b["label"], "count": b["count"]} for b in week_buckets[-4:]]
+# Since Oct 12 the popout's weekly chart is no longer "last 4": it keeps every
+# week from the first frozen one onward (frozen weeks, then live weeks after).
+_fz_labels = {}
+for _k in sorted(FROZEN_WEEKS):
+    _d = datetime.strptime(_k, "%Y-%m-%d")
+    _fz_labels[_k] = {"label": f"{_d.strftime('%b')} {_d.day}", "count": FROZEN_WEEKS[_k]["mgl"]}
+_fz_last = max(FROZEN_WEEKS)
+weekly_mgl_4 = list(_fz_labels.values()) + [
+    {"label": b["label"], "count": b["count"]}
+    for b in week_buckets if b["start"].strftime("%Y-%m-%d") > _fz_last
+]
 
 print(f"  MGL in last 14 days: {mgl_14d} of {total_14d} ({mgl_14d_pct}%)")
 print(f"  Weekly MGL (last 8 wks): {mgl_week_data}")
@@ -1179,12 +1209,15 @@ mktg_max_date = mktg_daily[-1]["date"]
 ROLL_WEEKS = 4
 _roll_weeks = []
 _wk = week_start.date() - timedelta(weeks=1)
-while _wk >= meta_start:
+_roll_floor = min(meta_start, datetime.strptime(min(FROZEN_WEEKS), "%Y-%m-%d").date())
+while _wk >= _roll_floor:
     _days = [(_wk + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+    _fz = FROZEN_WEEKS.get(_wk.strftime("%Y-%m-%d"))   # frozen weeks win over live data
     _roll_weeks.insert(0, {
         "label": f"{_wk.strftime('%b')} {_wk.day}",
-        "mgl":   sum(mgl_by_date.get(d, 0) for d in _days),
-        "spend": sum(float(_meta_by_date.get(d, {}).get("spend", 0)) for d in _days),
+        "mgl":   _fz["mgl"] if _fz else sum(mgl_by_date.get(d, 0) for d in _days),
+        "spend": _fz["spend"] if _fz else sum(float(_meta_by_date.get(d, {}).get("spend", 0)) for d in _days),
+        "frozen": _fz,
     })
     _wk -= timedelta(weeks=1)
 
@@ -1201,6 +1234,9 @@ for _i, _w in enumerate(_roll_weeks):
         "avg_mgl":  round(_mgl / ROLL_WEEKS, 1) if _full else None,
         "cpl":      round(_spend / _mgl, 2) if _full and _mgl else None,
     })
+    if _w["frozen"]:   # hard-typed rolling point, independent of older weeks
+        rolling_mgl[-1]["avg_mgl"] = _w["frozen"]["avg_mgl"]
+        rolling_mgl[-1]["cpl"]     = _w["frozen"]["cpl"]
 print(f"  4-wk rolling MGL/CPL: {[(r['label'], r['avg_mgl'], r['cpl']) for r in rolling_mgl if r['avg_mgl'] is not None]}")
 
 # ── MGL CPL hero: computed client-side from MKTG_DAILY (see setCplPeriod JS) ──
@@ -2232,7 +2268,7 @@ HEAD = """<!DOCTYPE html>
     }
     .wow-row {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
       gap: 8px;
       margin-top: 14px;
     }
@@ -2440,7 +2476,7 @@ HERO = f"""
       <div style="border-right:1px solid var(--line);padding:0 24px;padding-top:2px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
           <div style="display:flex;align-items:center;gap:6px;">
-            <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume{_info_icon("Compact view shows the last 3 months (2 months ago, last month, current month) of all new leads by created date, excluding any lead tagged 'instantly' (Instantly.ai cold-email leads). The expand icon opens a separate popout: MGL-source leads only, every month back to May 2026, plus the last 4 weeks (Mon–Sun). The MGL badge is always scoped to the current month, not a rolling window.")}</div>
+            <div style="font-size:0.56rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-mute);">Monthly Volume{_info_icon("Compact view shows the last 3 months (2 months ago, last month, current month) of all new leads by created date, excluding any lead tagged 'instantly' (Instantly.ai cold-email leads). The expand icon opens a separate popout: MGL-source leads only, every month back to May 2026, plus every week since Oct 12 (Mon–Sun). The MGL badge is always scoped to the current month, not a rolling window.")}</div>
             <button class="expand-icon-btn" onclick="openMonthlyModal()" title="View full month-by-month history" aria-label="Expand Monthly Volume">⤢</button>
           </div>
           <span class="mgl-pill" style="font-size:0.56rem;padding:2px 7px;white-space:nowrap;">MGL&nbsp;{cur_month_mgl}&nbsp;·&nbsp;{cur_month_mgl_pct}%&nbsp;·&nbsp;{cur_month_label}</span>
@@ -2738,7 +2774,7 @@ GRANOLA_SECTION = f"""
 GLOSSARY_TERMS = [
     ("This Week / Last Week", "New leads (opportunities created), Monday-Sunday, excluding any lead tagged 'instantly' (Instantly.ai cold-email tool). WoW badge compares this week's count to last week's."),
     ("MGL CPL", "Meta ad spend divided by MGL-source leads for the selected period (7D/30D/90D toggle). The delta badge compares to the immediately preceding period of equal length; hidden for 90D since spend history only goes back 90 days. Lower is better."),
-    ("Monthly Volume (bar chart)", "Only the last 3 months (2 months ago, last month, current month) by lead created date, across all pipelines/statuses, excluding leads tagged 'instantly' (Instantly.ai cold-email tool). The MGL badge next to it shows the current month's MGL count and % of that month's total leads shown in this chart (not a rolling window). The expand icon opens a separate popout showing MGL-source leads only -- by month back to May 2026, and by week (Mon–Sun) for the last 4 weeks -- a different slice of data than this compact chart, not the same data zoomed out."),
+    ("Monthly Volume (bar chart)", "Only the last 3 months (2 months ago, last month, current month) by lead created date, across all pipelines/statuses, excluding leads tagged 'instantly' (Instantly.ai cold-email tool). The MGL badge next to it shows the current month's MGL count and % of that month's total leads shown in this chart (not a rolling window). The expand icon opens a separate popout showing MGL-source leads only -- by month back to May 2026, and by week (Mon–Sun) since Oct 12 (weeks from Oct 12 onward are hard-typed so they never roll off) -- a different slice of data than this compact chart, not the same data zoomed out."),
     ("Daily Performance table (Spend/Clicks/CPC/Leads/Conv%/CPL)", "Meta ad spend, link clicks, cost-per-click, MGL leads, lead conversion rate, and cost per MGL lead, one row per day. Excludes today (spend/clicks are incomplete until the day closes out). Use the date-range picker to view any custom window back to 90 days."),
     ("Lead Sources — MGL / SGL / Other", "Essentially all-time within the Sales Pipeline: every opportunity ever won or lost, plus any currently open at New Lead stage or beyond. MGL = Marketing Generated Lead, SGL = Sales Generated Lead."),
     ("Call Quality (Great Fit / Potential / Poor Fit / Unscored)", "Quality score set on the contact record, shown for opportunities at Discovery Call stage or beyond, broken out by source (MGL/SGL/Other)."),
@@ -2789,7 +2825,7 @@ MONTHLY_MODAL = """
           <div style="position:relative;height:340px;"><canvas id="chartMonthlyFull"></canvas></div>
         </div>
         <div class="mgl-modal-panel weekly">
-          <div class="mgl-modal-label"><span class="mgl-modal-tag weekly">Weekly</span>Last 4 weeks · Mon–Sun · dashed = this week</div>
+          <div class="mgl-modal-label"><span class="mgl-modal-tag weekly">Weekly</span>Since Oct 12 · Mon–Sun · dashed = this week</div>
           <div style="position:relative;height:262px;"><canvas id="chartWeeklyMgl"></canvas></div>
           <div id="weeklyWowRow" class="wow-row"></div>
         </div>
