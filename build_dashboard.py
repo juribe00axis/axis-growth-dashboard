@@ -120,6 +120,38 @@ week_start = monday.replace(hour=0,  minute=0,  second=0,  microsecond=0)
 week_end   = today.replace( hour=23, minute=59, second=59, microsecond=0)
 day_14_ago = (today - timedelta(days=13)).replace(hour=0, minute=0, second=0, microsecond=0)
 
+# ── Always-fresh pages (added 2026-11-12) ────────────────────────────────────
+# GitHub Pages lets browsers reuse a saved copy of the page, so an open tab or
+# a normal reload could keep showing an old build until a hard refresh. Every
+# generated page now carries its build stamp and, on load, quietly re-fetches
+# itself bypassing the browser cache; if the server has a NEWER build it
+# reloads once at ?v=<that build>, which the browser can't have cached. The
+# ?v= check stops it from looping if the CDN is briefly behind. On a local
+# file:// preview the fetch simply fails and nothing happens.
+BUILD_ID = today.strftime("%Y%m%d%H%M%S")
+FRESHNESS_SCRIPT = """<script data-build="__BUILD__">
+(function () {
+  var mine = document.currentScript.dataset.build;
+  if (!/^https?:$/.test(location.protocol) || !window.fetch) return;
+  fetch(location.pathname, { cache: "no-store" })
+    .then(function (r) { return r.ok ? r.text() : ""; })
+    .then(function (t) {
+      var m = t.match(/<script data-build="(\\d+)">/);
+      if (!m || !(m[1] > mine)) return;
+      var u = new URL(location.href);
+      if (u.searchParams.get("v") === m[1]) return;
+      u.searchParams.set("v", m[1]);
+      location.replace(u.toString());
+    })
+    .catch(function () {});
+})();
+</script>
+""".replace("__BUILD__", BUILD_ID)
+
+def _with_freshness(doc):
+    """Inject the always-fresh script just before </head>."""
+    return doc.replace("</head>", FRESHNESS_SCRIPT + "</head>", 1)
+
 
 # ─── 4. FETCH PIPELINES ──────────────────────────────────────────────────────
 # Pull pipeline and stage metadata first so every opportunity record can be
@@ -4137,7 +4169,7 @@ RAW_DATA_LOGIC_SCRIPT = """
 
 raw_data_html = RAW_DATA_HEAD + RAW_DATA_HEADER + RAW_DATA_BODY + RAW_DATA_SCRIPT + RAW_DATA_LOGIC_SCRIPT
 raw_data_path = Path(__file__).parent / "axis-growth-data.html"
-raw_data_path.write_text(raw_data_html, encoding="utf-8")
+raw_data_path.write_text(_with_freshness(raw_data_html), encoding="utf-8")
 print(f"Raw data page written → {raw_data_path} ({len(field_movement_events)} field movements, {len(appointment_events)} appointments, {len(won_deals_events)} won deals)")
 
 
@@ -7775,7 +7807,7 @@ whiteboard_html = (
     + WHITEBOARD_DATA_SCRIPT + WHITEBOARD_LOGIC_SCRIPT
 )
 whiteboard_path = Path(__file__).parent / "kpi_whiteboard.html"
-whiteboard_path.write_text(whiteboard_html, encoding="utf-8")
+whiteboard_path.write_text(_with_freshness(whiteboard_html), encoding="utf-8")
 print(f"Whiteboard written → {whiteboard_path} ({len(whiteboard_won)} won deals, {len(whiteboard_month_keys)} months)")
 
 
@@ -7804,7 +7836,7 @@ GROUP_INTEL     = _section_group("Call Intelligence", GRANOLA_SECTION)
 
 html     = HEAD + HEADER + GROUP_MARKETING + GROUP_PIPELINE + GROUP_ACTIVITY + GROUP_ADSPEND + GROUP_INTEL + GLOSSARY_MODAL + MONTHLY_MODAL + DATA_SCRIPT + CHARTS_SCRIPT
 out_path = Path(__file__).parent / "axis-growth.html"
-out_path.write_text(html, encoding="utf-8")
+out_path.write_text(_with_freshness(html), encoding="utf-8")
 
 print(f"Dashboard written → {out_path}")
 print("  Open with:  open axis-growth.html")
