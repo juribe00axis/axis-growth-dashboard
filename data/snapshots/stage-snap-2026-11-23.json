@@ -1,6 +1,18 @@
 {
   "date": "2026-11-23",
   "opps": {
+    "uH56h3ca5Y09faAH8MFa": {
+      "stage": "New Lead",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
+    "PS9TgY4UGto3QIdCf6vq": {
+      "stage": "New Lead",
+      "owner": "kNU1jv4vrjjoehHNhlne"
+    },
+    "hnuLExpqB4E9AN8dmZ2A": {
+      "stage": "Discovery Call",
+      "owner": "Xeprp2GjJCDQFoJV4jqS"
+    },
     "XGDqQBZN2Ze15tgtOTNT": {
       "stage": "Discovery call set",
       "owner": "kNU1jv4vrjjoehHNhlne"
@@ -24,10 +36,6 @@
     "zZijgnawpCBKBiLQVCI4": {
       "stage": "New Lead",
       "owner": "kNU1jv4vrjjoehHNhlne"
-    },
-    "zAc0EvjMxmes9vGa3Hkq": {
-      "stage": "Discovery call set",
-      "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "rWT6G5XIS5fy6Zm1LEWu": {
       "stage": "Discovery call set",
@@ -94,7 +102,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "MaQ2vQkRHHDJ2Hqzw9ab": {
-      "stage": "Discovery Call",
+      "stage": "Proposal Sent",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "zpZAAlsbe8otNLlJlgcf": {
@@ -293,10 +301,6 @@
       "stage": "New Lead",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
-    "WHch7Cgyv5C7RrX9G4EO": {
-      "stage": "Agreement Sent",
-      "owner": "mMOdJLXRcIhuzcgsHx3M"
-    },
     "IzcdDyhZ3ke0gSQWEJnc": {
       "stage": "Discovery Call",
       "owner": "kNU1jv4vrjjoehHNhlne"
@@ -338,7 +342,7 @@
       "owner": "kNU1jv4vrjjoehHNhlne"
     },
     "RdO0Xgwdhp8pJENa9To2": {
-      "stage": "Proposal Sent",
+      "stage": "Agreement Sent",
       "owner": "Xeprp2GjJCDQFoJV4jqS"
     },
     "2f5qaORNqRyzaLL3tBSA": {
