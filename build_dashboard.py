@@ -610,21 +610,22 @@ _signed_stage_ids = {
 signed_all_time     = sum(1 for opp in all_opps if opp.get("pipelineId") == SALES_ID and opp.get("pipelineStageId") in _signed_stage_ids)
 prop_to_signed_pct  = round(signed_all_time / prop_all_time * 100) if prop_all_time else 0
 
-# "Won" = opportunities currently sitting in the Onboarding stage (not GHL's
-# won/lost status field -- this pipeline treats reaching Onboarding as won).
-_onboarding_id = next(
-    sid for sid, info in stage_map.items()
-    if info["pipeline_id"] == SALES_ID and info["name"] == "Onboarding"
-)
-onboarding_opps = [
+# "Won" = Sales Pipeline opportunities with GHL status "won", whatever stage
+# they sit in (changed 2026-11-24). Previously this was "currently in the
+# Onboarding stage", which missed deals marked won while still parked in
+# Agreement Signed (Vicenza Real Estate, TERRC -- both won 2026-11-18).
+# Every Onboarding deal was already status=won, so this is a strict superset.
+won_opps = [
     opp for opp in all_opps
-    if opp.get("pipelineId") == SALES_ID and opp.get("pipelineStageId") == _onboarding_id
+    if opp.get("pipelineId") == SALES_ID and opp.get("status") == "won"
 ]
-won_onboarding_total = len(onboarding_opps)
+won_status_total = len(won_opps)
 
-# Bucket onboarding entries by the month they entered that stage (lastStageChangeAt)
+# Bucket won deals by month using lastStageChangeAt (operator's call
+# 2026-11-24: keep the stage-change date, NOT lastStatusChangeAt, so no
+# previously-reported month shifts; 4 deals would move a month earlier).
 _won_by_month = defaultdict(int)
-for opp in onboarding_opps:
+for opp in won_opps:
     _ts = opp.get("lastStageChangeAt") or opp.get("createdAt")
     if _ts:
         _dt = _parse_ts(_ts)
@@ -667,13 +668,13 @@ for _mk in _won_month_keys:
     if not _is_current:
         _prev_count = _cnt
 
-# ── Won bento (added 2026-08-18) — reuses the SAME Onboarding-stage "Won"
+# ── Won bento (added 2026-08-18) — reuses the SAME won-status "Won"
 # definition as the Sales Pipeline Funnel card above, for one consistent
 # "Won" number across the whole dashboard rather than introducing a third
 # one. won_deals_events is the per-deal detail behind that count, for the
 # Raw Data page's new "All Time Won" tab.
 won_deals_events = []
-for opp in onboarding_opps:
+for opp in won_opps:
     _ts = opp.get("lastStageChangeAt") or opp.get("createdAt")
     if not _ts:
         continue
@@ -692,7 +693,7 @@ for opp in onboarding_opps:
 won_deals_events.sort(key=lambda e: e["date"], reverse=True)
 
 # blended_cost_per_signing is computed later (6g2), once meta_campaign_spend
-# is fetched -- it needs won_onboarding_total, which is already available here.
+# is fetched -- it needs won_status_total, which is already available here.
 
 won_month_chart_labels = [datetime.strptime(mk, "%Y-%m").strftime("%b") for mk in _won_month_keys]
 won_month_chart_data   = [_won_by_month[mk] for mk in _won_month_keys]
@@ -1315,18 +1316,18 @@ else:
     _meta_campaign_rows = _meta_campaign_resp.get("data", [])
     meta_campaign_spend = float(_meta_campaign_rows[0]["spend"]) if _meta_campaign_rows else 0
 
-blended_cost_per_signing = (meta_campaign_spend / won_onboarding_total) if won_onboarding_total else 0
-blended_cost_str = f"${blended_cost_per_signing:,.0f}" if won_onboarding_total else "—"
-print(f"  Spend since {META_SPEND_FLOOR}: ${meta_campaign_spend:,.0f} | Blended cost/signing: {blended_cost_str} ({won_onboarding_total} won)")
+blended_cost_per_signing = (meta_campaign_spend / won_status_total) if won_status_total else 0
+blended_cost_str = f"${blended_cost_per_signing:,.0f}" if won_status_total else "—"
+print(f"  Spend since {META_SPEND_FLOOR}: ${meta_campaign_spend:,.0f} | Blended cost/signing: {blended_cost_str} ({won_status_total} won)")
 
 # Same spend-since-April figure, but divided by MGL-source won deals only --
 # still "blended" (uses total spend, not MGL-attributed spend), just a
-# narrower denominator. Reuses onboarding_opps (6f) and MGL_SOURCES (6d).
-mgl_won_total = sum(1 for opp in onboarding_opps if (opp.get("source") or "") in MGL_SOURCES)
+# narrower denominator. Reuses won_opps (6f) and MGL_SOURCES (6d).
+mgl_won_total = sum(1 for opp in won_opps if (opp.get("source") or "") in MGL_SOURCES)
 blended_cost_per_signing_mgl = (meta_campaign_spend / mgl_won_total) if mgl_won_total else 0
 blended_cost_mgl_str = f"${blended_cost_per_signing_mgl:,.0f}" if mgl_won_total else "—"
 _mgl_won_this_month = sum(
-    1 for opp in onboarding_opps
+    1 for opp in won_opps
     if (opp.get("source") or "") in MGL_SOURCES
     and (_ts := opp.get("lastStageChangeAt") or opp.get("createdAt"))
     and _parse_ts(_ts).strftime("%Y-%m") == today.strftime("%Y-%m")
@@ -1510,16 +1511,16 @@ else:
 # Capital Raiser Intent's value key differs by endpoint -- confirmed live
 # 2026-08-18 that GET /opportunities/{id} (used for a one-off spot check)
 # returns it as cf["fieldValue"], but /opportunities/search (what this
-# script actually fetches all_opps/onboarding_opps from) returns the SAME
+# script actually fetches all_opps/won_opps from) returns the SAME
 # field as cf["fieldValueArray"] instead. Checking both, in that order,
 # covers whichever shape shows up.
 AGREEMENT_SIGNED_FIELD      = "Qru4091H66VTPvH2rQKO"
 CAPITAL_RAISER_INTENT_FIELD = "FNFagZQq9ZPZACmA8aHc"
-_onboarding_by_id = {opp.get("id"): opp for opp in onboarding_opps}
+_won_by_id = {opp.get("id"): opp for opp in won_opps}
 for _e in won_deals_events:
     _e["agreement_signed"] = None
     _e["capital_raiser_intent"] = None
-    _opp = _onboarding_by_id.get(_e["id"])
+    _opp = _won_by_id.get(_e["id"])
     if not _opp:
         continue
     for _cf in (_opp.get("customFields") or []):
@@ -1546,7 +1547,7 @@ if not SERVICE_FIELD_ID:
     print('  ⚠ No opportunity custom field named "Services Hired" in GHL — column left blank')
 for _e in won_deals_events:
     _e["service"] = []
-    _opp = _onboarding_by_id.get(_e["id"])
+    _opp = _won_by_id.get(_e["id"])
     if not _opp or not SERVICE_FIELD_ID:
         continue
     for _cf in (_opp.get("customFields") or []):
@@ -1584,7 +1585,7 @@ def _contact_type(contact_id):
     return _contact_type_cache[contact_id]
 
 for _e in won_deals_events:
-    _opp = _onboarding_by_id.get(_e["id"]) or {}
+    _opp = _won_by_id.get(_e["id"]) or {}
     _e["contact_type"] = _contact_type((_opp.get("contact") or {}).get("id") or _opp.get("contactId"))
     # Only an explicit "customer" excludes a deal. Unknown/blank stays counted
     # as new business, so a missing value never silently shrinks the funnel.
@@ -2657,15 +2658,15 @@ MIDDLE = f"""
           <span class="funnel-kpi-sub">{won_total} won of {total_sales_opps} total</span>
         </div>
         <div class="funnel-kpi">
-          <span class="funnel-kpi-label">Won{_info_icon("Not GHL's won/lost status field -- this counts opportunities currently sitting in the Onboarding stage, which is how this pipeline defines a closed-won deal.")}</span>
-          <span class="funnel-kpi-value">{won_onboarding_total}</span>
-          <span class="funnel-kpi-sub">currently in Onboarding</span>
+          <span class="funnel-kpi-label">Won{_info_icon("Counts Sales Pipeline opportunities with GHL status = Won, whatever stage they are in (Onboarding or still in Agreement Signed).")}</span>
+          <span class="funnel-kpi-value">{won_status_total}</span>
+          <span class="funnel-kpi-sub">status = Won</span>
         </div>
       </div>
 
       <a href="kpi_whiteboard.html" class="bento-link" title="Open the full Spend Efficiency Whiteboard">
         <div class="bento-wrap" style="margin-top:22px;padding-top:20px;border-top:1px solid var(--line);">
-          <div class="card-label" style="margin-bottom:4px;">Won Deals — Entered Onboarding by Month{_info_icon("Same 'Won' definition as the KPI chip above -- opportunities currently sitting in the Onboarding stage, not GHL's own won/lost status field. All Time Won, Blended Cost/Signing, and Blended Cost/Signing (MGL) are live from the GHL + Meta APIs. Click anywhere in this section to open the full Spend Efficiency Whiteboard for month-by-month detail, projections, and per-deal notes.")}</div>
+          <div class="card-label" style="margin-bottom:4px;">Won Deals by Month{_info_icon("Same 'Won' definition as the KPI chip above -- Sales Pipeline opportunities with GHL status = Won, in any stage. All Time Won, Blended Cost/Signing, and Blended Cost/Signing (MGL) are live from the GHL + Meta APIs. Click anywhere in this section to open the full Spend Efficiency Whiteboard for month-by-month detail, projections, and per-deal notes.")}</div>
           <div style="font-size:0.68rem;color:var(--text-mute);margin-bottom:14px;">Based on lastStageChangeAt · month-over-month vs. prior completed month</div>
           <div class="bento-grid-3">
             <div class="bento-panel">
@@ -2680,13 +2681,13 @@ MIDDLE = f"""
             <div class="bento-tiles-col">
               <div class="bento-tile">
                 <span class="funnel-kpi-label">All Time Won</span>
-                <span class="funnel-kpi-value">{won_onboarding_total}</span>
-                <span class="funnel-kpi-sub">currently in Onboarding</span>
+                <span class="funnel-kpi-value">{won_status_total}</span>
+                <span class="funnel-kpi-sub">status = Won</span>
               </div>
               <div class="bento-tile">
                 <span class="funnel-kpi-label">Blended Cost / Signing{_info_icon("Meta spend since Apr 1, 2026 (a month before May's first signing, giving spend a fair head start on the leads that became those wins) -- not the ad account's full history, which goes back to Oct 2024, long before AxisKey's sales effort started and would badly inflate this number.")}</span>
                 <span class="funnel-kpi-value">{blended_cost_str}</span>
-                <span class="funnel-kpi-sub">${meta_campaign_spend:,.0f} spend (since Apr 2026) ÷ {won_onboarding_total} won</span>
+                <span class="funnel-kpi-sub">${meta_campaign_spend:,.0f} spend (since Apr 2026) ÷ {won_status_total} won</span>
               </div>
               <div class="bento-tile">
                 <span class="funnel-kpi-label">Blended Cost / Signing (MGL){_info_icon("Same Meta spend since Apr 1, 2026 as Blended Cost/Signing, divided by MGL-source won deals only instead of all won deals -- still 'blended' since it uses total ad spend, not MGL-attributed spend.")}</span>
@@ -2813,8 +2814,8 @@ GLOSSARY_TERMS = [
     ("Pipeline Snapshot — Open Deals by Stage", "Current count of OPEN opportunities in each Sales Pipeline stage, as of the selected daily snapshot (use the Viewing Snapshot dropdown to look at a past date)."),
     ("Lead to Discovery", "Since Jul 1, 2026: total distinct opportunities that entered Discovery Call (read directly from GHL's 'Date Entered' custom fields) divided by total leads created since the same date. Flow-based and grows over time -- unlike the other three funnel KPIs below, which are all-time and based on current stage position."),
     ("Discovery to Proposal / Proposal to Signed / Lead to Won", "All-time conversion rates within the Sales Pipeline: of all opportunities that ever reached the first stage in the pair (any status), what % also reached the second stage (or won, for Lead to Won)."),
-    ("Won", "NOT GHL's won/lost status field -- this counts opportunities currently sitting in the Onboarding stage, which is how this pipeline defines a closed-won deal."),
-    ("Won Deals — Entered Onboarding by Month", "Based on lastStageChangeAt: which month each currently-Onboarding opportunity most recently moved into that stage. Month-over-month % compares to the prior completed month; the current month is marked in progress and excluded from that comparison. Blended Cost/Signing divides Meta spend since Apr 1, 2026 (not the ad account's full history, which predates AxisKey's sales effort) by all-time won; Blended Cost/Signing (MGL) divides the same spend by MGL-source won deals only."),
+    ("Won", "Counts Sales Pipeline opportunities with GHL status = Won, whatever stage they are in (Onboarding or still in Agreement Signed)."),
+    ("Won Deals by Month", "Based on lastStageChangeAt: the month each won opportunity last changed stage (normally when it entered Onboarding). Month-over-month % compares to the prior completed month; the current month is marked in progress and excluded from that comparison. Blended Cost/Signing divides Meta spend since Apr 1, 2026 (not the ad account's full history, which predates AxisKey's sales effort) by all-time won; Blended Cost/Signing (MGL) divides the same spend by MGL-source won deals only."),
     ("Weekly Rocks", "Distinct opportunities that ENTERED each of 5 key stages (New Lead, Discovery Call, Strategy Call, Proposal Sent, Agreement Signed) within the selected date range (defaults to since Jul 1, 2026), read directly from GHL's 'Date Entered' custom fields -- the true stage-entry date GHL recorded, not diffed from daily snapshots. Change the date range to compare any period. Owner filter uses each opportunity's current assigned owner."),
     ("Weekly Rocks — Appointments", "Appointments scheduled per week (any calendar/status), from GHL's own calendar events -- a real log, not diffed from daily snapshots. Bucketed by the appointment's own date into a week grid (W1 = Jul 1, 2026), kept as weeks (rather than a date range like the stage table above) since that's what makes week-over-week comparisons easy. Owner filter uses the appointment's assigned user, not the linked opportunity's owner."),
     ("Meta Campaign Spending (bottom section)", "Last 7 days of Meta ad spend, including today's partial/incomplete spend as its own tile -- unlike the Daily Performance table above, which excludes today."),
@@ -3909,7 +3910,7 @@ RAW_DATA_BODY = f"""
 
   <section class="card" id="tab-won" style="display:none;">
     <div style="font-size:0.72rem;color:var(--text-mute);margin-bottom:14px;">
-      Every opportunity currently sitting in the Sales Pipeline's Onboarding stage -- this pipeline's definition of a closed-won deal (not GHL's own won/lost status field; see the Won bento's info icon on the main dashboard). Date is when the opportunity entered that stage (lastStageChangeAt).
+      Every Sales Pipeline opportunity with GHL status = Won, in any stage (most are in Onboarding; some are still in Agreement Signed). Date is when the opportunity last changed stage (lastStageChangeAt).
     </div>
     <div class="rd-toolbar">
       <input id="wonSearch" class="rd-input" type="text" placeholder="Search opportunity, contact, or owner…" oninput="wonRender()">
@@ -4102,7 +4103,7 @@ RAW_DATA_LOGIC_SCRIPT = """
       );
     }
 
-    // ── All Time Won (opportunities in the Onboarding stage) ───────────────
+    // ── All Time Won (opportunities with status = won) ─────────────────────
     let wonSortKey = "date";
     let wonSortDir = -1;
     let wonVisible = WON_DEALS_EVENTS;
@@ -5054,8 +5055,9 @@ WHITEBOARD_BODY_WON = """
 <section>
   <div class="section-title">All-time won opportunities (AXISKEY, all pipelines)</div>
   <div class="subtitle" style="margin-bottom: 14px;">
-    "Date Won" is <code>lastStageChangeAt</code> -- when the opportunity entered
-    the Onboarding stage, same basis as the Won bento on the main dashboard.
+    A deal counts as won when its GHL status is Won, whatever stage it sits in.
+    "Date Won" is <code>lastStageChangeAt</code> -- when the opportunity last
+    changed stage (normally entering Onboarding), same basis as the Won bento.
     "Agreement Signed" and "Capital Raiser Intent" are live GHL custom fields
     on the opportunity record, read directly -- no longer editable here; edit
     them on the opportunity in GHL and they'll appear on the next refresh.
@@ -5068,7 +5070,7 @@ WHITEBOARD_BODY_WON = """
     <div class="tile">
       <div class="tile-label">Total Won</div>
       <div class="tile-value" id="wonTotalAll">—</div>
-      <div class="tile-sub">Everything in the Onboarding stage</div>
+      <div class="tile-sub">Every deal with status = Won</div>
     </div>
     <div class="tile">
       <div class="tile-label">New Business</div>
@@ -5114,10 +5116,9 @@ WHITEBOARD_BODY_WON = """
     opportunity in GHL. "Source" is the deal's own source field as recorded
     in GHL (including any specific referrer name like "Referral - Diego");
     blanks reflect missing data on the record, not an extraction issue here.
-    "Won" only includes opportunities *currently* sitting in the Onboarding
-    stage -- a deal that later moves further along the pipeline drops off
-    this list, same as everywhere else on the dashboard that uses this
-    definition. Amber "Existing client" rows are deals whose contact carries
+    "Won" includes every Sales Pipeline opportunity whose GHL status is Won,
+    whether it has reached Onboarding or is still in Agreement Signed --
+    same definition as everywhere else on the dashboard. Amber "Existing client" rows are deals whose contact carries
     GHL's standard Contact Type = "customer" -- expansion or repeat business
     from an account we already had. They are kept here deliberately (this is
     the full won ledger) but are excluded from the monthly Sales Report tabs,
@@ -6403,7 +6404,7 @@ const MGL_WON_BY_MONTH = {json.dumps(dict(whiteboard_mgl_won_by_month))};
 // basis) -- what the August/September tabs' MoM cards count.
 const NEW_WON_BY_MONTH = {json.dumps(dict(whiteboard_new_won_by_month))};
 const ALLTIME = {{
-  spend: {meta_campaign_spend}, won: {won_onboarding_total}, mglWon: {mgl_won_total},
+  spend: {meta_campaign_spend}, won: {won_status_total}, mglWon: {mgl_won_total},
   cps: {blended_cost_per_signing}, cpsMgl: {blended_cost_per_signing_mgl},
 }};
 const WON = {json.dumps(whiteboard_won)};
